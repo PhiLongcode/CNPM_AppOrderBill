@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.printer.PrinterConfigController"
+            style="-fx-background-color: #f5f5f5;">
+    
+    <!-- Top: Header -->
+    <top>
+        <VBox spacing="10" style="-fx-background-color: #1e3a5f; -fx-padding: 15;">
+            <Label text="🖨️ Cấu hình Máy in" 
+                   style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+        </VBox>
+    </top>
+    
+    <!-- Center: Configuration Forms -->
+    <center>
+        <HBox spacing="10" style="-fx-padding: 20;">
+            <!-- Left: List of configurations -->
+            <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10;" prefWidth="250">
+                <Label text="Danh sách cấu hình" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <ListView fx:id="configListView" prefHeight="600"/>
+            </VBox>
+            
+            <!-- Right: Forms -->
+            <ScrollPane fitToWidth="true" HBox.hgrow="ALWAYS">
+                <VBox spacing="20">
+                    <!-- Printer Configuration -->
+                    <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10;">
+                        <Label text="Cấu hình Máy in" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    
+                    <GridPane hgap="10" vgap="10">
+                        <Label text="Tên cấu hình:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="printerNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="300"/>
+                        
+                        <Label text="Máy in Windows:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <ComboBox fx:id="windowsPrinterCombo" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="300"/>
+                        <Button text="Làm mới danh sách" onAction="#onRefreshPrinters" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+                        
+                        <Label text="Loại kết nối:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                            <ComboBox fx:id="connectionTypeCombo" prefWidth="200"/>
+                            <Label fx:id="escposStatusLabel" text="⚙️ ESCPOS: Đang kiểm tra..." 
+                                   style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+                        </HBox>
+                        
+                        <Label text="Kích thước giấy:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                            <TextField fx:id="paperSizeField" prefWidth="200" text="80mm"/>
+                            <Label text="(58mm hoặc 80mm)" style="-fx-font-size: 10px; -fx-text-fill: #666;"/>
+                        </HBox>
+                        
+                        <Label text="Số bản in:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <Spinner fx:id="copiesSpinner" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="100" 
+                                 initialValue="1" min="1" max="10"/>
+                        
+                        <Label text="Mặc định cho:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                            <CheckBox fx:id="defaultKitchenCheckBox" text="Phiếu bếp"/>
+                            <CheckBox fx:id="defaultReceiptCheckBox" text="Hóa đơn"/>
+                        </HBox>
+                    </GridPane>
+                    
+                    <HBox spacing="10" style="-fx-padding: 10 0 0 0;">
+                        <Button fx:id="savePrinterConfigButton" text="💾 Lưu cấu hình máy in" onAction="#onSavePrinterConfig"
+                                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                        <Button text="🔌 Test kết nối" onAction="#onTestConnection"
+                                style="-fx-background-color: #FF9800; -fx-text-fill: white;"/>
+                        <VBox spacing="5">
+                            <Label text="Chọn loại hóa đơn:"/>
+                            <ComboBox fx:id="testPrintTypeCombo" prefWidth="150"/>
+                        </VBox>
+                        <Button text="🖨️ In thử" onAction="#onTestPrint"
+                                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+                    </HBox>
+                    <Label fx:id="printMethodInfoLabel" text="ℹ️ Phương thức in: Sẽ tự động chọn (ESCPOS hoặc JavaFX)"
+                           style="-fx-font-size: 11px; -fx-text-fill: #2196F3; -fx-padding: 5 0 0 0;"/>
+                </VBox>
+                
+                <!-- Print Template Configuration + Preview -->
+                <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15; -fx-background-radius: 10;">
+                    <Label text="Mẫu In" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    
+                    <HBox spacing="10">
+                        <Label text="Loại mẫu:"/>
+                        <ComboBox fx:id="templateTypeCombo" prefWidth="200"/>
+                    </HBox>
+                    
+                    <GridPane hgap="10" vgap="10" style="-fx-padding: 10 0 0 0;">
+                        <Label text="Tên nhà hàng:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="storeNameField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="300"/>
+                        
+                        <Label text="Địa chỉ:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="storeAddressField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="300"/>
+                        
+                        <Label text="Số điện thoại:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="storePhoneField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="300"/>
+                        
+                        <Label text="Header (đầu trang):" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <TextArea fx:id="headerTextArea" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="300" prefRowCount="3"/>
+                        
+                        <Label text="Footer (cuối trang):" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <TextArea fx:id="footerTextArea" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="300" prefRowCount="3"/>
+                        
+                        <Label text="Cỡ chữ (Font Size):" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                        <Spinner fx:id="fontSizeSpinner" GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="100" 
+                                 initialValue="11" min="9" max="14"/>
+                        
+                        <Label text="Cỡ chữ tên quán:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+                        <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                            <Spinner fx:id="storeNameFontSizeSpinner" prefWidth="100" 
+                                     initialValue="16" min="9" max="24"/>
+                            <Label text="(Mặc định: 1.5x cỡ chữ)" style="-fx-font-size: 10px; -fx-text-fill: #666;"/>
+                        </HBox>
+                        
+                        <Label text="Hiển thị ĐVT:" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+                        <CheckBox fx:id="showUnitCheckBox" GridPane.columnIndex="1" GridPane.rowIndex="7" 
+                                  text="Hiển thị cột đơn vị tính"/>
+                        
+                        <Label text="Tên các liên:" GridPane.columnIndex="0" GridPane.rowIndex="8"/>
+                        <VBox GridPane.columnIndex="1" GridPane.rowIndex="8" spacing="5">
+                            <TextField fx:id="copyLabelsField" prefWidth="300" 
+                                      promptText="Liên 1 - Khách hàng|Liên 2 - Lưu trữ|Liên 3 - Kế toán"/>
+                            <Label text="Ngăn cách bởi dấu |. Số liên = số tên được cấu hình." 
+                                   style="-fx-font-size: 10px; -fx-text-fill: #666;"/>
+                        </VBox>
+                    </GridPane>
+                    
+                    <HBox spacing="10" style="-fx-padding: 10 0 0 0;">
+                        <Button fx:id="saveTemplateButton" text="💾 Lưu mẫu in" onAction="#onSaveTemplate"
+                                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                        <Button text="🔄 Xem trước" onAction="#onRefreshPreview"
+                                style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+                        <Button text="📄 Xem khổ giấy" onAction="#onShowPaperPreview"
+                                style="-fx-background-color: #9C27B0; -fx-text-fill: white;"/>
+                    </HBox>
+                    
+                    <Label text="Xem trước (dùng dữ liệu mẫu)" style="-fx-font-weight: bold; -fx-padding: 5 0 0 0;"/>
+                    <TextArea fx:id="previewTextArea"
+                              editable="false"
+                              prefRowCount="24"
+                              prefColumnCount="46"
+                              wrapText="false"
+                              style="-fx-font-family: 'Consolas'; -fx-font-size: 12px; -fx-control-inner-background: #f9f9f9;"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+        </HBox>
+    </center>
+</BorderPane>
+

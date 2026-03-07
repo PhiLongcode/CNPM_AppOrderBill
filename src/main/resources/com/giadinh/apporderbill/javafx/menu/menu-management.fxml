@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.menu.MenuManagementController"
+            style="-fx-background-color: #f5f5f5;">
+    
+    <!-- Top: Header và Toolbar -->
+    <top>
+        <VBox spacing="10" style="-fx-background-color: #1e3a5f; -fx-padding: 15;">
+            <Label text="🍽️ Quản lý Menu" 
+                   style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+            
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button fx:id="addButton" text="➕ Thêm món" onAction="#onAddClick"
+                        style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                <Button fx:id="editButton" text="✏️ Sửa" onAction="#onEditClick"
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+                <Button fx:id="deleteButton" text="🗑️ Xóa" onAction="#onDeleteClick"
+                        style="-fx-background-color: #f44336; -fx-text-fill: white;"/>
+                <Button fx:id="toggleActiveButton" text="🔄 Kích hoạt/Vô hiệu" onAction="#onToggleActiveClick"
+                        style="-fx-background-color: #FF9800; -fx-text-fill: white;"/>
+                <Button fx:id="addStockButton" text="📦 Nhập kho" onAction="#onAddStockClick"
+                        style="-fx-background-color: #673AB7; -fx-text-fill: white;"/>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <!-- Column visibility menu -->
+                <MenuButton text="📋 Cột hiển thị" style="-fx-background-color: #607D8B; -fx-text-fill: white;">
+                    <items>
+                        <CheckMenuItem fx:id="showIdColumn" text="ID" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showNameColumn" text="Tên món" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showCategoryColumn" text="Danh mục" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showPriceColumn" text="Giá bán" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showCostColumn" text="Giá vốn" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showStockColumn" text="Tồn kho" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showSkuColumn" text="SKU" selected="false" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showBaseUnitColumn" text="ĐVT cơ bản" selected="false" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showActiveColumn" text="Trạng thái" selected="true" onAction="#onColumnVisibilityChange"/>
+                        <CheckMenuItem fx:id="showCreatedAtColumn" text="Ngày tạo" selected="false" onAction="#onColumnVisibilityChange"/>
+                    </items>
+                </MenuButton>
+                
+                <Button text="🔄 Làm mới" onAction="#onRefreshClick"
+                        style="-fx-background-color: #455A64; -fx-text-fill: white;"/>
+                
+                <Button fx:id="importButton" text="📥 Import Excel" onAction="#onImportClick"
+                        style="-fx-background-color: #9C27B0; -fx-text-fill: white;"/>
+                <Button fx:id="exportButton" text="📤 Export Excel" onAction="#onExportClick"
+                        style="-fx-background-color: #009688; -fx-text-fill: white;"/>
+            </HBox>
+            
+            <!-- Search and Filter -->
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Tìm kiếm:" style="-fx-text-fill: white;"/>
+                <TextField fx:id="searchField" prefWidth="200" promptText="Tên món..."/>
+                <Label text="Danh mục:" style="-fx-text-fill: white;"/>
+                <ComboBox fx:id="categoryFilter" prefWidth="150" promptText="Tất cả"/>
+                <CheckBox fx:id="activeOnlyCheckBox" text="Chỉ món đang bán" selected="true" style="-fx-text-fill: white;"/>
+                <CheckBox fx:id="lowStockOnlyCheckBox" text="⚠️ Sắp hết/Hết hàng" style="-fx-text-fill: #ffeb3b;"/>
+            </HBox>
+        </VBox>
+    </top>
+    
+    <!-- Center: Menu Items Table -->
+    <center>
+        <VBox spacing="0">
+            <!-- Warning banner -->
+            <HBox fx:id="stockWarningBanner" spacing="10" alignment="CENTER_LEFT" 
+                  style="-fx-background-color: #fff3cd; -fx-padding: 10; -fx-border-color: #ffc107; -fx-border-width: 0 0 1 0;">
+                <Label fx:id="stockWarningLabel" text="⚠️ Có sản phẩm sắp hết hoặc đã hết hàng" 
+                       style="-fx-text-fill: #856404; -fx-font-weight: bold;"/>
+                <Button fx:id="showLowStockBtn" text="Xem danh sách" onAction="#onShowLowStock"
+                        style="-fx-background-color: #ffc107; -fx-text-fill: #212529;"/>
+            </HBox>
+            
+            <TableView fx:id="menuItemsTable" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="idColumn" text="ID" prefWidth="60"/>
+                    <TableColumn fx:id="nameColumn" text="Tên món" prefWidth="250"/>
+                    <TableColumn fx:id="categoryColumn" text="Danh mục ▼" prefWidth="150"/>
+                    <TableColumn fx:id="priceColumn" text="Giá bán (VNĐ)" prefWidth="120"/>
+                    <TableColumn fx:id="costColumn" text="Giá vốn (VNĐ)" prefWidth="120"/>
+                    <TableColumn fx:id="stockColumn" text="Tồn" prefWidth="80"/>
+                    <TableColumn fx:id="skuColumn" text="SKU" prefWidth="120"/>
+                    <TableColumn fx:id="baseUnitColumn" text="ĐVT cơ bản" prefWidth="100"/>
+                    <TableColumn fx:id="activeColumn" text="Trạng thái" prefWidth="100"/>
+                    <TableColumn fx:id="createdAtColumn" text="Ngày tạo" prefWidth="150"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>
+

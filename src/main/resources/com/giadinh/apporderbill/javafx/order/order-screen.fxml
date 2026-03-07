@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.OrderScreenController"
+            style="-fx-background-color: #f5f5f5;">
+    
+    <!-- Header -->
+    <top>
+        <VBox spacing="0">
+            <HBox alignment="CENTER_LEFT" style="-fx-background-color: #1e3a5f; -fx-padding: 10;">
+                <children>
+                    <Label text="Quản lý Order - Thu ngân" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="Phiên bản 1.10" style="-fx-text-fill: white;"/>
+                </children>
+            </HBox>
+            <!-- Search bar -->
+            <HBox spacing="10" style="-fx-background-color: #2a4a6f; -fx-padding: 8;" alignment="CENTER_LEFT">
+                <children>
+                    <Label text="🔍" style="-fx-font-size: 16px;"/>
+                    <TextField fx:id="searchField" promptText="Tìm món (F3)" prefWidth="300" 
+                               style="-fx-background-color: white; -fx-padding: 5;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="Số lượng:" style="-fx-text-fill: white;"/>
+                    <TextField fx:id="quickQuantityField" text="1" prefWidth="50" 
+                               style="-fx-background-color: white; -fx-padding: 5;"/>
+                </children>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Main Content: Split between Menu (left) and Order (right) -->
+    <center>
+        <SplitPane dividerPositions="0.55" orientation="HORIZONTAL">
+            <!-- LEFT PANEL: Menu Items -->
+            <VBox spacing="0">
+                <!-- Category Tabs -->
+                <HBox fx:id="categoryTabsContainer" spacing="5" style="-fx-background-color: #e0e0e0; -fx-padding: 8;">
+                    <children>
+                        <!-- Category buttons will be added dynamically by controller -->
+                    </children>
+                </HBox>
+                
+                <!-- Menu Items Grid -->
+                <ScrollPane fitToWidth="true" style="-fx-background-color: white;">
+                    <content>
+                        <FlowPane fx:id="menuItemsContainer" hgap="10" vgap="10" 
+                                  prefWrapLength="600" style="-fx-padding: 10;">
+                        </FlowPane>
+                    </content>
+                </ScrollPane>
+            </VBox>
+
+            <!-- RIGHT PANEL: Order Details -->
+            <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15;" VBox.vgrow="ALWAYS">
+                <!-- Order Header -->
+                <VBox spacing="5">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <children>
+                            <Label text="Bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                            <TextField fx:id="tableNumberField" editable="false" prefWidth="100" 
+                                       style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                            <Label fx:id="orderStatusLabel" text="(Chưa chọn bàn)" 
+                                   style="-fx-text-fill: gray;"/>
+                        </children>
+                    </HBox>
+                    
+                    <!-- Custom Item Entry -->
+                    <HBox spacing="5" alignment="CENTER_LEFT">
+                        <children>
+                            <Label text="Món phát sinh:" style="-fx-font-size: 12px;"/>
+                            <TextField fx:id="itemNameField" promptText="Tên món" prefWidth="150"/>
+                            <TextField fx:id="itemPriceField" promptText="Giá" prefWidth="100"/>
+                            <Button fx:id="addCustomItemButton" text="Thêm" onAction="#onAddCustomItemClick"
+                                    style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                        </children>
+                    </HBox>
+                </VBox>
+
+                <!-- Order Items List -->
+                <VBox spacing="5" VBox.vgrow="ALWAYS" minHeight="400">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Danh sách món:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                        <MenuButton text="☰ Cột hiển thị" style="-fx-font-size: 11px;">
+                            <items>
+                                <CheckMenuItem fx:id="showSelectColumn" text="☑ Chọn" selected="true"/>
+                                <CheckMenuItem fx:id="showPrintedColumn" text="Đã in" selected="true"/>
+                                <CheckMenuItem fx:id="showNumberColumn" text="# STT" selected="true"/>
+                                <CheckMenuItem fx:id="showNameColumn" text="Tên món" selected="true"/>
+                                <CheckMenuItem fx:id="showQuantityColumn" text="Số lượng" selected="true"/>
+                                <CheckMenuItem fx:id="showUnitColumn" text="Đơn vị" selected="flase"/>
+                                <CheckMenuItem fx:id="showUnitPriceColumn" text="Đơn giá" selected="true"/>
+                                <CheckMenuItem fx:id="showTotalColumn" text="Thành tiền" selected="true"/>
+                                <CheckMenuItem fx:id="showDiscountColumn" text="Giảm giá (%)" selected="true"/>
+                                <CheckMenuItem fx:id="showNotesColumn" text="Ghi chú" selected="true"/>
+                                <CheckMenuItem fx:id="showActionColumn" text="Thao tác" selected="true"/>
+                            </items>
+                        </MenuButton>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <!-- Nút hủy và xóa món - luôn hiển thị -->
+                        <HBox fx:id="itemActionButtonsContainer" spacing="5">
+                            <children>
+                                <Button fx:id="cancelItemButton" text="Hủy món" 
+                                        style="-fx-background-color: #ff9800; -fx-text-fill: white; -fx-font-size: 12px;"
+                                        onAction="#onCancelItemClick"/>
+                                <Button fx:id="deleteItemButton" text="Xóa món" 
+                                        style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-size: 12px;"
+                                        onAction="#onDeleteItemClick"/>
+                            </children>
+                        </HBox>
+                    </HBox>
+                    <TableView fx:id="orderItemsTable" VBox.vgrow="ALWAYS" minHeight="350">
+                    <columns>
+                        <TableColumn fx:id="selectColumn" text="☑" prefWidth="45" resizable="false"/>
+                         <TableColumn fx:id="printedColumn" text="Đã in" prefWidth="70" minWidth="50"/>
+                        <TableColumn fx:id="itemNumberColumn" text="#" prefWidth="50" resizable="false"/>
+                        <TableColumn fx:id="nameColumn" text="Tên món" prefWidth="200" minWidth="150"/>
+                        <TableColumn fx:id="quantityColumn" text="SL" prefWidth="70" minWidth="50"/>
+                        <TableColumn fx:id="unitColumn" text="ĐVT" prefWidth="70" minWidth="50"/>
+                        <TableColumn fx:id="unitPriceColumn" text="Đơn giá" prefWidth="120" minWidth="90"/>
+                        <TableColumn fx:id="totalColumn" text="Thành tiền" prefWidth="130" minWidth="100"/>
+                        <TableColumn fx:id="discountColumn" text="Giảm giá (%)" prefWidth="100" minWidth="80"/>
+                        <TableColumn fx:id="notesColumn" text="Ghi chú" prefWidth="180" minWidth="130"/>
+                       
+                        <TableColumn fx:id="actionColumn" text="Thao tác" prefWidth="90" minWidth="80"/>
+                    </columns>
+                </TableView>
+                </VBox>
+
+                <!-- Order Summary -->
+                <HBox spacing="20" alignment="CENTER" style="-fx-background-color: #f0f0f0; -fx-padding: 15; -fx-border-color: #ccc; -fx-border-width: 1;">
+                    <children>
+                        <!-- Tổng tạm tính -->
+                        <VBox spacing="5" alignment="CENTER">
+                            <children>
+                                <Label text="Tổng tạm tính" style="-fx-font-size: 12px; -fx-text-fill: #666;"/>
+                                <HBox spacing="5" alignment="CENTER">
+                                    <children>
+                                        <Label fx:id="totalAmountLabel" text="0" 
+                                               style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                                        <Label text="VNĐ" style="-fx-font-size: 12px;"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Giảm giá -->
+                        <VBox spacing="5" alignment="CENTER">
+                            <children>
+                                <Label text="Giảm giá" style="-fx-font-size: 12px; -fx-text-fill: #666;"/>
+                                <HBox spacing="5" alignment="CENTER">
+                                    <children>
+                                        <TextField fx:id="discountField" text="0" prefWidth="120" 
+                                                   style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                        <Label text="VNĐ" style="-fx-font-size: 12px;"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                        
+                        <!-- Thành tiền -->
+                        <VBox spacing="5" alignment="CENTER">
+                            <children>
+                                <Label text="Thành tiền" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                                <HBox spacing="5" alignment="CENTER">
+                                    <children>
+                                        <Label fx:id="finalAmountLabel" text="0" 
+                                               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #d32f2f;"/>
+                                        <Label text="VNĐ" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+
+                <!-- Action Buttons -->
+                <HBox spacing="10" alignment="CENTER">
+                    <children>
+                        <Button fx:id="printKitchenTicketButton" text="🖨️ In phiếu bếp" 
+                                prefWidth="130" prefHeight="40"
+                                onAction="#onPrintKitchenTicketClick"
+                                style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-size: 13px;"/>
+                        <Button fx:id="printSelectedButton" text="📋 In món đã chọn" 
+                                prefWidth="130" prefHeight="40"
+                                onAction="#onPrintSelectedItemsClick"
+                                style="-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-size: 13px;"/>
+                        <Button fx:id="reprintKitchenTicketButton" text="🔄 In lại PB"
+                                prefWidth="100" prefHeight="40"
+                                onAction="#onReprintKitchenTicketClick"
+                                style="-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-size: 13px;"/>
+                        <Button fx:id="reprintReceiptButton" text=" In lại HĐ"
+                                prefWidth="110" prefHeight="40"
+                                onAction="#onReprintReceiptClick"
+                                style="-fx-background-color: #607D8B; -fx-text-fill: white; -fx-font-size: 13px;"/>
+                        <Button fx:id="printDraftReceiptButton" text="📄 In phiếu tạm" 
+                                prefWidth="130" prefHeight="40"
+                                onAction="#onPrintDraftReceiptClick"
+                                style="-fx-background-color: #FFC107; -fx-text-fill: white; -fx-font-size: 13px;"/>
+                        <Button fx:id="checkoutButton" text="💰 Thanh toán (F9)" 
+                                prefWidth="180" prefHeight="50"
+                                onAction="#onCheckoutClick"
+                                style="-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-size: 15px; -fx-font-weight: bold;"/>
+                    </children>
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <!-- Bottom: Table Grid -->
+    <bottom>
+        <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 10;">
+            <Label text="Danh sách bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+            <HBox spacing="5">
+                <children>
+                    <ToggleButton fx:id="allTablesFilterBtn" text="Tất cả" selected="true"/>
+                    <ToggleButton fx:id="inUseTablesFilterBtn" text="Đang dùng"/>
+                    <ToggleButton fx:id="emptyTablesFilterBtn" text="Trống"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="addTableButton" text="+ Thêm bàn" onAction="#onAddTableClick"
+                            style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;; -fx-padding: 10 20 10 20;"/>
+                </children>
+            </HBox>
+            <ScrollPane fitToWidth="true" prefViewportHeight="120">
+                <content>
+                    <FlowPane fx:id="tableContainer" hgap="10" vgap="10" prefWrapLength="1000"
+                              style="-fx-padding: 5; -fx-font-weight: bold; -fx-font-size: 18px;">
+                    </FlowPane>
+                </content>
+            </ScrollPane>
+        </VBox>
+    </bottom>
+</BorderPane>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.MainLayoutController"
+            style="-fx-background-color: #f5f5f5;">
+    
+    <!-- Top: Menu Bar -->
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="Hệ thống">
+                    <items>
+                        <MenuItem text="Đơn hàng" onAction="#showOrderScreen"/>
+                        <MenuItem text="Thống kê" onAction="#showDashboardScreen"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Chế độ dữ liệu" onAction="#showDataModeDialog"/>
+                        <MenuItem text="Kiểm tra dung lượng" onAction="#showStorageUsageDialog"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="Thoát" onAction="#exitApplication"/>
+                    </items>
+                </Menu>
+                <Menu text="Quản lý">
+                    <items>
+                        <MenuItem text="Quản lý Menu" onAction="#showMenuManagementScreen"/>
+                        <MenuItem text="Cấu hình máy in" onAction="#showPrinterConfigScreen"/>
+                    </items>
+                </Menu>
+                <Menu text="Trợ giúp">
+                    <items>
+                        <MenuItem text="Hướng dẫn sử dụng" onAction="#showUserGuideScreen"/>
+                        <MenuItem text="Về ứng dụng" onAction="#showAboutDialog"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    
+    <!-- Center: Content Area (will be replaced dynamically) -->
+    <center>
+        <StackPane fx:id="contentPane" style="-fx-background-color: white;">
+            <!-- Default content will be loaded here -->
+        </StackPane>
+    </center>
+</BorderPane>
+

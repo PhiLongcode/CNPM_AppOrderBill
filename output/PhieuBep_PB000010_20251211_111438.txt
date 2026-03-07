@@ -1,0 +1,21 @@
+
+
+Mã phiếu bếp: PB000010
+Phòng bàn: 1
+Loại phiếu: Phiếu bếp
+Thời gian: 11/12/2025 11:14:23
+
+════════════════════════════════
+
+Tên món                Số lượng
+────────────────────────────────
+Bò nhúng giấm                 1
+
+Bò tơ bóp trái Vả             1
+
+Bò tơ cháy Tiêu xanh          1
+
+Bò nhúng mắm ruốc             1
+
+════════════════════════════════
+Tổng số món: 4

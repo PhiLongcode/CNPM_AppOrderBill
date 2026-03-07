@@ -1,0 +1,161 @@
+/* Menu Item Dialog Styles */
+
+.menu-item-dialog {
+  -fx-background-color: #f5f5f5;
+}
+
+.main-scroll {
+  -fx-background-color: transparent;
+  -fx-background: transparent;
+}
+
+.main-scroll > .viewport {
+  -fx-background-color: transparent;
+}
+
+.main-content {
+  -fx-background-color: #f5f5f5;
+}
+
+/* Section Cards */
+.section-card {
+  -fx-background-color: white;
+  -fx-background-radius: 8;
+  -fx-border-color: #e0e0e0;
+  -fx-border-radius: 8;
+  -fx-padding: 14;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 4, 0, 0, 1);
+}
+
+.section-title {
+  -fx-font-weight: bold;
+  -fx-font-size: 14px;
+  -fx-text-fill: #333;
+}
+
+.field-label {
+  -fx-font-size: 13px;
+  -fx-text-fill: #333;
+  -fx-font-weight: normal;
+}
+
+/* Unit Header */
+.unit-header {
+  -fx-background-color: #e8e8e8;
+  -fx-background-radius: 4;
+}
+
+.header-label {
+  -fx-font-weight: bold;
+  -fx-font-size: 11px;
+  -fx-text-fill: #444;
+}
+
+/* Units scroll pane */
+.units-scroll {
+  -fx-background-color: transparent;
+  -fx-background: transparent;
+}
+
+.units-scroll > .viewport {
+  -fx-background-color: transparent;
+}
+
+/* Unit Row */
+.unit-row {
+  -fx-background-color: #fafafa;
+  -fx-background-radius: 4;
+  -fx-padding: 4;
+}
+
+.unit-row:hover {
+  -fx-background-color: #f0f0f0;
+}
+
+/* Buttons */
+.add-unit-btn {
+  -fx-background-color: #4caf50;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+  -fx-cursor: hand;
+  -fx-background-radius: 4;
+  -fx-padding: 8 16;
+}
+
+.add-unit-btn:hover {
+  -fx-background-color: #45a049;
+}
+
+.remove-unit-btn {
+  -fx-background-color: #ff5252;
+  -fx-text-fill: white;
+  -fx-cursor: hand;
+  -fx-background-radius: 12;
+  -fx-min-width: 26;
+  -fx-min-height: 26;
+  -fx-max-width: 26;
+  -fx-max-height: 26;
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+}
+
+.remove-unit-btn:hover {
+  -fx-background-color: #e04848;
+}
+
+/* Hint label */
+.hint-label {
+  -fx-text-fill: #666;
+  -fx-font-size: 11px;
+  -fx-font-style: italic;
+}
+
+/* Text fields */
+.text-field {
+  -fx-background-radius: 4;
+  -fx-border-radius: 4;
+  -fx-border-color: #ccc;
+  -fx-border-width: 1;
+  -fx-padding: 6 8;
+}
+
+.text-field:focused {
+  -fx-border-color: #2196f3;
+  -fx-effect: dropshadow(gaussian, rgba(33, 150, 243, 0.3), 4, 0, 0, 0);
+}
+
+/* Check box */
+.check-box {
+  -fx-font-size: 13px;
+}
+
+.check-box > .box {
+  -fx-background-radius: 3;
+}
+
+.check-box:selected > .box {
+  -fx-background-color: #4caf50;
+}
+
+/* Dialog buttons */
+.button-bar > .container > .button {
+  -fx-padding: 8 20;
+  -fx-background-radius: 4;
+}
+
+.button-bar > .container > .default-button {
+  -fx-background-color: #2196f3;
+  -fx-text-fill: white;
+}
+
+.button-bar > .container > .default-button:hover {
+  -fx-background-color: #1976d2;
+}
+
+.button-bar > .container > .cancel-button {
+  -fx-background-color: #e0e0e0;
+}
+
+.button-bar > .container > .cancel-button:hover {
+  -fx-background-color: #bdbdbd;
+}

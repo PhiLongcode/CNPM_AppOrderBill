@@ -1,0 +1,427 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<ScrollPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.guide.UserGuideController"
+            fitToWidth="true"
+            style="-fx-background-color: white;">
+    <content>
+        <VBox spacing="20" style="-fx-padding: 30;">
+            <!-- Header -->
+            <VBox spacing="10">
+                <Label text="📖 HƯỚNG DẪN SỬ DỤNG" 
+                       style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <Label text="Hệ thống Quản lý Order Bill - Phiên bản 1.0"
+                       style="-fx-font-size: 14px; -fx-text-fill: #666;"/>
+                <Separator/>
+            </VBox>
+
+            <!-- Mục lục -->
+            <VBox spacing="10">
+                <Label text="MỤC LỤC" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="5" style="-fx-padding: 10 0 0 20;">
+                    <Hyperlink text="1. Tạo và quản lý Order" onAction="#scrollToSection1"/>
+                    <Hyperlink text="2. Thêm món vào Order" onAction="#scrollToSection2"/>
+                    <Hyperlink text="3. Quản lý món trong Order" onAction="#scrollToSection3"/>
+                    <Hyperlink text="4. Thanh toán Order" onAction="#scrollToSection4"/>
+                    <Hyperlink text="5. In phiếu bếp và hóa đơn" onAction="#scrollToSection5"/>
+                    <Hyperlink text="6. Quản lý Menu" onAction="#scrollToSection6"/>
+                    <Hyperlink text="7. Quản lý Bàn" onAction="#scrollToSection7"/>
+                    <Hyperlink text="8. Quản lý Tồn kho" onAction="#scrollToSection8"/>
+                    <Hyperlink text="9. Xem Thống kê" onAction="#scrollToSection9"/>
+                    <Hyperlink text="10. Phím tắt" onAction="#scrollToSection10"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 1: Tạo và quản lý Order -->
+            <VBox fx:id="section1" spacing="10">
+                <Label text="1. TẠO VÀ QUẢN LÝ ORDER" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="1.1. Tạo Order mới:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Click vào một bàn trống ở phần 'Danh sách bàn' phía dưới màn hình" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Order sẽ được tạo tự động, bàn chuyển sang màu xanh (đang dùng)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Hiển thị 'Bàn: [số bàn]' và trạng thái '(Đang phục vụ)'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="1.2. Mở Order đang có:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click vào bàn đang có order (màu xanh)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Danh sách món trong order sẽ được hiển thị" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 2: Thêm món -->
+            <VBox fx:id="section2" spacing="10">
+                <Label text="2. THÊM MÓN VÀO ORDER" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="2.1. Thêm món từ Menu:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Chọn bàn trước (nếu chưa chọn)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập số lượng muốn thêm vào ô 'Số lượng' (mặc định: 1)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click vào card món trong danh sách menu bên trái" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Món sẽ được thêm vào order với số lượng đã nhập" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nếu món có quản lý tồn kho: tồn kho sẽ được trừ ngay lập tức" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #d32f2f;"/>
+                    
+                    <Label text="2.2. Thêm món phát sinh (Custom Item):" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Nhập tên món vào ô 'Tên món' (ví dụ: 'Nước suối')" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập giá vào ô 'Giá'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút 'Thêm'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="2.3. Tìm kiếm món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Nhập tên món vào ô tìm kiếm (hoặc nhấn F3)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Kết quả tìm kiếm hiển thị realtime, không phân biệt dấu" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="2.4. Lọc món theo danh mục:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click vào tab danh mục (ví dụ: 'Bò Tơ', 'Đồ Uống')" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Chỉ hiển thị món thuộc danh mục đó" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'Tất cả' để hiển thị lại tất cả món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 3: Quản lý món trong Order -->
+            <VBox fx:id="section3" spacing="10">
+                <Label text="3. QUẢN LÝ MÓN TRONG ORDER" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="3.1. Tăng/Giảm số lượng:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Click vào row món trong bảng order" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút '+' để tăng số lượng" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút '-' để giảm số lượng (tối thiểu = 1)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Hoặc click vào cột 'SL' và nhập số lượng mới, nhấn Enter" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="3.2. Hủy món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click vào row món cần hủy" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút 'Hủy món' phía trên bảng" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Món sẽ bị gạch ngang, không tính vào tổng tiền" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Tồn kho được hoàn lại (nếu có)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   • Món đã in phiếu bếp không thể hủy" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #f57c00;"/>
+                    
+                    <Label text="3.3. Xóa món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click vào row món cần xóa (chỉ cho món chưa in phiếu bếp)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút 'Xóa món' phía trên bảng" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Món sẽ bị xóa hoàn toàn khỏi order" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Tồn kho được hoàn lại (nếu có)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   ⚠️ Lưu ý: Món đã in phiếu bếp không thể xóa, chỉ có thể hủy" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #d32f2f; -fx-font-weight: bold;"/>
+                    
+                    <Label text="3.4. Thêm ghi chú cho món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click vào cột 'Ghi chú' của món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập ghi chú (ví dụ: 'Không cay', 'Ít muối')" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhấn Enter để lưu" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Ghi chú sẽ được in trên phiếu bếp" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 4: Thanh toán -->
+            <VBox fx:id="section4" spacing="10">
+                <Label text="4. THANH TOÁN ORDER" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="4.1. Áp dụng giảm giá:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Nhập số tiền giảm giá vào ô 'Giảm giá' trong phần Order Summary" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Thành tiền sẽ được tính lại tự động" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="4.2. Thanh toán:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click nút '💰 Thanh toán (F9)' hoặc nhấn phím F9" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Dialog thanh toán hiển thị:" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="     - Tổng tiền hàng" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    <Label text="     - Giảm giá (nếu có)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    <Label text="     - Thành tiền" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    <Label text="   • Chọn phương thức thanh toán: Tiền mặt / Chuyển khoản" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập số tiền khách đưa (nếu tiền mặt)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'Thanh toán'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Hóa đơn sẽ được in tự động" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   • Bàn chuyển sang trạng thái 'trống'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 5: In phiếu bếp và hóa đơn -->
+            <VBox fx:id="section5" spacing="10">
+                <Label text="5. IN PHIẾU BẾP VÀ HÓA ĐƠN" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="5.1. In phiếu bếp cho tất cả món:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Click nút '🖨️ In phiếu bếp'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Tất cả món chưa in sẽ được in" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Món được đánh dấu 'Đã in' (có dấu ✓)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="5.2. In món đã chọn:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Check vào checkbox của các món cần in" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút '📋 In món đã chọn'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Chỉ các món đã chọn được in" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="5.3. In lại phiếu bếp:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click nút '🔄 In lại PB'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Phiếu bếp được in lại với tất cả món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="5.4. In lại hóa đơn:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click nút ' In lại HĐ'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Chọn hóa đơn từ danh sách (hôm nay)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'In lại' hoặc double-click vào hóa đơn" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 6: Quản lý Menu -->
+            <VBox fx:id="section6" spacing="10">
+                <Label text="6. QUẢN LÝ MENU" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="6.1. Thêm món mới:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Vào menu 'Quản lý' > 'Quản lý Menu'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút 'Thêm món mới'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập đầy đủ thông tin: Tên, Danh mục, Giá, Đơn vị..." 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'Lưu'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="6.2. Sửa món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Tìm món cần sửa (có thể dùng tìm kiếm)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click vào món để mở dialog sửa" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Thay đổi thông tin cần thiết" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'Lưu'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="6.3. Xóa món:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Mở dialog sửa món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút 'Xóa'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Xác nhận xóa" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Món sẽ không hiển thị trong menu khi order (có thể khôi phục)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 7: Quản lý Bàn -->
+            <VBox fx:id="section7" spacing="10">
+                <Label text="7. QUẢN LÝ BÀN" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="7.1. Thêm bàn mới:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Scroll xuống phần 'Danh sách bàn'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click nút '+ Thêm bàn'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập số bàn (ví dụ: '21')" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Bàn được thêm và sắp xếp theo thứ tự số" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="7.2. Xóa bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Right-click vào bàn trống" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Chọn 'Xóa bàn'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Xác nhận xóa" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="7.3. Lọc bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Click tab 'Tất cả' để xem tất cả bàn" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click tab 'Đang dùng' để xem bàn có order" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click tab 'Trống' để xem bàn trống" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 8: Quản lý Tồn kho -->
+            <VBox fx:id="section8" spacing="10">
+                <Label text="8. QUẢN LÝ TỒN KHO" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="8.1. Thiết lập quản lý tồn kho:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Vào 'Quản lý Menu' > Mở dialog sửa món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Check 'Quản lý tồn kho'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Nhập 'Tồn kho hiện tại' và 'Tồn tối thiểu'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'Lưu'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    
+                    <Label text="8.2. Cảnh báo tồn kho:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • 📦 Kho: X - Tồn kho bình thường (màu xanh)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • ⚠ Kho: X (Sắp hết) - Tồn kho ≤ mức tối thiểu (màu cam)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #f57c00;"/>
+                    <Label text="   • ⛔ Hết hàng (Kho: 0) - Tồn kho = 0 (màu đỏ)" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #d32f2f;"/>
+                    
+                    <Label text="8.3. Tồn kho realtime:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Khi thêm món vào order: Tồn kho được trừ ngay lập tức" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   • Khi hủy/xóa món: Tồn kho được hoàn lại ngay" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   • Card menu cập nhật tồn kho realtime" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #388e3c;"/>
+                    <Label text="   • Nếu không đủ tồn kho: Không cho phép thêm món" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #d32f2f;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 9: Xem Thống kê -->
+            <VBox fx:id="section9" spacing="10">
+                <Label text="9. XEM THỐNG KÊ" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <Label text="9.1. Xem thống kê:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    <Label text="   • Vào menu 'Hệ thống' > 'Thống kê'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Chọn tab: 'Hôm nay' / 'Tuần này' / 'Tháng này' / 'Tùy chọn'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Xem thông tin:" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="     - Tổng doanh thu" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    <Label text="     - Số lượng order" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    <Label text="     - Số lượng món đã bán" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-padding: 0 0 0 20;"/>
+                    
+                    <Label text="9.2. Xem lịch sử thanh toán:" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+                    <Label text="   • Scroll xuống phần 'Lịch sử thanh toán'" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Xem danh sách hóa đơn đã thanh toán" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                    <Label text="   • Click 'In lại' để in lại hóa đơn" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true;"/>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Section 10: Phím tắt -->
+            <VBox fx:id="section10" spacing="10">
+                <Label text="10. PHÍM TẮT" 
+                       style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1e3a5f;"/>
+                <VBox spacing="8" style="-fx-padding: 10 0 0 20;">
+                    <HBox spacing="20">
+                        <VBox spacing="5">
+                            <Label text="F3" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                            <Label text="F9" style="-fx-font-size: 13px; -fx-font-weight: bold;"/>
+                        </VBox>
+                        <VBox spacing="5">
+                            <Label text="Tìm kiếm món" style="-fx-font-size: 13px;"/>
+                            <Label text="Thanh toán order" style="-fx-font-size: 13px;"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </VBox>
+
+            <Separator/>
+
+            <!-- Lưu ý quan trọng -->
+            <VBox spacing="10" style="-fx-background-color: #fff3cd; -fx-padding: 15; -fx-border-color: #ffc107; -fx-border-width: 2; -fx-border-radius: 5;">
+                <Label text="⚠️ LƯU Ý QUAN TRỌNG" 
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #856404;"/>
+                <VBox spacing="5" style="-fx-padding: 10 0 0 0;">
+                    <Label text="• Tồn kho được trừ NGAY KHI THÊM MÓN vào order, không phải khi thanh toán" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #856404;"/>
+                    <Label text="• Món đã in phiếu bếp không thể XÓA, chỉ có thể HỦY" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #856404;"/>
+                    <Label text="• Khi hủy/xóa món, tồn kho được hoàn lại ngay lập tức" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #856404;"/>
+                    <Label text="• Hóa đơn được in tự động sau khi thanh toán" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #856404;"/>
+                    <Label text="• Cần cấu hình máy in trước khi sử dụng chức năng in" 
+                           style="-fx-font-size: 13px; -fx-wrap-text: true; -fx-text-fill: #856404;"/>
+                </VBox>
+            </VBox>
+
+            <!-- Footer -->
+            <VBox spacing="5" style="-fx-padding: 20 0 0 0; -fx-alignment: CENTER;">
+                <Label text="Hệ thống Quản lý Order Bill - Phiên bản 1.0"
+                       style="-fx-font-size: 12px; -fx-text-fill: #999;"/>
+                <Label text="© 2025 - Tất cả quyền được bảo lưu" 
+                       style="-fx-font-size: 11px; -fx-text-fill: #999;"/>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>
+
