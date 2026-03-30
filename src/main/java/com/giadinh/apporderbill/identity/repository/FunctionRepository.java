@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public interface FunctionRepository {
     Optional<Function> findById(int id);
+    Optional<Function> findByName(String name); // Thêm phương thức này
     List<Function> findAll();
     List<Function> findByModuleId(int moduleId);
     void save(Function function);
