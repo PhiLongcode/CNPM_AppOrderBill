@@ -2,6 +2,7 @@ package com.giadinh.apporderbill.orders.usecase;
 
 import com.giadinh.apporderbill.billing.model.Payment;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
+import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.orders.model.Order;
 import com.giadinh.apporderbill.orders.model.OrderStatus;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
@@ -14,13 +15,16 @@ public class CheckoutOrderUseCase {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final TableRepository tableRepository;
+    private final CustomerUseCases customerUseCases;
 
     public CheckoutOrderUseCase(OrderRepository orderRepository,
             PaymentRepository paymentRepository,
-            TableRepository tableRepository) {
+            TableRepository tableRepository,
+            CustomerUseCases customerUseCases) {
         this.orderRepository = orderRepository;
         this.paymentRepository = paymentRepository;
         this.tableRepository = tableRepository;
+        this.customerUseCases = customerUseCases;
     }
 
     public CheckoutOrderOutput execute(CheckoutOrderInput input) {
@@ -65,6 +69,12 @@ public class CheckoutOrderUseCase {
                     input.getDiscountPercent(),
                     input.getCashier() == null ? "SYSTEM" : input.getCashier());
             payment = paymentRepository.save(payment);
+
+            // Auto loyalty points: 1 point per 10,000 VND paid.
+            if (customerUseCases != null) {
+                int pointsEarned = (int) (finalAmount / 10_000L);
+                customerUseCases.addPointsByPhone(input.getCustomerPhone(), pointsEarned);
+            }
 
             order.setStatus(OrderStatus.COMPLETED);
             orderRepository.save(order);

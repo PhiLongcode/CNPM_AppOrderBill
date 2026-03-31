@@ -17,6 +17,7 @@ import com.giadinh.apporderbill.billing.usecase.PrintReceiptUseCase;
 import com.giadinh.apporderbill.kitchen.usecase.PrintKitchenTicketUseCase;
 import com.giadinh.apporderbill.kitchen.usecase.PrintSelectedItemsUseCase;
 import com.giadinh.apporderbill.menu.usecase.*;
+import com.giadinh.apporderbill.menu.service.ExcelService;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.printer.usecase.UpdatePrintTemplateUseCase;
 import com.giadinh.apporderbill.printer.usecase.UpdatePrinterConfigUseCase;
@@ -24,7 +25,6 @@ import com.giadinh.apporderbill.reporting.usecase.GetDailyRevenueUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetMonthlyRevenueUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetRevenueByDateRangeUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetWeeklyRevenueUseCase;
-import com.giadinh.apporderbill.shared.util.*;
 import com.giadinh.apporderbill.shared.service.SimplePrinterService;
 import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import com.giadinh.apporderbill.shared.util.DataModeConfig;
@@ -32,14 +32,29 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.sql.Connection;
 
 public class OrderPosApplication extends Application {
         @Override
         public void start(Stage stage) {
                 try {
+                        FXMLLoader loginLoader = new FXMLLoader(
+                                        OrderPosApplication.class.getResource("javafx/login/login.fxml"));
+                        Scene loginScene = new Scene(loginLoader.load(), 420, 240);
+                        Stage loginStage = new Stage();
+                        loginStage.setTitle("Đăng nhập");
+                        loginStage.initModality(Modality.APPLICATION_MODAL);
+                        loginStage.setScene(loginScene);
+                        loginStage.showAndWait();
+                        com.giadinh.apporderbill.javafx.login.LoginController loginController = loginLoader.getController();
+                        if (loginController == null || loginController.getLoginOutput() == null
+                                        || !loginController.getLoginOutput().isSuccess()) {
+                                Platform.exit();
+                                return;
+                        }
+
                         // Đọc chế độ dữ liệu từ file config (REAL/DEMO), mặc định là REAL
                         DataModeConfig dataModeConfig = DataModeConfig.load();
                         boolean useDemoDatabase = dataModeConfig.isDemo();
@@ -71,6 +86,43 @@ public class OrderPosApplication extends Application {
                                         connectionProvider);
                         com.giadinh.apporderbill.table.repository.TableRepository tableRepository = new com.giadinh.apporderbill.table.repository.SqliteTableRepository(
                                         connectionProvider);
+                        com.giadinh.apporderbill.customer.repository.CustomerRepository customerRepository = new com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository(
+                                        connectionProvider);
+                        com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases = new com.giadinh.apporderbill.customer.usecase.CustomerUseCases(
+                                        customerRepository);
+
+                        Connection identityConnection = connectionProvider.getConnection();
+                        com.giadinh.apporderbill.identity.repository.ModuleRepository moduleRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.ModuleRepositoryImpl(
+                                        identityConnection);
+                        com.giadinh.apporderbill.identity.repository.FunctionRepository functionRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.FunctionRepositoryImpl(
+                                        identityConnection);
+                        com.giadinh.apporderbill.identity.repository.RoleGroupRepository roleGroupRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.RoleGroupRepositoryImpl(
+                                        identityConnection);
+                        com.giadinh.apporderbill.identity.repository.PermissionAssignmentRepository permissionAssignmentRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.PermissionAssignmentRepositoryImpl(
+                                        identityConnection);
+                        com.giadinh.apporderbill.identity.repository.UserRepository userRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.UserRepositoryImpl(
+                                        identityConnection);
+                        com.giadinh.apporderbill.identity.usecase.LoginUseCase loginUseCase = new com.giadinh.apporderbill.identity.usecase.LoginUseCase(
+                                        userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
+                        com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase checkAccessUseCase = new com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase(
+                                        userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
+                        com.giadinh.apporderbill.identity.usecase.ManageUserUseCase manageUserUseCase = new com.giadinh.apporderbill.identity.usecase.ManageUserUseCase(
+                                        userRepository, roleGroupRepository);
+                        com.giadinh.apporderbill.identity.usecase.ManageRoleGroupUseCase manageRoleGroupUseCase = new com.giadinh.apporderbill.identity.usecase.ManageRoleGroupUseCase(
+                                        roleGroupRepository, permissionAssignmentRepository, functionRepository);
+                        com.giadinh.apporderbill.identity.usecase.ManagePermissionAssignmentUseCase managePermissionAssignmentUseCase = new com.giadinh.apporderbill.identity.usecase.ManagePermissionAssignmentUseCase(
+                                        permissionAssignmentRepository, roleGroupRepository, functionRepository);
+                        com.giadinh.apporderbill.identity.IdentityComponent identityComponent = new com.giadinh.apporderbill.identity.IdentityComponentImpl(
+                                        moduleRepository,
+                                        functionRepository,
+                                        roleGroupRepository,
+                                        permissionAssignmentRepository,
+                                        userRepository,
+                                        loginUseCase,
+                                        checkAccessUseCase,
+                                        manageUserUseCase,
+                                        manageRoleGroupUseCase,
+                                        managePermissionAssignmentUseCase);
 
                         // Khởi tạo 20 bàn mặc định vào database nếu chưa có
                         connectionProvider.initializeTables(tableRepository);
@@ -110,7 +162,8 @@ public class OrderPosApplication extends Application {
                         CheckoutOrderUseCase checkoutOrderUseCase = new CheckoutOrderUseCase(
                                         orderRepository,
                                         paymentRepository,
-                                        tableRepository);
+                                        tableRepository,
+                                        customerUseCases);
                         PrintReceiptUseCase printReceiptUseCase = new PrintReceiptUseCase(paymentRepository,
                                         printerService);
 
@@ -121,12 +174,12 @@ public class OrderPosApplication extends Application {
                         UpdateMenuItemUseCase updateMenuItemUseCase = new UpdateMenuItemUseCase(menuItemRepository);
                         DeleteMenuItemUseCase deleteMenuItemUseCase = new DeleteMenuItemUseCase(menuItemRepository);
                         GetAllMenuItemsUseCase getAllMenuItemsUseCase = new GetAllMenuItemsUseCase(menuItemRepository);
+                        ExcelService excelService = new ExcelService();
                         ImportMenuFromExcelUseCase importMenuFromExcelUseCase = new ImportMenuFromExcelUseCase(
                                         menuItemRepository,
-                                        null); // TODO: ExcelService
+                                        excelService);
                         ExportMenuToExcelUseCase exportMenuToExcelUseCase = new ExportMenuToExcelUseCase(
-                                        menuItemRepository, null); // TODO:
-                                                                   // ExcelService
+                                        menuItemRepository, excelService);
 
                         // Initialize Use Cases - Item Management
                         UpdateOrderItemQuantityUseCase updateOrderItemQuantityUseCase = new UpdateOrderItemQuantityUseCase(
@@ -191,6 +244,13 @@ public class OrderPosApplication extends Application {
                                         getAllMenuItemsUseCase,
                                         importMenuFromExcelUseCase,
                                         exportMenuToExcelUseCase);
+                        mainController.setCustomerUseCases(customerUseCases);
+                        mainController.setIdentityComponent(identityComponent);
+                        mainController.setCurrentUser(
+                                        loginController.getLoginOutput().getUsername(),
+                                        loginController.canOperate("Manage Menu Items"),
+                                        loginController.canOperate("Manage Users"),
+                                        loginController.canOperate("Manage Permissions"));
 
                         // Inject printer use cases into MainLayoutController
                         mainController.setPrinterUseCases(
@@ -258,11 +318,11 @@ public class OrderPosApplication extends Application {
                                         com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase = new com.giadinh.apporderbill.table.usecase.AddTableUseCase(
                                                         tableRepository);
                                         com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase = new com.giadinh.apporderbill.table.usecase.DeleteTableUseCase(
-                                                        tableRepository, orderRepository);
+                                                        tableRepository);
                                         com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase = new com.giadinh.apporderbill.table.usecase.ClearTableUseCase(
-                                                        orderRepository);
+                                                        tableRepository);
                                         com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase = new com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase(
-                                                        tableRepository, orderRepository);
+                                                        tableRepository);
 
                                         // Inject table use cases vào controller
                                         controller.setAddTableUseCase(addTableUseCase);

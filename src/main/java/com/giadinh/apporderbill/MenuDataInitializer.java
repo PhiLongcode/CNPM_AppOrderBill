@@ -367,12 +367,15 @@ public class MenuDataInitializer {
      * Khởi tạo dữ liệu menu một cách an toàn (chỉ insert nếu chưa tồn tại).
      */
     public void initializeMenuDataSafe() {
-        try (Connection conn = connectionProvider.getConnection();
-                Statement stmt = conn.createStatement()) {
-
-            // Kiểm tra xem đã có dữ liệu chưa
-            var rs = stmt.executeQuery("SELECT COUNT(*) as count FROM menu_items");
-            int count = rs.getInt("count");
+        try {
+            int count;
+            // IMPORTANT: close the checking connection before doing inserts
+            // to avoid SQLITE_BUSY lock between 2 concurrent connections.
+            try (Connection conn = connectionProvider.getConnection();
+                    Statement stmt = conn.createStatement()) {
+                var rs = stmt.executeQuery("SELECT COUNT(*) as count FROM menu_items");
+                count = rs.getInt("count");
+            }
 
             if (count > 0) {
                 System.out.println("Đã có " + count + " món trong database. Bỏ qua khởi tạo.");
@@ -380,14 +383,15 @@ public class MenuDataInitializer {
                 return;
             }
 
-            // Nếu chưa có dữ liệu thì mới khởi tạo
             System.out.println("Database trống, bắt đầu khởi tạo menu items...");
             initializeMenuData();
 
-            // Verify after initialization
-            rs = stmt.executeQuery("SELECT COUNT(*) as count FROM menu_items");
-            count = rs.getInt("count");
-            System.out.println("Đã load " + count + " món từ database");
+            try (Connection verifyConn = connectionProvider.getConnection();
+                    Statement verifyStmt = verifyConn.createStatement()) {
+                var rs = verifyStmt.executeQuery("SELECT COUNT(*) as count FROM menu_items");
+                count = rs.getInt("count");
+                System.out.println("Đã load " + count + " món từ database");
+            }
         } catch (SQLException e) {
             System.err.println("Lỗi khi kiểm tra dữ liệu menu: " + e.getMessage());
             e.printStackTrace();

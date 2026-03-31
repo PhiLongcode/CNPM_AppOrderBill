@@ -149,7 +149,12 @@ public class IdentityDataInitializer implements CommandLineRunner {
     private User createUserIfNotExists(String username, String passwordHash, int roleGroupId) {
         Optional<User> existing = userRepository.findByUsername(username);
         if (existing.isPresent()) {
-            return existing.get();
+            User current = existing.get();
+            // Keep seeded accounts consistent to avoid login mismatch in local environments.
+            current.setPasswordHash(passwordHash);
+            current.setRoleGroupId(roleGroupId);
+            userRepository.save(current);
+            return current;
         } else {
             User user = new User(0, username, passwordHash, roleGroupId);
             userRepository.save(user);

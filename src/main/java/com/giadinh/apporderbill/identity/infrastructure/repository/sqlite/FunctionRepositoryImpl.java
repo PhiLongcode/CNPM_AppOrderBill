@@ -97,28 +97,32 @@ public class FunctionRepositoryImpl implements FunctionRepository {
     public void save(Function function) {
         if (function.getId() == 0) { // New function
             String sql = "INSERT INTO functions (name, moduleId) VALUES (?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, function.getName());
                 pstmt.setInt(2, function.getModuleId());
                 pstmt.executeUpdate();
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        // For simplicity, we are not setting the generated ID back to the object
-                    }
-                }
             } catch (SQLException e) {
                 System.err.println("Error saving new function: " + e.getMessage());
                 e.printStackTrace();
             }
         } else { // Existing function
-            String sql = "UPDATE functions SET name = ?, moduleId = ? WHERE id = ?";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, function.getName());
-                pstmt.setInt(2, function.getModuleId());
-                pstmt.setInt(3, function.getId());
-                pstmt.executeUpdate();
+            String updateSql = "UPDATE functions SET name = ?, moduleId = ? WHERE id = ?";
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                updateStmt.setString(1, function.getName());
+                updateStmt.setInt(2, function.getModuleId());
+                updateStmt.setInt(3, function.getId());
+                int updated = updateStmt.executeUpdate();
+                if (updated == 0) {
+                    String insertSql = "INSERT INTO functions (id, name, moduleId) VALUES (?, ?, ?)";
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, function.getId());
+                        insertStmt.setString(2, function.getName());
+                        insertStmt.setInt(3, function.getModuleId());
+                        insertStmt.executeUpdate();
+                    }
+                }
             } catch (SQLException e) {
-                System.err.println("Error updating function: " + e.getMessage());
+                System.err.println("Error upserting function: " + e.getMessage());
                 e.printStackTrace();
             }
         }

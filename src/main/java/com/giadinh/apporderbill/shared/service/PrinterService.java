@@ -1,6 +1,9 @@
 package com.giadinh.apporderbill.shared.service;
 
 public interface PrinterService {
+    class PrinterException extends Exception {
+        public PrinterException(String message) { super(message); }
+    }
     /**
      * In phiếu bếp.
      * @param content Nội dung phiếu bếp đã được định dạng.
@@ -21,4 +24,8 @@ public interface PrinterService {
      * @return true nếu in thành công, false nếu thất bại.
      */
     boolean printTest(String content);
+
+    default boolean printDraftReceipt(Long orderId, long subtotal, Double discountPercent) throws PrinterException {
+        return printReceipt("DRAFT RECEIPT #" + orderId + " subtotal=" + subtotal + " discount=" + discountPercent);
+    }
 }

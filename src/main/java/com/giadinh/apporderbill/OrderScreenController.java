@@ -793,6 +793,11 @@ public class OrderScreenController implements OrderScreenView {
     }
 
     @Override
+    public String getCustomerPhone() {
+        return checkoutHandler != null ? checkoutHandler.getCustomerPhone() : "";
+    }
+
+    @Override
     public void clearItemInputFields() {
         itemNameField.clear();
         itemPriceField.clear();

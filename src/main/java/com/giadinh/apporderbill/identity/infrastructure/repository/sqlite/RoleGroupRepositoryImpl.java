@@ -80,28 +80,32 @@ public class RoleGroupRepositoryImpl implements RoleGroupRepository {
     public void save(RoleGroup roleGroup) {
         if (roleGroup.getId() == 0) { // New rolegroup
             String sql = "INSERT INTO rolegroups (name, description) VALUES (?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, roleGroup.getName());
                 pstmt.setString(2, roleGroup.getDescription());
                 pstmt.executeUpdate();
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        // For simplicity, not setting generated ID back to object for now
-                    }
-                }
             } catch (SQLException e) {
                 System.err.println("Error saving new rolegroup: " + e.getMessage());
                 e.printStackTrace();
             }
         } else { // Existing rolegroup
-            String sql = "UPDATE rolegroups SET name = ?, description = ? WHERE id = ?";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, roleGroup.getName());
-                pstmt.setString(2, roleGroup.getDescription());
-                pstmt.setInt(3, roleGroup.getId());
-                pstmt.executeUpdate();
+            String updateSql = "UPDATE rolegroups SET name = ?, description = ? WHERE id = ?";
+            try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                updateStmt.setString(1, roleGroup.getName());
+                updateStmt.setString(2, roleGroup.getDescription());
+                updateStmt.setInt(3, roleGroup.getId());
+                int updated = updateStmt.executeUpdate();
+                if (updated == 0) {
+                    String insertSql = "INSERT INTO rolegroups (id, name, description) VALUES (?, ?, ?)";
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+                        insertStmt.setInt(1, roleGroup.getId());
+                        insertStmt.setString(2, roleGroup.getName());
+                        insertStmt.setString(3, roleGroup.getDescription());
+                        insertStmt.executeUpdate();
+                    }
+                }
             } catch (SQLException e) {
-                System.err.println("Error updating rolegroup: " + e.getMessage());
+                System.err.println("Error upserting rolegroup: " + e.getMessage());
                 e.printStackTrace();
             }
         }

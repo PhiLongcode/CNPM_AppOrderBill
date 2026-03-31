@@ -10,4 +10,12 @@ public interface OrderRepository {
     void save(Order order);
     void delete(String orderId);
     List<Order> findAllPendingOrders();
+
+    default Optional<Order> findActiveByTable(String tableId) {
+        return findByTableIdAndStatusPending(tableId);
+    }
+
+    default List<Order> findAllServing() {
+        return findAllPendingOrders();
+    }
 }

@@ -7,19 +7,22 @@ public class CheckoutOrderInput {
     private Long discountAmount;
     private Double discountPercent;
     private String cashier;
+    private String customerPhone;
 
     public CheckoutOrderInput(Long orderId,
             long paidAmount,
             String paymentMethod,
             Long discountAmount,
             Double discountPercent,
-            String cashier) {
+            String cashier,
+            String customerPhone) {
         this.orderId = orderId;
         this.paidAmount = paidAmount;
         this.paymentMethod = paymentMethod;
         this.discountAmount = discountAmount;
         this.discountPercent = discountPercent;
         this.cashier = cashier;
+        this.customerPhone = customerPhone;
     }
 
     public Long getOrderId() {
@@ -44,5 +47,9 @@ public class CheckoutOrderInput {
 
     public String getCashier() {
         return cashier;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
     }
 }

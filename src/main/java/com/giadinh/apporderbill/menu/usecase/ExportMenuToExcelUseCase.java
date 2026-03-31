@@ -1,21 +1,22 @@
 package com.giadinh.apporderbill.menu.usecase;
 
 import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
+import com.giadinh.apporderbill.menu.service.ExcelService;
 
 public class ExportMenuToExcelUseCase {
     private final MenuItemRepository repository;
-    private final Object excelService;
+    private final ExcelService excelService;
 
-    public ExportMenuToExcelUseCase(MenuItemRepository repository, Object excelService) {
+    public ExportMenuToExcelUseCase(MenuItemRepository repository, ExcelService excelService) {
         this.repository = repository;
         this.excelService = excelService;
     }
 
-    public void execute() {
-        int size = repository.findAll().size();
-        if (excelService == null && size >= 0) {
+    public void execute(String filePath) {
+        if (excelService == null) {
             return;
         }
+        excelService.exportMenu(repository.findAll(), filePath);
     }
 }
 

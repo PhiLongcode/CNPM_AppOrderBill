@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill.javafx.menu;
+package com.giadinh.apporderbill.javafx.menu;
 
 import com.giadinh.apporderbill.menu.usecase.dto.MenuItemUnitDto;
 import javafx.fxml.FXML;

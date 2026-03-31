@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill.javafx.order.handlers;
+package com.giadinh.apporderbill.javafx.order.handlers;
 
 import com.giadinh.apporderbill.menu.usecase.GetActiveMenuItemsUseCase;
 import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;

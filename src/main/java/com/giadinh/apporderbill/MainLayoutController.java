@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill;
+package com.giadinh.apporderbill;
 
 import com.giadinh.apporderbill.billing.usecase.GetTodayPaymentsUseCase;
 import com.giadinh.apporderbill.billing.usecase.ReprintReceiptUseCase;
@@ -13,6 +13,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 
 import java.io.IOException;
@@ -32,9 +33,19 @@ public class MainLayoutController {
     private com.giadinh.apporderbill.javafx.menu.MenuManagementPresenter menuManagementPresenter;
     private Parent printerConfigScreen;
     private Parent userGuideScreen;
+    private Parent customerManagementScreen;
+    private Parent adminManagementScreen;
 
     private OrderScreenController orderScreenController;
     private DashboardController dashboardController;
+    @FXML
+    private MenuItem menuManagementMenuItem;
+    @FXML
+    private MenuItem customerManagementMenuItem;
+    @FXML
+    private MenuItem adminManagementMenuItem;
+    private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
+    private com.giadinh.apporderbill.identity.IdentityComponent identityComponent;
 
     // Use cases for injection
     private GetDailyRevenueUseCase getDailyRevenueUseCase;
@@ -161,6 +172,60 @@ public class MainLayoutController {
             contentPane.getChildren().setAll(menuManagementScreen);
         } catch (IOException e) {
             showError("Lỗi khi tải màn hình quản lý menu: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    protected void showCustomerManagementScreen() {
+        try {
+            if (customerManagementScreen == null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/customer/customer-management.fxml"));
+                customerManagementScreen = loader.load();
+                com.giadinh.apporderbill.javafx.customer.CustomerManagementController controller = loader.getController();
+                if (customerUseCases != null) {
+                    controller.setUseCases(customerUseCases);
+                }
+            }
+            contentPane.getChildren().setAll(customerManagementScreen);
+        } catch (IOException e) {
+            showError("Lỗi khi tải màn hình quản lý khách hàng: " + e.getMessage());
+        }
+    }
+
+    public void setCustomerUseCases(com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases) {
+        this.customerUseCases = customerUseCases;
+    }
+
+    public void setIdentityComponent(com.giadinh.apporderbill.identity.IdentityComponent identityComponent) {
+        this.identityComponent = identityComponent;
+    }
+
+    @FXML
+    protected void showAdminManagementScreen() {
+        try {
+            if (adminManagementScreen == null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/admin/admin-management.fxml"));
+                adminManagementScreen = loader.load();
+                com.giadinh.apporderbill.javafx.admin.AdminManagementController controller = loader.getController();
+                if (identityComponent != null) {
+                    controller.setIdentityComponent(identityComponent);
+                }
+            }
+            contentPane.getChildren().setAll(adminManagementScreen);
+        } catch (IOException e) {
+            showError("Lỗi khi tải màn hình quản trị phân quyền: " + e.getMessage());
+        }
+    }
+
+    public void setCurrentUser(String username, boolean canManageMenu, boolean canManageCustomer, boolean canManageAdmin) {
+        if (menuManagementMenuItem != null) {
+            menuManagementMenuItem.setDisable(!canManageMenu);
+        }
+        if (customerManagementMenuItem != null) {
+            customerManagementMenuItem.setDisable(!canManageCustomer);
+        }
+        if (adminManagementMenuItem != null) {
+            adminManagementMenuItem.setDisable(!canManageAdmin);
         }
     }
 

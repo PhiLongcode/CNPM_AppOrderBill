@@ -122,17 +122,12 @@ public class PermissionAssignmentRepositoryImpl implements PermissionAssignmentR
     public void save(PermissionAssignment assignment) {
         if (assignment.getId() == 0) { // New assignment
             String sql = "INSERT INTO permission_assignments (roleGroupId, functionId, canView, canOperate) VALUES (?, ?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setInt(1, assignment.getRoleGroupId());
                 pstmt.setInt(2, assignment.getFunctionId());
                 pstmt.setBoolean(3, assignment.isCanView());
                 pstmt.setBoolean(4, assignment.isCanOperate());
                 pstmt.executeUpdate();
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        // For simplicity, not setting generated ID back to object for now
-                    }
-                }
             } catch (SQLException e) {
                 System.err.println("Error saving new permission assignment: " + e.getMessage());
                 e.printStackTrace();

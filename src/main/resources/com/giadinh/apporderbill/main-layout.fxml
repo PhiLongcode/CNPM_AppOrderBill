@@ -24,7 +24,9 @@
                 </Menu>
                 <Menu text="Quản lý">
                     <items>
-                        <MenuItem text="Quản lý Menu" onAction="#showMenuManagementScreen"/>
+                        <MenuItem fx:id="menuManagementMenuItem" text="Quản lý Menu" onAction="#showMenuManagementScreen"/>
+                        <MenuItem fx:id="customerManagementMenuItem" text="Quản lý khách hàng" onAction="#showCustomerManagementScreen"/>
+                        <MenuItem fx:id="adminManagementMenuItem" text="Quản trị phân quyền" onAction="#showAdminManagementScreen"/>
                         <MenuItem text="Cấu hình máy in" onAction="#showPrinterConfigScreen"/>
                     </items>
                 </Menu>

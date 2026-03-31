@@ -15,7 +15,7 @@ import java.sql.SQLException;
 @Configuration
 public class IdentityConfig {
 
-    private static final String DB_URL = "jdbc:sqlite:AppOrderBill.db"; // Sử dụng một database file chung
+    private static final String DB_URL = "jdbc:sqlite:output/pos.db"; // Dùng chung DB với desktop POS
 
     // Bean để cung cấp kết nối SQLite
     @Bean
@@ -97,11 +97,18 @@ public class IdentityConfig {
                                                FunctionRepository functionRepository,
                                                RoleGroupRepository roleGroupRepository,
                                                PermissionAssignmentRepository permissionAssignmentRepository,
-                                               UserRepository userRepository) {
+                                               UserRepository userRepository,
+                                               LoginUseCase loginUseCase,
+                                               CheckAccessUseCase checkAccessUseCase,
+                                               ManageUserUseCase manageUserUseCase,
+                                               ManageRoleGroupUseCase manageRoleGroupUseCase,
+                                               ManagePermissionAssignmentUseCase managePermissionAssignmentUseCase) {
         // IdentityComponentImpl sẽ nhận các UseCase thông qua constructor injection nếu chúng là @Service
         // Hoặc chúng ta có thể truyền các Repository vào đây và UseCase tự khởi tạo bên trong
         // Nhưng để tuân thủ DI tốt hơn, ta nên inject các UseCase vào ComponentImpl
         // Vì các UseCase đã là @Bean ở trên, ta có thể inject trực tiếp vào IdentityComponentImpl constructor
-        return new IdentityComponentImpl(moduleRepository, functionRepository, roleGroupRepository, permissionAssignmentRepository, userRepository);
+        return new IdentityComponentImpl(moduleRepository, functionRepository, roleGroupRepository,
+                permissionAssignmentRepository, userRepository, loginUseCase, checkAccessUseCase, manageUserUseCase,
+                manageRoleGroupUseCase, managePermissionAssignmentUseCase);
     }
 }

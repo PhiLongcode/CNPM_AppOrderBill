@@ -43,7 +43,7 @@ public class ReportingController {
             @RequestParam String start, @RequestParam String end) {
         LocalDate startDate = LocalDate.parse(start);
         LocalDate endDate = LocalDate.parse(end);
-        GetRevenueByDateRangeInput input = new GetRevenueByDateRangeInput(startDate, endDate);
+        GetRevenueByDateRangeInput input = new GetRevenueByDateRangeInput(startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
         return ResponseEntity.ok(reportingComponent.getRevenueByDateRange(input));
     }
 }

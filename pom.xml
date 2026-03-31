@@ -86,7 +86,7 @@
                 </descriptorRefs>
                 <archive>
                     <manifest>
-                        <mainClass>com.giadinh.apporderbill.AppOrder</mainClass>
+                        <mainClass>com.giadinh.apporderbill.OrderPosApplication</mainClass>
                     </manifest>
                 </archive>
             </configuration>
@@ -106,10 +106,10 @@
                 <version>0.0.8</version>
                 <executions>
                     <execution>
-                        <!-- Default configuration for running with: mvn clean javafx:run -->
+                        <!-- Run desktop JavaFX app with: mvn javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>com.giadinh.apporderbill/com.giadinh.apporderbill.HelloApplication</mainClass>
+                            <mainClass>com.giadinh.apporderbill.OrderPosApplication</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
@@ -119,6 +119,13 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.giadinh.apporderbill.AppOrderApiApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

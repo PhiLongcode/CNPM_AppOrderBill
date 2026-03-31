@@ -95,16 +95,11 @@ public class UserRepositoryImpl implements UserRepository {
     public void save(User user) {
         if (user.getId() == 0) { // New user
             String sql = "INSERT INTO users (username, passwordHash, roleGroupId) VALUES (?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, user.getUsername());
                 pstmt.setString(2, user.getPasswordHash());
                 pstmt.setInt(3, user.getRoleGroupId());
                 pstmt.executeUpdate();
-                try (ResultSet rs = pstmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        // For simplicity, not setting generated ID back to object for now
-                    }
-                }
             } catch (SQLException e) {
                 System.err.println("Error saving new user: " + e.getMessage());
                 e.printStackTrace();

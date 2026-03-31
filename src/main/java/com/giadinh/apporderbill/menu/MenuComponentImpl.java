@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.menu;
 
 import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
+import com.giadinh.apporderbill.menu.service.ExcelService;
 import com.giadinh.apporderbill.menu.usecase.CreateMenuItemUseCase;
 import com.giadinh.apporderbill.menu.usecase.DeleteMenuItemUseCase;
 import com.giadinh.apporderbill.menu.usecase.GetActiveMenuItemsUseCase;
@@ -24,7 +25,7 @@ public class MenuComponentImpl implements MenuComponent {
     private final GetActiveMenuItemsUseCase getActiveUseCase;
     private final ImportMenuFromExcelUseCase importUseCase;
 
-    public MenuComponentImpl(MenuItemRepository menuItemRepository, Object excelService) {
+    public MenuComponentImpl(MenuItemRepository menuItemRepository, ExcelService excelService) {
         this.createUseCase = new CreateMenuItemUseCase(menuItemRepository);
         this.updateUseCase = new UpdateMenuItemUseCase(menuItemRepository);
         this.deleteUseCase = new DeleteMenuItemUseCase(menuItemRepository);

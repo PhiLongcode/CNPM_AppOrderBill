@@ -32,6 +32,7 @@ import com.giadinh.apporderbill.billing.BillingComponent;
 import com.giadinh.apporderbill.billing.BillingComponentImpl;
 import com.giadinh.apporderbill.menu.MenuComponent;
 import com.giadinh.apporderbill.menu.MenuComponentImpl;
+import com.giadinh.apporderbill.menu.service.ExcelService;
 import com.giadinh.apporderbill.reporting.ReportingComponent;
 import com.giadinh.apporderbill.reporting.ReportingComponentImpl;
 import com.giadinh.apporderbill.printer.PrinterComponent;
@@ -129,9 +130,7 @@ public class OrderApiConfig {
 
     @Bean
     public MenuComponent menuComponent(MenuItemRepository menuItemRepository) {
-        // ExcelService mapping as null since it's not fully implemented yet in Desktop
-        // as well
-        return new MenuComponentImpl(menuItemRepository, null);
+        return new MenuComponentImpl(menuItemRepository, new ExcelService());
     }
 
     @Bean

@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill.javafx.order;
+package com.giadinh.apporderbill.javafx.order;
 
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.billing.usecase.GetTodayPaymentsUseCase;
@@ -398,7 +398,8 @@ public class OrderScreenPresenter {
                     paymentMethod != null ? paymentMethod : "CASH",
                     discountAmount > 0 ? discountAmount : null,
                     discountPercent,
-                    "THU_NGAN");
+                    "THU_NGAN",
+                    view.getCustomerPhone());
 
             CheckoutOrderOutput output = checkoutOrderUseCase.execute(input);
 
@@ -510,7 +511,7 @@ public class OrderScreenPresenter {
             return null;
         }
         try {
-            return orderRepository.findById(currentOrderId).orElse(null);
+            return orderRepository.findById(String.valueOf(currentOrderId)).orElse(null);
         } catch (Exception e) {
             System.err.println("Lỗi khi lấy order hiện tại: " + e.getMessage());
             return null;

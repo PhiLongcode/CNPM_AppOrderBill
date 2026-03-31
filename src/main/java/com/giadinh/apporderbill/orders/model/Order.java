@@ -38,7 +38,19 @@ public class Order {
         return orderId;
     }
 
+    public Long getId() {
+        try {
+            return Long.parseLong(orderId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public String getTableId() {
+        return tableId;
+    }
+
+    public String getTableNumber() {
         return tableId;
     }
 
