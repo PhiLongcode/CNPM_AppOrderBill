@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill;
+package com.giadinh.apporderbill;
 
 import com.giadinh.apporderbill.billing.usecase.PrintReceiptUseCase;
 import com.giadinh.apporderbill.kitchen.usecase.PrintKitchenTicketUseCase;
@@ -784,14 +784,12 @@ public class OrderScreenController implements OrderScreenView {
 
     @Override
     public String getPaidAmount() {
-        // TODO: Lấy từ UI field khi có
-        return "0";
+        return checkoutHandler != null ? checkoutHandler.getPaidAmount() : "0";
     }
 
     @Override
     public String getPaymentMethod() {
-        // TODO: Lấy từ UI dropdown khi có
-        return "CASH";
+        return checkoutHandler != null ? checkoutHandler.getPaymentMethod() : "CASH";
     }
 
     @Override

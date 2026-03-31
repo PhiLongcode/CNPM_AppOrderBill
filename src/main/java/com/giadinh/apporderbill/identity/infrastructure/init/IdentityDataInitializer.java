@@ -2,7 +2,6 @@ package com.giadinh.apporderbill.identity.infrastructure.init;
 
 import com.giadinh.apporderbill.identity.model.Function;
 import com.giadinh.apporderbill.identity.model.Module;
-import com.giadinh.apporderbill.identity.model.NguoiDung;
 import com.giadinh.apporderbill.identity.model.PermissionAssignment;
 import com.giadinh.apporderbill.identity.model.RoleGroup;
 import com.giadinh.apporderbill.identity.model.User;

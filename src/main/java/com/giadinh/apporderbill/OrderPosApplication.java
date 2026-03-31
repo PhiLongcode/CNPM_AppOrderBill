@@ -1,4 +1,4 @@
-﻿package com.giadinh.apporderbill;
+package com.giadinh.apporderbill;
 
 import com.giadinh.apporderbill.printer.repository.PrinterConfigRepository;
 import com.giadinh.apporderbill.printer.repository.PrintTemplateRepository;
@@ -110,8 +110,7 @@ public class OrderPosApplication extends Application {
                         CheckoutOrderUseCase checkoutOrderUseCase = new CheckoutOrderUseCase(
                                         orderRepository,
                                         paymentRepository,
-                                        menuItemRepository,
-                                        calculateOrderTotalUseCase);
+                                        tableRepository);
                         PrintReceiptUseCase printReceiptUseCase = new PrintReceiptUseCase(paymentRepository,
                                         printerService);
 
