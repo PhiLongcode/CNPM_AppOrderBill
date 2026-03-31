@@ -12,7 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication(scanBasePackages = { "com.giadinh.apporderbill", "com.giadinh.apporderbill.web", "com.giadinh.apporderbill.web.config" })
+@SpringBootApplication(scanBasePackages = { "com.giadinh.apporderbill", "com.giadinh.apporderbill.web", "com.giadinh.apporderbill.web.config", "com.giadinh.apporderbill.identity.config" })
 public class AppOrderApiApplication {
 
     @Value("${printer.usb.name:default_printer}")

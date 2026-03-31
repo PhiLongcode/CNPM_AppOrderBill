@@ -51,19 +51,23 @@ public class IdentityComponentImpl implements IdentityComponent {
                                  FunctionRepository functionRepository,
                                  RoleGroupRepository roleGroupRepository,
                                  PermissionAssignmentRepository permissionAssignmentRepository,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository,
+                                 LoginUseCase loginUseCase,
+                                 CheckAccessUseCase checkAccessUseCase,
+                                 ManageUserUseCase manageUserUseCase,
+                                 ManageRoleGroupUseCase manageRoleGroupUseCase,
+                                 ManagePermissionAssignmentUseCase managePermissionAssignmentUseCase) {
         this.moduleRepository = moduleRepository;
         this.functionRepository = functionRepository;
         this.roleGroupRepository = roleGroupRepository;
         this.permissionAssignmentRepository = permissionAssignmentRepository;
         this.userRepository = userRepository;
 
-        // Initialize Use Cases (This would ideally be done via DI as well)
-        this.loginUseCase = new LoginUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
-        this.checkAccessUseCase = new CheckAccessUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
-        this.manageUserUseCase = new ManageUserUseCase(userRepository, roleGroupRepository);
-        this.manageRoleGroupUseCase = new ManageRoleGroupUseCase(roleGroupRepository, permissionAssignmentRepository, functionRepository);
-        this.managePermissionAssignmentUseCase = new ManagePermissionAssignmentUseCase(permissionAssignmentRepository, roleGroupRepository, functionRepository);
+        this.loginUseCase = loginUseCase;
+        this.checkAccessUseCase = checkAccessUseCase;
+        this.manageUserUseCase = manageUserUseCase;
+        this.manageRoleGroupUseCase = manageRoleGroupUseCase;
+        this.managePermissionAssignmentUseCase = managePermissionAssignmentUseCase;
     }
 
     @Override
