@@ -14,6 +14,6 @@ public interface OrdersComponent {
     RemoveOrderItemOutput removeOrderItem(RemoveOrderItemInput input);
     CalculateOrderTotalOutput calculateOrderTotal(CalculateOrderTotalInput input);
     CheckoutOrderOutput checkoutOrder(CheckoutOrderInput input);
-    CancelOrderOutput cancelOrder(CancelOrderInput input);
+    CancelOrderOutput cancelOrder(CancelOrderInput input );
 }
 

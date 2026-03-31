@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.admin.AdminManagementController">
+    <top>
+        <HBox spacing="10" style="-fx-padding: 10;">
+            <Label text="Quản trị phân quyền (Admin)"/>
+            <Button text="Làm mới" onAction="#onRefreshAll"/>
+        </HBox>
+    </top>
+
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Người dùng">
+                    <BorderPane>
+                        <top>
+                            <HBox spacing="8" style="-fx-padding: 10;">
+                                <Button text="Thêm user" onAction="#onAddUser"/>
+                                <Button text="Sửa user" onAction="#onEditUser"/>
+                                <Button text="Xóa user" onAction="#onDeleteUser"/>
+                            </HBox>
+                        </top>
+                        <center>
+                            <TableView fx:id="usersTable">
+                                <columns>
+                                    <TableColumn fx:id="userIdCol" text="ID" prefWidth="80"/>
+                                    <TableColumn fx:id="usernameCol" text="Username" prefWidth="220"/>
+                                    <TableColumn fx:id="userRoleCol" text="Nhóm quyền" prefWidth="220"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                    </BorderPane>
+                </Tab>
+                <Tab text="Nhóm quyền">
+                    <BorderPane>
+                        <top>
+                            <HBox spacing="8" style="-fx-padding: 10;">
+                                <Button text="Thêm nhóm" onAction="#onAddRole"/>
+                                <Button text="Sửa nhóm" onAction="#onEditRole"/>
+                                <Button text="Xóa nhóm" onAction="#onDeleteRole"/>
+                            </HBox>
+                        </top>
+                        <center>
+                            <TableView fx:id="rolesTable">
+                                <columns>
+                                    <TableColumn fx:id="roleIdCol" text="ID" prefWidth="80"/>
+                                    <TableColumn fx:id="roleNameCol" text="Tên nhóm" prefWidth="220"/>
+                                    <TableColumn fx:id="roleDescCol" text="Mô tả" prefWidth="360"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                    </BorderPane>
+                </Tab>
+                <Tab text="Phân quyền">
+                    <BorderPane>
+                        <top>
+                            <HBox spacing="8" style="-fx-padding: 10;">
+                                <Button text="Thêm phân quyền" onAction="#onAddPermission"/>
+                                <Button text="Sửa phân quyền" onAction="#onEditPermission"/>
+                                <Button text="Xóa phân quyền" onAction="#onDeletePermission"/>
+                            </HBox>
+                        </top>
+                        <center>
+                            <TableView fx:id="permissionsTable">
+                                <columns>
+                                    <TableColumn fx:id="permIdCol" text="ID" prefWidth="80"/>
+                                    <TableColumn fx:id="permRoleCol" text="Nhóm quyền" prefWidth="220"/>
+                                    <TableColumn fx:id="permFunctionCol" text="Chức năng" prefWidth="260"/>
+                                    <TableColumn fx:id="permViewCol" text="Xem" prefWidth="90"/>
+                                    <TableColumn fx:id="permOperateCol" text="Thao tác" prefWidth="90"/>
+                                </columns>
+                            </TableView>
+                        </center>
+                    </BorderPane>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+
+    <padding>
+        <Insets top="8" right="8" bottom="8" left="8"/>
+    </padding>
+</BorderPane>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.customer.CustomerManagementController">
+    <top>
+        <VBox spacing="8" style="-fx-padding: 12; -fx-background-color: #1e3a5f;">
+            <Label text="Quản lý khách hàng" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <HBox spacing="8">
+                <TextField fx:id="searchField" promptText="Tìm theo tên/sđt..." prefWidth="240"/>
+                <Button text="Tìm" onAction="#onSearch"/>
+                <Button text="Làm mới" onAction="#onRefresh"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Thêm" onAction="#onAdd"/>
+                <Button text="Sửa" onAction="#onEdit"/>
+                <Button text="Xóa" onAction="#onDelete"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <TableView fx:id="customerTable">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="80"/>
+                <TableColumn fx:id="nameColumn" text="Tên khách" prefWidth="280"/>
+                <TableColumn fx:id="phoneColumn" text="SĐT" prefWidth="180"/>
+                <TableColumn fx:id="pointsColumn" text="Điểm" prefWidth="120"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>
+
