@@ -10,8 +10,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +25,7 @@ import javafx.scene.text.FontWeight;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -228,7 +233,7 @@ public class MenuItemHandler {
         filteredMenuItems.addAll(allMenuItems.stream()
                 .filter(item -> {
                     boolean matchesCategory = "Tất cả".equals(selectedCategory) ||
-                            item.getCategory().equals(selectedCategory);
+                            Objects.equals(item.getCategory(), selectedCategory);
 
                     boolean matchesSearch = searchText.isEmpty() ||
                             VietnameseTextUtils.containsIgnoreVietnameseAccents(
@@ -272,7 +277,18 @@ public class MenuItemHandler {
         card.setStyle(String.format(
                 "-fx-background-color: %s; -fx-border-color: %s; -fx-border-width: 1; -fx-border-radius: 5; -fx-padding: 6;",
                 bgColor, borderColor));
-        card.setOnMouseClicked(e -> onMenuItemClicked(item));
+        card.setPickOnBounds(true);
+        card.setCursor(Cursor.HAND);
+        card.addEventHandler(MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.getButton() != MouseButton.PRIMARY) {
+                return;
+            }
+            if (isClickOnInnerButton(e.getTarget(), card)) {
+                return;
+            }
+            onMenuItemClicked(item);
+            e.consume();
+        });
 
         // Hiển thị hình ảnh nếu có
         String imageUrl = item.getImageUrl();
@@ -294,6 +310,7 @@ public class MenuItemHandler {
                     imageView.setFitWidth(200);
                     imageView.setFitHeight(100);
                     imageView.setPreserveRatio(true);
+                    imageView.setPickOnBounds(true);
                     imageView.setStyle("-fx-background-radius: 3;");
                     card.getChildren().add(imageView);
                 }
@@ -396,5 +413,19 @@ public class MenuItemHandler {
         if (onMenuItemClickHandler != null) {
             onMenuItemClickHandler.accept(menuItem);
         }
+    }
+
+    private static boolean isClickOnInnerButton(Object target, VBox card) {
+        if (!(target instanceof Node node)) {
+            return false;
+        }
+        Node n = node;
+        while (n != null && n != card) {
+            if (n instanceof javafx.scene.control.Button) {
+                return true;
+            }
+            n = n.getParent();
+        }
+        return false;
     }
 }

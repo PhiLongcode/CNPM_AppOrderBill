@@ -47,6 +47,8 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     private FlowPane tableContainer;
     @FXML
+    private ScrollPane menuItemsScrollPane;
+    @FXML
     private FlowPane menuItemsContainer;
     @FXML
     private HBox categoryTabsContainer;
@@ -167,6 +169,10 @@ public class OrderScreenController implements OrderScreenView {
 
         // Initialize handlers
         initializeHandlers();
+
+        if (menuItemsScrollPane != null) {
+            menuItemsScrollPane.setPannable(false);
+        }
 
         setupQuickQuantityField();
         setupColumnVisibilityFilters();
@@ -470,6 +476,10 @@ public class OrderScreenController implements OrderScreenView {
     private void onMenuItemClicked(MenuItemOutput menuItem) {
         if (presenter == null) {
             showError("Presenter chưa được khởi tạo");
+            return;
+        }
+        if (presenter.getCurrentOrderId() == null) {
+            showError("Vui lòng chọn bàn ở phần \"Danh sách bàn\" phía dưới màn hình, rồi bấm lại món để thêm vào order.");
             return;
         }
 

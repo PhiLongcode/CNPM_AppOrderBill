@@ -128,6 +128,11 @@ public class Order {
                 .sum();
     }
 
+    /** Gọi sau khi restoreOrderItem từ DB để đồng bộ totalAmount với các dòng. */
+    public void recomputeTotalFromItems() {
+        calculateTotalAmount();
+    }
+
     // Thêm OrderItem đã có sẵn vào danh sách (dùng khi tải từ DB)
     public void restoreOrderItem(OrderItem item) {
         this.items.add(item);

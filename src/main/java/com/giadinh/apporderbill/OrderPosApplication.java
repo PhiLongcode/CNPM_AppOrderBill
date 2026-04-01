@@ -84,7 +84,7 @@ public class OrderPosApplication extends Application {
                                         connectionProvider);
                         PrinterConfigRepository printerConfigRepository = new com.giadinh.apporderbill.printer.repository.SqlitePrinterConfigRepository(
                                         connectionProvider);
-                        com.giadinh.apporderbill.table.repository.TableRepository tableRepository = new com.giadinh.apporderbill.table.repository.SqliteTableRepository(
+                        com.giadinh.apporderbill.table.repository.TableRepository tableRepository = new com.giadinh.apporderbill.table.infrastructure.repository.sqlite.SqliteTableRepository(
                                         connectionProvider);
                         com.giadinh.apporderbill.customer.repository.CustomerRepository customerRepository = new com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository(
                                         connectionProvider);
@@ -126,6 +126,15 @@ public class OrderPosApplication extends Application {
 
                         // Khởi tạo 20 bàn mặc định vào database nếu chưa có
                         connectionProvider.initializeTables(tableRepository);
+
+                        com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase =
+                                        new com.giadinh.apporderbill.table.usecase.AddTableUseCase(tableRepository);
+                        com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase =
+                                        new com.giadinh.apporderbill.table.usecase.DeleteTableUseCase(tableRepository);
+                        com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase =
+                                        new com.giadinh.apporderbill.table.usecase.ClearTableUseCase(tableRepository);
+                        com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase =
+                                        new com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase(tableRepository);
 
                         PrinterService printerService = new SimplePrinterService(orderRepository, menuItemRepository,
                                         printTemplateRepository, printerConfigRepository);
@@ -246,11 +255,14 @@ public class OrderPosApplication extends Application {
                                         exportMenuToExcelUseCase);
                         mainController.setCustomerUseCases(customerUseCases);
                         mainController.setIdentityComponent(identityComponent);
+                        mainController.setTableManagementUseCases(
+                                        addTableUseCase, deleteTableUseCase, clearTableUseCase, getAllTablesUseCase);
                         mainController.setCurrentUser(
                                         loginController.getLoginOutput().getUsername(),
                                         loginController.canOperate("Manage Menu Items"),
                                         loginController.canOperate("Manage Users"),
-                                        loginController.canOperate("Manage Permissions"));
+                                        loginController.canOperate("Manage Permissions"),
+                                        loginController.canOperate("Manage Tables"));
 
                         // Inject printer use cases into MainLayoutController
                         mainController.setPrinterUseCases(
@@ -313,16 +325,6 @@ public class OrderPosApplication extends Application {
 
                                         // Set printer service for draft receipt
                                         presenter.setPrinterService(printerService);
-
-                                        // Initialize Table Use Cases
-                                        com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase = new com.giadinh.apporderbill.table.usecase.AddTableUseCase(
-                                                        tableRepository);
-                                        com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase = new com.giadinh.apporderbill.table.usecase.DeleteTableUseCase(
-                                                        tableRepository);
-                                        com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase = new com.giadinh.apporderbill.table.usecase.ClearTableUseCase(
-                                                        tableRepository);
-                                        com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase = new com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase(
-                                                        tableRepository);
 
                                         // Inject table use cases vào controller
                                         controller.setAddTableUseCase(addTableUseCase);

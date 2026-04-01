@@ -15,7 +15,7 @@ import com.giadinh.apporderbill.billing.repository.SqlitePaymentRepository;
 import com.giadinh.apporderbill.kitchen.repository.KitchenTicketRepository;
 import com.giadinh.apporderbill.kitchen.repository.SqliteKitchenTicketRepository;
 import com.giadinh.apporderbill.table.repository.TableRepository;
-import com.giadinh.apporderbill.table.repository.SqliteTableRepository;
+import com.giadinh.apporderbill.table.infrastructure.repository.sqlite.SqliteTableRepository;
 import com.giadinh.apporderbill.printer.repository.PrintTemplateRepository;
 import com.giadinh.apporderbill.printer.repository.SqlitePrintTemplateRepository;
 import com.giadinh.apporderbill.printer.repository.PrinterConfigRepository;

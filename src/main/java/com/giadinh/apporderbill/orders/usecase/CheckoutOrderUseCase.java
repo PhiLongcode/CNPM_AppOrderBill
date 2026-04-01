@@ -79,8 +79,9 @@ public class CheckoutOrderUseCase {
             order.setStatus(OrderStatus.COMPLETED);
             orderRepository.save(order);
 
-            if (order.getTableId() != null) {
-                tableRepository.findById(order.getTableId()).ifPresent(table -> {
+            String tableName = order.getTableNumber();
+            if (tableName != null) {
+                tableRepository.findByTableName(tableName).ifPresent(table -> {
                     table.clearTable();
                     tableRepository.save(table);
                 });

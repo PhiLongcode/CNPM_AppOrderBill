@@ -125,15 +125,24 @@ public class OrderScreenPresenter {
             // Kiểm tra xem bàn đã có order active chưa
             var existingOrder = orderRepository.findActiveByTable(tableNumber);
             if (existingOrder.isPresent()) {
-                // Bàn đang được phục vụ, chỉ cập nhật view, không show dialog
-                currentOrderId = existingOrder.get().getId();
-                currentTableNumber = existingOrder.get().getTableNumber();
-                
-                // Load order details và cập nhật view
+                Order ord = existingOrder.get();
+                currentOrderId = ord.getId();
+                if (currentOrderId == null && ord.getOrderId() != null) {
+                    try {
+                        currentOrderId = Long.parseLong(ord.getOrderId());
+                    } catch (NumberFormatException ex) {
+                        currentOrderId = null;
+                    }
+                }
+                currentTableNumber = ord.getTableNumber();
+                if (currentOrderId == null) {
+                    view.showError("Không đọc được mã đơn hàng của bàn này. Vui lòng thử tạo order mới hoặc liên hệ quản trị.");
+                    return;
+                }
+
                 GetOrderDetailsInput input = new GetOrderDetailsInput(currentOrderId);
                 var orderDetails = getOrderDetailsUseCase.execute(input);
                 updateView(orderDetails);
-                // Không show success message vì đã có order rồi, chỉ load lại
                 return;
             }
             

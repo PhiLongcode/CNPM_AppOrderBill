@@ -35,6 +35,8 @@ public class MainLayoutController {
     private Parent userGuideScreen;
     private Parent customerManagementScreen;
     private Parent adminManagementScreen;
+    private Parent tableManagementScreen;
+    private com.giadinh.apporderbill.javafx.table.TableManagementController tableManagementController;
 
     private OrderScreenController orderScreenController;
     private DashboardController dashboardController;
@@ -42,6 +44,8 @@ public class MainLayoutController {
     private MenuItem menuManagementMenuItem;
     @FXML
     private MenuItem customerManagementMenuItem;
+    @FXML
+    private MenuItem tableManagementMenuItem;
     @FXML
     private MenuItem adminManagementMenuItem;
     private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
@@ -192,6 +196,27 @@ public class MainLayoutController {
         }
     }
 
+    @FXML
+    protected void showTableManagementScreen() {
+        try {
+            if (tableManagementScreen == null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/table/table-management.fxml"));
+                tableManagementScreen = loader.load();
+                tableManagementController = loader.getController();
+                if (addTableUseCase != null && deleteTableUseCase != null && clearTableUseCase != null
+                        && getAllTablesUseCase != null) {
+                    tableManagementController.setUseCases(addTableUseCase, deleteTableUseCase, clearTableUseCase,
+                            getAllTablesUseCase);
+                }
+            } else if (tableManagementController != null) {
+                tableManagementController.reloadFromDatabase();
+            }
+            contentPane.getChildren().setAll(tableManagementScreen);
+        } catch (IOException e) {
+            showError("Lỗi khi tải màn hình quản lý bàn: " + e.getMessage());
+        }
+    }
+
     public void setCustomerUseCases(com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases) {
         this.customerUseCases = customerUseCases;
     }
@@ -217,15 +242,39 @@ public class MainLayoutController {
         }
     }
 
-    public void setCurrentUser(String username, boolean canManageMenu, boolean canManageCustomer, boolean canManageAdmin) {
+    public void setCurrentUser(String username, boolean canManageMenu, boolean canManageCustomer, boolean canManageAdmin,
+            boolean canManageTables) {
         if (menuManagementMenuItem != null) {
             menuManagementMenuItem.setDisable(!canManageMenu);
         }
         if (customerManagementMenuItem != null) {
             customerManagementMenuItem.setDisable(!canManageCustomer);
         }
+        if (tableManagementMenuItem != null) {
+            tableManagementMenuItem.setDisable(!canManageTables);
+        }
         if (adminManagementMenuItem != null) {
             adminManagementMenuItem.setDisable(!canManageAdmin);
+        }
+    }
+
+    private com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase;
+    private com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase;
+    private com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase;
+    private com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase;
+
+    public void setTableManagementUseCases(
+            com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase,
+            com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase,
+            com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase,
+            com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase) {
+        this.addTableUseCase = addTableUseCase;
+        this.deleteTableUseCase = deleteTableUseCase;
+        this.clearTableUseCase = clearTableUseCase;
+        this.getAllTablesUseCase = getAllTablesUseCase;
+        if (tableManagementScreen != null && tableManagementController != null && addTableUseCase != null) {
+            tableManagementController.setUseCases(addTableUseCase, deleteTableUseCase, clearTableUseCase,
+                    getAllTablesUseCase);
         }
     }
 

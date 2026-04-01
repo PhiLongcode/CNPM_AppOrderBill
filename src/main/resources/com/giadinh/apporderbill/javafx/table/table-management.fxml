@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.table.TableManagementController">
+    <top>
+        <VBox spacing="8" style="-fx-padding: 12; -fx-background-color: #1e3a5f;">
+            <Label text="Quản lý bàn" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+            <HBox spacing="8">
+                <Button text="Làm mới" onAction="#onRefresh"/>
+                <Button text="Thêm bàn" onAction="#onAdd"
+                        style="-fx-background-color: #2196F3; -fx-text-fill: white;"/>
+                <Button text="Làm trống bàn (trạng thái)" onAction="#onClearStatus"
+                        style="-fx-background-color: #ff9800; -fx-text-fill: white;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Xóa bàn" onAction="#onDelete"
+                        style="-fx-background-color: #d32f2f; -fx-text-fill: white;"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <TableView fx:id="tablesTable">
+            <columns>
+                <TableColumn fx:id="idColumn" text="Mã bàn (UUID)" prefWidth="280"/>
+                <TableColumn fx:id="nameColumn" text="Tên bàn" prefWidth="200"/>
+                <TableColumn fx:id="statusColumn" text="Trạng thái" prefWidth="120"/>
+                <TableColumn fx:id="orderColumn" text="Order hiện tại" prefWidth="200"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

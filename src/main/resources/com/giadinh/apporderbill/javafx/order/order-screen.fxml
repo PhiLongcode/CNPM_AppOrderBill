@@ -47,7 +47,8 @@
                 </HBox>
                 
                 <!-- Menu Items Grid -->
-                <ScrollPane fitToWidth="true" style="-fx-background-color: white;">
+                <ScrollPane fx:id="menuItemsScrollPane" fitToWidth="true" pannable="false"
+                            style="-fx-background-color: white;">
                     <content>
                         <FlowPane fx:id="menuItemsContainer" hgap="10" vgap="10" 
                                   prefWrapLength="600" style="-fx-padding: 10;">

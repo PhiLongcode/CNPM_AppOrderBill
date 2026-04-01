@@ -57,6 +57,7 @@ public class IdentityDataInitializer implements CommandLineRunner {
         Function funcTransferTable = createFunctionIfNotExists(303, "Transfer Table", moduleSales.getId());
         Function funcPrintKitchenTicket = createFunctionIfNotExists(304, "Print Kitchen Ticket", moduleSales.getId());
         Function funcPrintReceipt = createFunctionIfNotExists(305, "Print Receipt", moduleSales.getId());
+        Function funcManageTables = createFunctionIfNotExists(306, "Manage Tables", moduleSales.getId());
 
         // 3. Create RoleGroups
         RoleGroup adminRoleGroup = createRoleGroupIfNotExists(1, "ADMIN", "Administrator with full access");
@@ -75,6 +76,7 @@ public class IdentityDataInitializer implements CommandLineRunner {
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcTransferTable.getId(), true, true);
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcPrintKitchenTicket.getId(), true, false);
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcPrintReceipt.getId(), true, false);
+        assignPermissionIfNotExists(adminRoleGroup.getId(), funcManageTables.getId(), true, true);
 
         // CASHIER permissions
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcLogin.getId(), true, false);
@@ -85,6 +87,7 @@ public class IdentityDataInitializer implements CommandLineRunner {
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcPrintReceipt.getId(), true, false);
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageMenuItems.getId(), true, false); // Cashier chỉ xem menu
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageCategories.getId(), true, false); // Cashier chỉ xem category
+        assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageTables.getId(), true, true);
 
         // 5. Create Users
         createUserIfNotExists("admin", "admin_pass", adminRoleGroup.getId()); // In practice, use strong password hashing
