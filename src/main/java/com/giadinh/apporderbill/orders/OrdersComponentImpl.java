@@ -1,7 +1,7 @@
 package com.giadinh.apporderbill.orders;
 
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.orders.usecase.dto.*;

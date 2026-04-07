@@ -1,7 +1,7 @@
-package com.giadinh.apporderbill.menu.usecase;
+package com.giadinh.apporderbill.catalog.usecase;
 
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
-import com.giadinh.apporderbill.menu.service.ExcelService;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.service.ExcelService;
 
 public class ExportMenuToExcelUseCase {
     private final MenuItemRepository repository;
@@ -19,4 +19,3 @@ public class ExportMenuToExcelUseCase {
         excelService.exportMenu(repository.findAll(), filePath);
     }
 }
-

@@ -104,7 +104,7 @@ public class OrderScreenPresenter {
      * Mở dialog nhập kho nhanh cho một món (từ màn Order).
      * Chỉ tăng tồn kho (không thay đổi các thông tin khác).
      */
-    public void openQuickRestockDialog(com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput menuItem) {
+    public void openQuickRestockDialog(com.giadinh.apporderbill.catalog.usecase.dto.MenuItemOutput menuItem) {
         if (menuItem == null || menuItem.getMenuItemId() == null) {
             view.showError(msg("ui.order.restock_item_unknown"));
             return;

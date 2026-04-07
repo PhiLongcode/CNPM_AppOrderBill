@@ -1,7 +1,6 @@
-package com.giadinh.apporderbill.menu.service;
+package com.giadinh.apporderbill.catalog.service;
 
-import com.giadinh.apporderbill.menu.model.MenuItem;
-
+import com.giadinh.apporderbill.catalog.model.MenuItem;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,4 +13,3 @@ public class ExcelService {
         // Placeholder for actual XLSX implementation.
     }
 }
-

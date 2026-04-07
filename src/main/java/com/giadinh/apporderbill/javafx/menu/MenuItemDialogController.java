@@ -1,6 +1,6 @@
 package com.giadinh.apporderbill.javafx.menu;
 
-import com.giadinh.apporderbill.menu.usecase.dto.MenuItemUnitDto;
+import com.giadinh.apporderbill.catalog.usecase.dto.MenuItemUnitDto;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;

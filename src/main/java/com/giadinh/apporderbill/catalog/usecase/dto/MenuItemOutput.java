@@ -1,4 +1,4 @@
-package com.giadinh.apporderbill.menu.usecase.dto;
+package com.giadinh.apporderbill.catalog.usecase.dto;
 
 public class MenuItemOutput {
     private final Long menuItemId;
@@ -37,4 +37,3 @@ public class MenuItemOutput {
     public Long getStockMin() { return stockMin; }
     public boolean isActive() { return active; }
 }
-

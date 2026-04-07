@@ -2,7 +2,7 @@ package com.giadinh.apporderbill.orders.usecase;
 
 import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.ErrorCode;
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
 import com.giadinh.apporderbill.orders.model.OrderItem;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.usecase.dto.AddCustomItemOutput;
@@ -20,7 +20,7 @@ public class AddMenuItemToOrderUseCase {
     public AddCustomItemOutput execute(AddMenuItemInput input) {
         var order = orderRepository.findById(String.valueOf(input.getOrderId()))
                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
-        var menu = menuItemRepository.findById(input.getMenuItemId())
+        var menu = menuItemRepository.findById(input.getMenuItemId().intValue())
                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_MENU_ITEM_NOT_FOUND));
 
         String targetMenuItemId = String.valueOf(menu.getMenuItemId());

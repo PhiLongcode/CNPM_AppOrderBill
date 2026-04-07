@@ -1,9 +1,9 @@
-package com.giadinh.apporderbill.menu.usecase;
+package com.giadinh.apporderbill.catalog.usecase;
 
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
-import com.giadinh.apporderbill.menu.service.ExcelService;
-import com.giadinh.apporderbill.menu.usecase.dto.ImportMenuFromExcelInput;
-import com.giadinh.apporderbill.menu.usecase.dto.ImportMenuFromExcelOutput;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.service.ExcelService;
+import com.giadinh.apporderbill.catalog.usecase.dto.ImportMenuFromExcelInput;
+import com.giadinh.apporderbill.catalog.usecase.dto.ImportMenuFromExcelOutput;
 import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.ErrorCode;
 
@@ -25,8 +25,7 @@ public class ImportMenuFromExcelUseCase {
             if (imported != null) {
                 imported.forEach(repository::save);
             }
-            int count = imported == null ? 0 : imported.size();
-            return new ImportMenuFromExcelOutput(count);
+            return new ImportMenuFromExcelOutput(imported == null ? 0 : imported.size());
         } catch (DomainException e) {
             throw e;
         } catch (Exception e) {

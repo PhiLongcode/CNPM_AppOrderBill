@@ -1,6 +1,6 @@
 package com.giadinh.apporderbill.javafx.order;
 
-import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;
+import com.giadinh.apporderbill.catalog.usecase.dto.MenuItemOutput;
 import com.giadinh.apporderbill.billing.usecase.dto.PaymentSummaryOutput;
 
 import java.util.List;

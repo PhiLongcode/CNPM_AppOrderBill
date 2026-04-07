@@ -5,7 +5,7 @@ import com.giadinh.apporderbill.kitchen.usecase.PrintSelectedItemsUseCase;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintKitchenTicketInput;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintKitchenTicketOutput;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintSelectedItemsInput;
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.shared.service.PrinterService;
 

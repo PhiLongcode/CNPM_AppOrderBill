@@ -1,4 +1,4 @@
-package com.giadinh.apporderbill.menu.usecase.dto;
+package com.giadinh.apporderbill.catalog.usecase.dto;
 
 public class MenuItemUnitDto {
     private final String unitName;
@@ -21,4 +21,3 @@ public class MenuItemUnitDto {
     public String getSku() { return sku; }
     public boolean isDefault() { return isDefault; }
 }
-

@@ -284,20 +284,20 @@ public class MainLayoutController {
     }
 
     // Use cases for menu management
-    private com.giadinh.apporderbill.menu.usecase.CreateMenuItemUseCase createMenuItemUseCase;
-    private com.giadinh.apporderbill.menu.usecase.UpdateMenuItemUseCase updateMenuItemUseCase;
-    private com.giadinh.apporderbill.menu.usecase.DeleteMenuItemUseCase deleteMenuItemUseCase;
-    private com.giadinh.apporderbill.menu.usecase.GetAllMenuItemsUseCase getAllMenuItemsUseCase;
-    private com.giadinh.apporderbill.menu.usecase.ImportMenuFromExcelUseCase importMenuFromExcelUseCase;
-    private com.giadinh.apporderbill.menu.usecase.ExportMenuToExcelUseCase exportMenuToExcelUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.CreateMenuItemUseCase createMenuItemUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.UpdateMenuItemUseCase updateMenuItemUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.DeleteMenuItemUseCase deleteMenuItemUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.GetAllMenuItemsUseCase getAllMenuItemsUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.ImportMenuFromExcelUseCase importMenuFromExcelUseCase;
+    private com.giadinh.apporderbill.catalog.usecase.ExportMenuToExcelUseCase exportMenuToExcelUseCase;
 
     public void setMenuUseCases(
-            com.giadinh.apporderbill.menu.usecase.CreateMenuItemUseCase createMenuItemUseCase,
-            com.giadinh.apporderbill.menu.usecase.UpdateMenuItemUseCase updateMenuItemUseCase,
-            com.giadinh.apporderbill.menu.usecase.DeleteMenuItemUseCase deleteMenuItemUseCase,
-            com.giadinh.apporderbill.menu.usecase.GetAllMenuItemsUseCase getAllMenuItemsUseCase,
-            com.giadinh.apporderbill.menu.usecase.ImportMenuFromExcelUseCase importMenuFromExcelUseCase,
-            com.giadinh.apporderbill.menu.usecase.ExportMenuToExcelUseCase exportMenuToExcelUseCase) {
+            com.giadinh.apporderbill.catalog.usecase.CreateMenuItemUseCase createMenuItemUseCase,
+            com.giadinh.apporderbill.catalog.usecase.UpdateMenuItemUseCase updateMenuItemUseCase,
+            com.giadinh.apporderbill.catalog.usecase.DeleteMenuItemUseCase deleteMenuItemUseCase,
+            com.giadinh.apporderbill.catalog.usecase.GetAllMenuItemsUseCase getAllMenuItemsUseCase,
+            com.giadinh.apporderbill.catalog.usecase.ImportMenuFromExcelUseCase importMenuFromExcelUseCase,
+            com.giadinh.apporderbill.catalog.usecase.ExportMenuToExcelUseCase exportMenuToExcelUseCase) {
         this.createMenuItemUseCase = createMenuItemUseCase;
         this.updateMenuItemUseCase = updateMenuItemUseCase;
         this.deleteMenuItemUseCase = deleteMenuItemUseCase;

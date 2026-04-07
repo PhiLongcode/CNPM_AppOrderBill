@@ -8,8 +8,8 @@ import com.giadinh.apporderbill.shared.util.SqliteConnectionProvider;
 
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.repository.SqliteOrderRepository;
-import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
-import com.giadinh.apporderbill.menu.repository.SqliteMenuItemRepository;
+import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
+import com.giadinh.apporderbill.catalog.repository.SqliteMenuItemRepository;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.billing.repository.SqlitePaymentRepository;
 import com.giadinh.apporderbill.kitchen.repository.KitchenTicketRepository;
@@ -22,7 +22,6 @@ import com.giadinh.apporderbill.printer.repository.PrinterConfigRepository;
 import com.giadinh.apporderbill.printer.repository.SqlitePrinterConfigRepository;
 
 import com.giadinh.apporderbill.shared.service.PrinterService;
-import com.giadinh.apporderbill.shared.service.SimplePrinterService;
 import com.giadinh.apporderbill.shared.service.DefaultPrinterService;
 
 import com.giadinh.apporderbill.orders.OrdersComponent;
@@ -31,9 +30,10 @@ import com.giadinh.apporderbill.kitchen.KitchenComponent;
 import com.giadinh.apporderbill.kitchen.KitchenComponentImpl;
 import com.giadinh.apporderbill.billing.BillingComponent;
 import com.giadinh.apporderbill.billing.BillingComponentImpl;
-import com.giadinh.apporderbill.menu.MenuComponent;
-import com.giadinh.apporderbill.menu.MenuComponentImpl;
-import com.giadinh.apporderbill.menu.service.ExcelService;
+import com.giadinh.apporderbill.catalog.CatalogComponent;
+import com.giadinh.apporderbill.catalog.CatalogComponentImpl;
+import com.giadinh.apporderbill.catalog.repository.CategoryRepository;
+import com.giadinh.apporderbill.catalog.repository.SqliteCategoryRepository;
 import com.giadinh.apporderbill.reporting.ReportingComponent;
 import com.giadinh.apporderbill.reporting.ReportingComponentImpl;
 import com.giadinh.apporderbill.printer.PrinterComponent;
@@ -130,8 +130,13 @@ public class OrderApiConfig {
     }
 
     @Bean
-    public MenuComponent menuComponent(MenuItemRepository menuItemRepository) {
-        return new MenuComponentImpl(menuItemRepository, new ExcelService());
+    public CategoryRepository categoryRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqliteCategoryRepository(connectionProvider);
+    }
+
+    @Bean
+    public CatalogComponent menuComponent(MenuItemRepository menuItemRepository, CategoryRepository categoryRepository) {
+        return new CatalogComponentImpl(menuItemRepository, categoryRepository);
     }
 
     @Bean

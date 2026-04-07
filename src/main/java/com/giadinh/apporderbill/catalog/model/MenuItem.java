@@ -58,16 +58,24 @@ public class MenuItem {
 
     // Getters
     public int getId() { return id; }
+    public Long getMenuItemId() { return (long) id; }
     public String getName() { return name; }
     public double getPrice() { return price; }
+    public Long getUnitPrice() { return Math.round(price); }
     public String getCategoryName() { return categoryName; }
+    public String getCategory() { return categoryName; }
     public String getImageUrl() { return imageUrl; }
     public boolean isStockManaged() { return isStockManaged; }
+    public boolean isStockTracked() { return isStockManaged; }
     public int getCurrentStockQuantity() { return currentStockQuantity; }
+    public Long getStockQty() { return (long) currentStockQuantity; }
     public int getMinStockQuantity() { return minStockQuantity; }
+    public Long getStockMin() { return (long) minStockQuantity; }
     public int getMaxStockQuantity() { return maxStockQuantity; }
     public String getUnitOfMeasureName() { return unitOfMeasureName; }
+    public String getBaseUnit() { return unitOfMeasureName; }
     public MenuItemStatus getStatus() { return status; }
+    public boolean isActive() { return status == MenuItemStatus.ACTIVE; }
 
     // Setters (chỉ cho các thuộc tính có thể thay đổi nghiệp vụ)
     public void setName(String name) {
@@ -93,6 +101,7 @@ public class MenuItem {
 
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public void setStockManaged(boolean stockManaged) { isStockManaged = stockManaged; }
+    public void updateStock(long stockQuantity) { this.currentStockQuantity = (int) stockQuantity; }
     public void setMinStockQuantity(int minStockQuantity) { this.minStockQuantity = minStockQuantity; }
     public void setMaxStockQuantity(int maxStockQuantity) { this.maxStockQuantity = maxStockQuantity; }
     public void setUnitOfMeasureName(String unitOfMeasureName) { this.unitOfMeasureName = unitOfMeasureName; }

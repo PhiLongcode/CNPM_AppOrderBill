@@ -1,0 +1,6 @@
+package com.giadinh.apporderbill.catalog.usecase.dto;
+
+public class ImportMenuFromExcelInput {
+    private String filePath;
+    public String getFilePath() { return filePath; }
+}

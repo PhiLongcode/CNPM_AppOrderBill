@@ -1,12 +1,12 @@
 package com.giadinh.apporderbill.javafx.menu;
 
-import com.giadinh.apporderbill.menu.usecase.CreateMenuItemUseCase;
-import com.giadinh.apporderbill.menu.usecase.DeleteMenuItemUseCase;
-import com.giadinh.apporderbill.menu.usecase.ExportMenuToExcelUseCase;
-import com.giadinh.apporderbill.menu.usecase.GetAllMenuItemsUseCase;
-import com.giadinh.apporderbill.menu.usecase.ImportMenuFromExcelUseCase;
-import com.giadinh.apporderbill.menu.usecase.UpdateMenuItemUseCase;
-import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;
+import com.giadinh.apporderbill.catalog.usecase.CreateMenuItemUseCase;
+import com.giadinh.apporderbill.catalog.usecase.DeleteMenuItemUseCase;
+import com.giadinh.apporderbill.catalog.usecase.ExportMenuToExcelUseCase;
+import com.giadinh.apporderbill.catalog.usecase.GetAllMenuItemsUseCase;
+import com.giadinh.apporderbill.catalog.usecase.ImportMenuFromExcelUseCase;
+import com.giadinh.apporderbill.catalog.usecase.UpdateMenuItemUseCase;
+import com.giadinh.apporderbill.catalog.usecase.dto.MenuItemOutput;
 
 import java.util.Collections;
 import java.util.List;

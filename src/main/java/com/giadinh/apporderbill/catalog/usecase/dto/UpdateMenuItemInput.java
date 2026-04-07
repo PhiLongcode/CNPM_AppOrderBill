@@ -1,8 +1,9 @@
-package com.giadinh.apporderbill.menu.usecase.dto;
+package com.giadinh.apporderbill.catalog.usecase.dto;
 
 import java.util.List;
 
-public class CreateMenuItemInput {
+public class UpdateMenuItemInput {
+    private Long menuItemId;
     private String name;
     private String category;
     private Long unitPrice;
@@ -13,6 +14,7 @@ public class CreateMenuItemInput {
     private Long stockMin;
     private List<MenuItemUnitDto> units;
 
+    public Long getMenuItemId() { return menuItemId; }
     public String getName() { return name; }
     public String getCategory() { return category; }
     public Long getUnitPrice() { return unitPrice; }
@@ -23,4 +25,3 @@ public class CreateMenuItemInput {
     public Long getStockMin() { return stockMin; }
     public List<MenuItemUnitDto> getUnits() { return units; }
 }
-

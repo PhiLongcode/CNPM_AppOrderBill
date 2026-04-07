@@ -2,8 +2,8 @@ package com.giadinh.apporderbill;
 
 import com.giadinh.apporderbill.billing.usecase.PrintReceiptUseCase;
 import com.giadinh.apporderbill.kitchen.usecase.PrintKitchenTicketUseCase;
-import com.giadinh.apporderbill.menu.usecase.GetActiveMenuItemsUseCase;
-import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;
+import com.giadinh.apporderbill.catalog.usecase.GetActiveMenuItemsUseCase;
+import com.giadinh.apporderbill.catalog.usecase.dto.MenuItemOutput;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.javafx.order.OrderItemViewModel;
 import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
@@ -136,7 +136,7 @@ public class OrderScreenController implements OrderScreenView {
     private OrderScreenPresenter presenter;
     private GetActiveMenuItemsUseCase getActiveMenuItemsUseCase;
     private AddMenuItemToOrderUseCase addMenuItemToOrderUseCase;
-    private com.giadinh.apporderbill.menu.repository.MenuItemRepository menuItemRepository;
+    private com.giadinh.apporderbill.catalog.repository.MenuItemRepository menuItemRepository;
 
     // Table Use Cases
     private com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase;
@@ -366,7 +366,7 @@ public class OrderScreenController implements OrderScreenView {
     }
 
     public void setMenuItemRepository(
-            com.giadinh.apporderbill.menu.repository.MenuItemRepository menuItemRepository) {
+            com.giadinh.apporderbill.catalog.repository.MenuItemRepository menuItemRepository) {
         this.menuItemRepository = menuItemRepository;
         if (checkoutHandler != null) {
             checkoutHandler.setMenuItemRepository(menuItemRepository);
