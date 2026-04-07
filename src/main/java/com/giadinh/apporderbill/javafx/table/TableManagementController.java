@@ -5,6 +5,7 @@ import com.giadinh.apporderbill.table.usecase.ClearTableUseCase;
 import com.giadinh.apporderbill.table.usecase.DeleteTableUseCase;
 import com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase;
 import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import com.giadinh.apporderbill.table.usecase.dto.AddTableInput;
 import com.giadinh.apporderbill.table.usecase.dto.ClearTableInput;
 import com.giadinh.apporderbill.table.usecase.dto.DeleteTableInput;
@@ -80,9 +81,9 @@ public class TableManagementController {
             return;
         }
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Thêm bàn");
-        dialog.setHeaderText("Nhập tên bàn hiển thị trên POS (ví dụ: Bàn VIP)");
-        dialog.setContentText("Tên bàn:");
+        dialog.setTitle(msg("ui.table.add_title"));
+        dialog.setHeaderText(msg("ui.table.add_header"));
+        dialog.setContentText(msg("ui.table.name_label"));
         if (tablesTable.getScene() != null && tablesTable.getScene().getWindow() != null) {
             dialog.initOwner(tablesTable.getScene().getWindow());
         }
@@ -92,7 +93,7 @@ public class TableManagementController {
         }
         String name = result.get().trim();
         if (name.isEmpty()) {
-            alert(Alert.AlertType.WARNING, "Tên bàn không được để trống.");
+            alert(Alert.AlertType.WARNING, msg("ui.table.name_required"));
             return;
         }
         try {
@@ -111,11 +112,11 @@ public class TableManagementController {
         }
         TableOutput selected = tablesTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            alert(Alert.AlertType.WARNING, "Vui lòng chọn một bàn để xóa.");
+            alert(Alert.AlertType.WARNING, msg("ui.table.select_to_delete"));
             return;
         }
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Xóa bàn \"" + selected.getTableName() + "\" khỏi hệ thống?\n(Các order đang mở vẫn có thể tham chiếu tên bàn.)",
+                msg("ui.table.confirm_delete", selected.getTableName()),
                 ButtonType.OK, ButtonType.CANCEL);
         confirm.setHeaderText(null);
         if (confirm.showAndWait().orElse(ButtonType.CANCEL) != ButtonType.OK) {
@@ -136,7 +137,7 @@ public class TableManagementController {
         }
         TableOutput selected = tablesTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            alert(Alert.AlertType.WARNING, "Vui lòng chọn bàn cần đặt trạng thái trống trong danh mục bàn.");
+            alert(Alert.AlertType.WARNING, msg("ui.table.select_to_clear"));
             return;
         }
         try {
@@ -151,5 +152,9 @@ public class TableManagementController {
         Alert a = new Alert(type, message, ButtonType.OK);
         a.setHeaderText(null);
         a.showAndWait();
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 }

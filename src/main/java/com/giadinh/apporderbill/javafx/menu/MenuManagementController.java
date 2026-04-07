@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.javafx.menu;
 
 import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -151,22 +152,22 @@ public class MenuManagementController {
         applyFilters();
     }
 
-    @FXML private void onAddClick() { showInfo("Tính năng thêm món đang được hoàn thiện."); }
-    @FXML private void onEditClick() { showInfo("Tính năng sửa món đang được hoàn thiện."); }
+    @FXML private void onAddClick() { showInfo(msg("ui.menu.feature_add_in_progress")); }
+    @FXML private void onEditClick() { showInfo(msg("ui.menu.feature_edit_in_progress")); }
     @FXML private void onDeleteClick() {
         MenuItemRow selected = menuItemsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Vui lòng chọn món cần xóa.");
+            showInfo(msg("ui.menu.select_item_to_delete"));
             return;
         }
         allRows.remove(selected);
         applyFilters();
     }
-    @FXML private void onToggleActiveClick() { showInfo("Tính năng bật/tắt món đang được hoàn thiện."); }
-    @FXML private void onAddStockClick() { showInfo("Tính năng nhập kho đang được hoàn thiện."); }
+    @FXML private void onToggleActiveClick() { showInfo(msg("ui.menu.feature_toggle_in_progress")); }
+    @FXML private void onAddStockClick() { showInfo(msg("ui.menu.feature_stock_in_progress")); }
     @FXML private void onRefreshClick() { reloadFromDatabase(); }
-    @FXML private void onImportClick() { showInfo("Tính năng import Excel đang được hoàn thiện."); }
-    @FXML private void onExportClick() { showInfo("Tính năng export Excel đang được hoàn thiện."); }
+    @FXML private void onImportClick() { showInfo(msg("ui.menu.feature_import_in_progress")); }
+    @FXML private void onExportClick() { showInfo(msg("ui.menu.feature_export_in_progress")); }
     @FXML private void onShowLowStock() { lowStockOnlyCheckBox.setSelected(true); applyFilters(); }
 
     @FXML
@@ -205,6 +206,10 @@ public class MenuManagementController {
         a.setHeaderText(null);
         a.setContentText(content);
         a.showAndWait();
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 }
 

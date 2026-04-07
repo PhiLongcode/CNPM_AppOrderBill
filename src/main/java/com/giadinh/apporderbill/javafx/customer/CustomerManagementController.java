@@ -2,6 +2,7 @@ package com.giadinh.apporderbill.javafx.customer;
 
 import com.giadinh.apporderbill.customer.model.Customer;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -65,7 +66,7 @@ public class CustomerManagementController {
         if (useCases == null) return;
         Customer selected = customerTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Vui lòng chọn khách hàng.");
+            showInfo(msg("ui.customer.select_customer"));
             return;
         }
         CustomerFormData data = showCustomerForm("Sửa khách hàng", selected);
@@ -83,7 +84,7 @@ public class CustomerManagementController {
         if (useCases == null) return;
         Customer selected = customerTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Vui lòng chọn khách hàng.");
+            showInfo(msg("ui.customer.select_customer"));
             return;
         }
         useCases.delete(selected.getId());
@@ -100,7 +101,7 @@ public class CustomerManagementController {
     private CustomerFormData showCustomerForm(String title, Customer existing) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle(title);
-        ButtonType saveType = new ButtonType("Lưu", ButtonBar.ButtonData.OK_DONE);
+        ButtonType saveType = new ButtonType(msg("ui.customer.save_button"), ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().setAll(saveType, ButtonType.CANCEL);
 
         TextField nameField = new TextField(existing == null ? "" : existing.getName());
@@ -124,27 +125,31 @@ public class CustomerManagementController {
         String phone = phoneField.getText() == null ? "" : phoneField.getText().trim();
         String pointsText = pointsField.getText() == null ? "0" : pointsField.getText().trim();
         if (name.isBlank()) {
-            showInfo("Tên khách không được trống.");
+            showInfo(msg("ui.customer.name_required"));
             return null;
         }
         if (phone.isBlank() || !phone.matches("\\d{9,11}")) {
-            showInfo("Số điện thoại không hợp lệ (9-11 chữ số).");
+            showInfo(msg("ui.customer.phone_invalid"));
             return null;
         }
         int points;
         try {
             points = Integer.parseInt(pointsText);
         } catch (Exception e) {
-            showInfo("Điểm phải là số nguyên.");
+            showInfo(msg("ui.customer.points_integer"));
             return null;
         }
         if (points < 0) {
-            showInfo("Điểm không được âm.");
+            showInfo(msg("ui.customer.points_non_negative"));
             return null;
         }
         return new CustomerFormData(name, phone, points);
     }
 
     private record CustomerFormData(String name, String phone, int points) {}
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
+    }
 }
 

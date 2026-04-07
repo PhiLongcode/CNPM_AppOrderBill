@@ -61,6 +61,14 @@ public class CheckoutDialogController {
         return new Result(paid, discount, method);
     }
 
+    public Button getConfirmButton() {
+        return confirmButton;
+    }
+
+    public Button getCancelButton() {
+        return cancelButton;
+    }
+
     private long parseLong(String text, long defaultValue) {
         if (text == null || text.trim().isEmpty()) {
             return defaultValue;

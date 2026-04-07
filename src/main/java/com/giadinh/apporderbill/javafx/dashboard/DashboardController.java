@@ -11,6 +11,7 @@ import com.giadinh.apporderbill.reporting.usecase.GetDailyRevenueUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetMonthlyRevenueUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetRevenueByDateRangeUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetWeeklyRevenueUseCase;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -107,7 +108,7 @@ public class DashboardController {
         LocalDate start = paymentStartDatePicker.getValue();
         LocalDate end = paymentEndDatePicker.getValue();
         if (start == null || end == null) {
-            showInfo("Vui lòng chọn khoảng ngày.");
+            showInfo(msg("ui.dashboard.select_date_range"));
             return;
         }
         paymentRows.setAll(getPaymentsByDateRangeUseCase.execute(start.atStartOfDay(), end.atTime(23, 59, 59)));
@@ -123,7 +124,7 @@ public class DashboardController {
     private void onViewDetailClick() {
         PaymentSummaryOutput selected = paymentsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Vui lòng chọn hóa đơn cần xem.");
+            showInfo(msg("ui.dashboard.select_payment_to_view"));
             return;
         }
         if (getPaymentDetailUseCase == null) return;
@@ -134,12 +135,12 @@ public class DashboardController {
             PaymentDetailDialogController controller = loader.getController();
             controller.setPaymentDetail(detail);
             Stage stage = new Stage();
-            stage.setTitle("Chi tiết hóa đơn");
+            stage.setTitle(msg("ui.dashboard.payment_detail_title"));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
             stage.showAndWait();
         } catch (Exception ex) {
-            showInfo("Không thể mở chi tiết hóa đơn: " + ex.getMessage());
+            showInfo(msg("ui.dashboard.open_payment_detail_failed", ex.getMessage()));
         }
     }
 
@@ -147,7 +148,7 @@ public class DashboardController {
     private void onDeleteSelectedClick() {
         PaymentSummaryOutput selected = paymentsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showInfo("Vui lòng chọn hóa đơn cần xóa khỏi danh sách.");
+            showInfo(msg("ui.dashboard.select_payment_to_remove"));
             return;
         }
         paymentRows.remove(selected);
@@ -159,7 +160,7 @@ public class DashboardController {
         LocalDate start = paymentStartDatePicker.getValue();
         LocalDate end = paymentEndDatePicker.getValue();
         if (start == null || end == null) {
-            showInfo("Vui lòng chọn khoảng ngày để xóa.");
+            showInfo(msg("ui.dashboard.select_date_range_to_delete"));
             return;
         }
         deletePaymentsByDateRangeUseCase.execute(start.atStartOfDay(), end.atTime(23, 59, 59));
@@ -171,6 +172,10 @@ public class DashboardController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 
     public static class DailyRevenueRow {

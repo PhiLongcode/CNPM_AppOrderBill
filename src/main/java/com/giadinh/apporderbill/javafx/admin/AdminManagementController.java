@@ -109,7 +109,7 @@ public class AdminManagementController {
         if (identityComponent == null) return;
         User selected = usersTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn user để sửa.");
+            showError(msg("ui.admin.select_user_to_edit"));
             return;
         }
         Dialog<UserFormResult> dialog = createUserDialog(selected);
@@ -129,10 +129,10 @@ public class AdminManagementController {
     private void onDeleteUser() {
         User selected = usersTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn user để xóa.");
+            showError(msg("ui.admin.select_user_to_delete"));
             return;
         }
-        if (!confirm("Xóa user '" + selected.getUsername() + "'?")) return;
+        if (!confirm(msg("ui.admin.confirm_delete_user", selected.getUsername()))) return;
         identityComponent.deleteUser(selected.getId());
         refreshAll();
     }
@@ -156,7 +156,7 @@ public class AdminManagementController {
     private void onEditRole() {
         RoleGroup selected = rolesTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn nhóm quyền để sửa.");
+            showError(msg("ui.admin.select_role_to_edit"));
             return;
         }
         Set<Integer> existingFunctions = identityComponent.getFunctionsByRoleGroup(selected.getId()).stream()
@@ -180,10 +180,10 @@ public class AdminManagementController {
     private void onDeleteRole() {
         RoleGroup selected = rolesTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn nhóm quyền để xóa.");
+            showError(msg("ui.admin.select_role_to_delete"));
             return;
         }
-        if (!confirm("Xóa nhóm quyền '" + selected.getName() + "'?")) return;
+        if (!confirm(msg("ui.admin.confirm_delete_role", selected.getName()))) return;
         identityComponent.deleteRoleGroup(selected.getId());
         refreshAll();
     }
@@ -208,7 +208,7 @@ public class AdminManagementController {
     private void onEditPermission() {
         PermissionAssignment selected = permissionsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn phân quyền để sửa.");
+            showError(msg("ui.admin.select_permission_to_edit"));
             return;
         }
         Dialog<PermissionFormResult> dialog = createPermissionDialog(selected);
@@ -230,10 +230,10 @@ public class AdminManagementController {
     private void onDeletePermission() {
         PermissionAssignment selected = permissionsTable.getSelectionModel().getSelectedItem();
         if (selected == null) {
-            showError("Vui lòng chọn phân quyền để xóa.");
+            showError(msg("ui.admin.select_permission_to_delete"));
             return;
         }
-        if (!confirm("Xóa phân quyền ID " + selected.getId() + "?")) return;
+        if (!confirm(msg("ui.admin.confirm_delete_permission", selected.getId()))) return;
         identityComponent.deletePermissionAssignment(selected.getId());
         refreshAll();
     }
@@ -295,7 +295,7 @@ public class AdminManagementController {
             String password = passwordField.getText() == null ? "" : passwordField.getText().trim();
             RoleGroup role = roleCombo.getValue();
             if (username.isEmpty() || password.isEmpty() || role == null) {
-                showError("Username, password và nhóm quyền là bắt buộc.");
+                showError(msg("ui.admin.user_form_required"));
                 return null;
             }
             return new UserFormResult(username, password, role.getId());
@@ -321,7 +321,7 @@ public class AdminManagementController {
             if (bt != ButtonType.OK) return null;
             String name = nameField.getText() == null ? "" : nameField.getText().trim();
             if (name.isEmpty()) {
-                showError("Tên nhóm quyền không được để trống.");
+                showError(msg("ui.admin.role_name_required"));
                 return null;
             }
             return new RoleFormResult(name, descField.getText() == null ? "" : descField.getText().trim());
@@ -390,7 +390,7 @@ public class AdminManagementController {
             RoleGroup role = roleCombo.getValue();
             Function function = functionCombo.getValue();
             if (role == null || function == null) {
-                showError("Nhóm quyền và chức năng là bắt buộc.");
+                showError(msg("ui.admin.permission_form_required"));
                 return null;
             }
             return new PermissionFormResult(role.getId(), function.getId(), canView.isSelected(), canOperate.isSelected());
@@ -408,6 +408,10 @@ public class AdminManagementController {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setHeaderText(null);
         alert.showAndWait();
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 
     private record UserFormResult(String username, String password, int roleGroupId) {}

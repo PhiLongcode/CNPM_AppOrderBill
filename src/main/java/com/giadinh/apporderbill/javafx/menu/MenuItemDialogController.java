@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.javafx.menu;
 
 import com.giadinh.apporderbill.menu.usecase.dto.MenuItemUnitDto;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -222,17 +223,17 @@ public class MenuItemDialogController {
             String category = categoryField.getText().trim();
 
             if (name.isEmpty()) {
-                showError("Tên món không được để trống");
+                showError(msg("ui.menu_item_dialog.name_required"));
                 return null;
             }
             if (category.isEmpty()) {
-                showError("Danh mục không được để trống");
+                showError(msg("ui.menu_item_dialog.category_required"));
                 return null;
             }
 
             long price = Long.parseLong(priceField.getText().trim().replace(",", ""));
             if (price <= 0) {
-                showError("Giá phải lớn hơn 0");
+                showError(msg("ui.menu_item_dialog.price_positive"));
                 return null;
             }
 
@@ -250,7 +251,7 @@ public class MenuItemDialogController {
             return new Result(name, category, price, costPrice, sku, baseUnit, imageUrl,
                     stockTracked, stockQty, stockMin, stockMax, units);
         } catch (NumberFormatException e) {
-            showError("Giá không hợp lệ");
+            showError(msg("ui.menu_item_dialog.price_invalid"));
             return null;
         }
     }
@@ -299,7 +300,7 @@ public class MenuItemDialogController {
 
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Lỗi");
+        alert.setTitle(msg("ui.common.error_title"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -317,8 +318,10 @@ public class MenuItemDialogController {
 
             Dialog<Result> dialog = new Dialog<>();
             dialog.setDialogPane(dialogPane);
-            dialog.setTitle(existingItem == null ? "Thêm món mới" : "Sửa món");
-            dialog.setHeaderText(existingItem == null ? "Nhập thông tin món mới" : "Cập nhật thông tin món");
+            dialog.setTitle(existingItem == null ? controller.msg("ui.menu_item_dialog.add_title")
+                    : controller.msg("ui.menu_item_dialog.edit_title"));
+            dialog.setHeaderText(existingItem == null ? controller.msg("ui.menu_item_dialog.add_header")
+                    : controller.msg("ui.menu_item_dialog.edit_header"));
 
             // Set existingItem trước để initialize() biết là đang edit
             if (existingItem != null) {
@@ -347,11 +350,15 @@ public class MenuItemDialogController {
         } catch (IOException e) {
             e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi");
-            alert.setContentText("Không thể mở dialog: " + e.getMessage());
+            alert.setTitle(DomainMessages.formatKey("ui.common.error_title"));
+            alert.setContentText(DomainMessages.formatKey("ui.menu_item_dialog.open_failed", e.getMessage()));
             alert.showAndWait();
             return null;
         }
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 
     /**

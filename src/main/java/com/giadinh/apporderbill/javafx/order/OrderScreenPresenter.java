@@ -106,7 +106,7 @@ public class OrderScreenPresenter {
      */
     public void openQuickRestockDialog(com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput menuItem) {
         if (menuItem == null || menuItem.getMenuItemId() == null) {
-            view.showError("Không xác định được món để nhập kho.");
+            view.showError(msg("ui.order.restock_item_unknown"));
             return;
         }
 
@@ -119,7 +119,7 @@ public class OrderScreenPresenter {
      */
     public void onTableSelected(String tableNumber) {
         if (tableNumber == null || tableNumber.isBlank()) {
-            view.showError("Số bàn không được để trống");
+            view.showError(msg("ui.order.table_number_required"));
             return;
         }
 
@@ -138,7 +138,7 @@ public class OrderScreenPresenter {
                 }
                 currentTableNumber = ord.getTableNumber();
                 if (currentOrderId == null) {
-                    view.showError("Không đọc được mã đơn hàng của bàn này. Vui lòng thử tạo order mới hoặc liên hệ quản trị.");
+                    view.showError(msg("ui.order.order_id_unreadable"));
                     return;
                 }
 
@@ -156,11 +156,11 @@ public class OrderScreenPresenter {
             currentTableNumber = output.getTableNumber();
 
             updateView(output);
-            view.showSuccess("Đã mở order cho bàn " + tableNumber);
+            view.showSuccess(msg("ui.order.opened_for_table", tableNumber));
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi mở order: " + e.getMessage());
+            view.showError(msg("ui.order.open_failed", e.getMessage()));
         }
     }
 
@@ -169,7 +169,7 @@ public class OrderScreenPresenter {
      */
     public void onAddCustomItem() {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
@@ -179,15 +179,15 @@ public class OrderScreenPresenter {
 
         // Validation
         if (itemName == null || itemName.isBlank()) {
-            view.showError("Tên món không được để trống");
+            view.showError(msg("ui.order.item_name_required"));
             return;
         }
         if (quantityText == null || quantityText.isBlank()) {
-            view.showError("Số lượng không được để trống");
+            view.showError(msg("ui.order.quantity_required"));
             return;
         }
         if (priceText == null || priceText.isBlank()) {
-            view.showError("Đơn giá không được để trống");
+            view.showError(msg("ui.order.price_required"));
             return;
         }
 
@@ -196,11 +196,11 @@ public class OrderScreenPresenter {
             long unitPrice = Long.parseLong(priceText.trim());
 
             if (quantity <= 0) {
-                view.showError("Số lượng phải lớn hơn 0");
+                view.showError(msg("ui.order.quantity_positive"));
                 return;
             }
             if (unitPrice <= 0) {
-                view.showError("Đơn giá phải lớn hơn 0");
+                view.showError(msg("ui.order.price_positive"));
                 return;
             }
 
@@ -216,11 +216,11 @@ public class OrderScreenPresenter {
             updateView(output);
             view.clearItemInputFields();
         } catch (NumberFormatException e) {
-            view.showError("Số lượng và đơn giá phải là số hợp lệ");
+            view.showError(msg("ui.order.quantity_price_invalid"));
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi thêm món: " + e.getMessage());
+            view.showError(msg("ui.order.add_item_failed", e.getMessage()));
         }
     }
 
@@ -229,17 +229,17 @@ public class OrderScreenPresenter {
      */
     public void onAddMenuItem(Long menuItemId, int quantity) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
         if (menuItemId == null) {
-            view.showError("Menu item ID không được để trống");
+            view.showError(msg("ui.order.menu_item_id_required"));
             return;
         }
 
         if (quantity <= 0) {
-            view.showError("Số lượng phải lớn hơn 0");
+            view.showError(msg("ui.order.quantity_positive"));
             return;
         }
 
@@ -259,7 +259,7 @@ public class OrderScreenPresenter {
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi thêm món: " + e.getMessage());
+            view.showError(msg("ui.order.add_item_failed", e.getMessage()));
         }
     }
 
@@ -277,7 +277,7 @@ public class OrderScreenPresenter {
 
             updateView(output);
         } catch (Exception e) {
-            view.showError("Lỗi khi làm mới order: " + e.getMessage());
+            view.showError(msg("ui.order.refresh_failed", e.getMessage()));
         }
     }
 
@@ -286,7 +286,7 @@ public class OrderScreenPresenter {
      */
     public void calculateTotalWithDiscount(long discountAmount, Double discountPercent) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
@@ -302,7 +302,7 @@ public class OrderScreenPresenter {
             view.displayFinalAmount(output.getFinalAmount());
             view.displayDiscountAmount(output.getDiscountAmount());
         } catch (Exception e) {
-            view.showError("Lỗi khi tính tổng tiền: " + e.getMessage());
+            view.showError(msg("ui.order.calculate_total_failed", e.getMessage()));
         }
     }
 
@@ -311,7 +311,7 @@ public class OrderScreenPresenter {
      */
     public void cancelOrder(String reason) {
         if (currentOrderId == null) {
-            view.showError("Không có order nào để hủy");
+            view.showError(msg("ui.order.no_order_to_cancel"));
             return;
         }
 
@@ -332,12 +332,12 @@ public class OrderScreenPresenter {
             view.displayFinalAmount(0);
             view.displayDiscountAmount(0);
 
-            view.showSuccess("Đã hủy order thành công");
+            view.showSuccess(msg("ui.order.cancel_order_success"));
             
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
         } catch (Exception e) {
-            view.showError("Lỗi khi hủy order: " + e.getMessage());
+            view.showError(msg("ui.order.cancel_order_failed", e.getMessage()));
         }
     }
 
@@ -346,7 +346,7 @@ public class OrderScreenPresenter {
      */
     public void printKitchenTicket(boolean isAddOn) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn và có món trong order");
+            view.showError(msg("ui.order.select_table_and_have_order"));
             return;
         }
 
@@ -361,9 +361,9 @@ public class OrderScreenPresenter {
                 // In thất bại hoặc bị hủy
                 String errorMsg = output.getPrintError();
                 if (errorMsg != null && !errorMsg.isEmpty()) {
-                    view.showError("Lỗi in phiếu bếp: " + errorMsg);
+                    view.showError(msg("ui.order.print_kitchen_failed", errorMsg));
                 } else {
-                    view.showError("In phiếu bếp bị hủy hoặc thất bại. Vui lòng kiểm tra máy in.");
+                    view.showError(msg("ui.order.print_kitchen_cancelled_or_failed"));
                 }
                 // Vẫn refresh order vì món đã được đánh dấu là đã in
                 refreshOrder();
@@ -371,17 +371,17 @@ public class OrderScreenPresenter {
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi in phiếu bếp: " + e.getMessage());
+            view.showError(msg("ui.order.print_kitchen_exception", e.getMessage()));
         }
     }
 
     /**
      * Thanh toán order.
      */
-    public void checkout(long paidAmount, String paymentMethod, long discountAmount, Double discountPercent) {
+    public boolean checkout(long paidAmount, String paymentMethod, long discountAmount, Double discountPercent) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn và có món trong order");
-            return;
+            view.showError(msg("ui.order.select_table_and_have_order"));
+            return false;
         }
 
         try {
@@ -393,8 +393,8 @@ public class OrderScreenPresenter {
             CalculateOrderTotalOutput calcOutput = calculateOrderTotalUseCase.execute(calcInput);
 
             if (paidAmount < calcOutput.getFinalAmount()) {
-                view.showError("Số tiền khách đưa không đủ. Cần: " + calcOutput.getFinalAmount() + " VNĐ");
-                return;
+                view.showError(msg("error.CHECKOUT_PAID_AMOUNT_INSUFFICIENT", calcOutput.getFinalAmount()));
+                return false;
             }
 
             // LƯU THANH TOÁN TRƯỚC
@@ -417,12 +417,10 @@ public class OrderScreenPresenter {
                 printSuccess = true;
             } catch (DomainException e) {
                 System.err.println("In hóa đơn thất bại: " + DomainMessages.format(e));
-                view.showError("Thanh toán đã lưu thành công!\n\nNhưng in hóa đơn thất bại: " + DomainMessages.format(e) +
-                        "\n\nBạn có thể in lại từ lịch sử thanh toán.");
+                view.showError(msg("ui.order.checkout_saved_but_print_failed", DomainMessages.format(e)));
             } catch (Exception e) {
                 System.err.println("In hóa đơn thất bại: " + e.getMessage());
-                view.showError("Thanh toán đã lưu thành công!\n\nNhưng in hóa đơn thất bại: " + e.getMessage() +
-                        "\n\nBạn có thể in lại từ lịch sử thanh toán.");
+                view.showError(msg("ui.order.checkout_saved_but_print_failed", e.getMessage()));
             }
 
             // Reset order state sau khi thanh toán đã hoàn tất
@@ -446,12 +444,14 @@ public class OrderScreenPresenter {
             } else {
                 System.out.println("! Thanh toán thành công cho order #" + completedOrderId + " nhưng in bị hủy/lỗi");
             }
+            return true;
 
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi thanh toán: " + e.getMessage());
+            view.showError(msg("ui.order.checkout_failed", e.getMessage()));
         }
+        return false;
     }
 
     /**
@@ -561,12 +561,12 @@ public class OrderScreenPresenter {
      */
     public void updateItemQuantity(Long orderItemId, int newQuantity) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
         if (newQuantity <= 0) {
-            view.showError("Số lượng phải lớn hơn 0");
+            view.showError(msg("ui.order.quantity_positive"));
             return;
         }
 
@@ -586,7 +586,7 @@ public class OrderScreenPresenter {
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi cập nhật số lượng: " + e.getMessage());
+            view.showError(msg("ui.order.update_quantity_failed", e.getMessage()));
         }
     }
 
@@ -596,7 +596,7 @@ public class OrderScreenPresenter {
      */
     public void cancelItem(Long orderItemId) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
@@ -607,14 +607,14 @@ public class OrderScreenPresenter {
             view.displayOrderItems(convertToViewModels(output.getItems()));
             view.displayTotalAmount(output.getTotalAmount());
             view.displayFinalAmount(output.getTotalAmount());
-            view.showSuccess("Đã hủy món");
+            view.showSuccess(msg("ui.order.cancel_item_success"));
             
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi hủy món: " + e.getMessage());
+            view.showError(msg("ui.order.cancel_item_failed", e.getMessage()));
         }
     }
 
@@ -624,7 +624,7 @@ public class OrderScreenPresenter {
      */
     public void deleteItem(Long orderItemId) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn trước");
+            view.showError(msg("ui.order.select_table_first"));
             return;
         }
 
@@ -635,14 +635,14 @@ public class OrderScreenPresenter {
             view.displayOrderItems(convertToViewModels(output.getItems()));
             view.displayTotalAmount(output.getTotalAmount());
             view.displayFinalAmount(output.getTotalAmount());
-            view.showSuccess("Đã xóa món khỏi order");
+            view.showSuccess(msg("ui.order.delete_item_success"));
             
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi xóa món: " + e.getMessage());
+            view.showError(msg("ui.order.delete_item_failed", e.getMessage()));
         }
     }
 
@@ -664,9 +664,9 @@ public class OrderScreenPresenter {
             view.displayTotalAmount(output.getTotalAmount());
             view.displayFinalAmount(output.getTotalAmount());
 
-            view.showSuccess("Đã cập nhật ghi chú");
+            view.showSuccess(msg("ui.order.update_note_success"));
         } catch (Exception e) {
-            view.showError("Lỗi khi cập nhật ghi chú: " + e.getMessage());
+            view.showError(msg("ui.order.update_note_failed", e.getMessage()));
         }
     }
 
@@ -692,9 +692,9 @@ public class OrderScreenPresenter {
             view.displayTotalAmount(output.getTotalAmount());
             view.displayFinalAmount(output.getTotalAmount());
 
-            view.showSuccess("Đã cập nhật giảm giá");
+            view.showSuccess(msg("ui.order.update_discount_success"));
         } catch (Exception e) {
-            view.showError("Lỗi khi cập nhật giảm giá: " + e.getMessage());
+            view.showError(msg("ui.order.update_discount_failed", e.getMessage()));
         }
     }
 
@@ -703,7 +703,7 @@ public class OrderScreenPresenter {
      */
     public void reprintKitchenTicket() {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn order trước");
+            view.showError(msg("ui.order.select_order_first"));
             return;
         }
 
@@ -712,9 +712,9 @@ public class OrderScreenPresenter {
             PrintKitchenTicketOutput output = printKitchenTicketUseCase.execute(input);
 
             if (output.isPrinted()) {
-                view.showSuccess("Đã in lại phiếu bếp");
+                view.showSuccess(msg("ui.order.reprint_kitchen_success"));
             } else {
-                view.showError("Không thể in phiếu bếp. Vui lòng kiểm tra máy in");
+                view.showError(msg("ui.order.print_kitchen_unavailable"));
             }
 
             // Refresh order details
@@ -722,22 +722,22 @@ public class OrderScreenPresenter {
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi in lại phiếu bếp: " + e.getMessage());
+            view.showError(msg("ui.order.reprint_kitchen_failed", e.getMessage()));
         }
     }
 
     /**
      * In các món đã chọn.
      */
-    public void printSelectedItems(List<Long> orderItemIds) {
+    public boolean printSelectedItems(List<Long> orderItemIds) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn order trước");
-            return;
+            view.showError(msg("ui.order.select_order_first"));
+            return false;
         }
 
         if (orderItemIds == null || orderItemIds.isEmpty()) {
-            view.showError("Vui lòng chọn ít nhất một món");
-            return;
+            view.showError(msg("ui.order.select_items_first"));
+            return false;
         }
 
         try {
@@ -745,18 +745,21 @@ public class OrderScreenPresenter {
             PrintKitchenTicketOutput output = printSelectedItemsUseCase.execute(input);
 
             if (output.isPrinted()) {
-                view.showSuccess("Đã in " + orderItemIds.size() + " món đã chọn");
+                view.showSuccess(msg("ui.order.print_selected_success", orderItemIds.size()));
             } else {
-                view.showError("Không thể in phiếu bếp. Vui lòng kiểm tra máy in");
+                view.showError(msg("ui.order.print_kitchen_unavailable"));
+                return false;
             }
 
             // Refresh order details
             refreshCurrentOrder();
+            return true;
         } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
-            view.showError("Lỗi khi in món đã chọn: " + e.getMessage());
+            view.showError(msg("ui.order.print_selected_failed", e.getMessage()));
         }
+        return false;
     }
 
     private void refreshCurrentOrder() {
@@ -797,12 +800,12 @@ public class OrderScreenPresenter {
      */
     public void printDraftReceipt(long discountAmount, Double discountPercent) {
         if (currentOrderId == null) {
-            view.showError("Vui lòng chọn bàn và có món trong order");
+            view.showError(msg("ui.order.select_table_and_have_order"));
             return;
         }
 
         if (printerService == null) {
-            view.showError("Dịch vụ in chưa được khởi tạo");
+            view.showError(msg("ui.order.printer_service_not_ready"));
             return;
         }
 
@@ -816,11 +819,11 @@ public class OrderScreenPresenter {
 
             // In phiếu tạm
             printerService.printDraftReceipt(currentOrderId, discountAmount, discountPercent);
-            view.showSuccess("Đã in phiếu tạm thành công");
+            view.showSuccess(msg("ui.order.print_draft_success"));
         } catch (com.giadinh.apporderbill.shared.service.PrinterService.PrinterException e) {
-            view.showError("Lỗi khi in phiếu tạm: " + e.getMessage());
+            view.showError(msg("ui.order.print_draft_failed", e.getMessage()));
         } catch (Exception e) {
-            view.showError("Lỗi khi in phiếu tạm: " + e.getMessage());
+            view.showError(msg("ui.order.print_draft_failed", e.getMessage()));
         }
     }
 
@@ -829,7 +832,7 @@ public class OrderScreenPresenter {
      */
     public void showReprintReceiptDialog() {
         if (getTodayPaymentsUseCase == null || reprintReceiptUseCase == null) {
-            view.showError("Chức năng in lại hóa đơn chưa được khởi tạo");
+            view.showError(msg("ui.order.reprint_receipt_not_ready"));
             return;
         }
 
@@ -837,14 +840,14 @@ public class OrderScreenPresenter {
             List<PaymentSummaryOutput> payments = getTodayPaymentsUseCase.execute();
 
             if (payments.isEmpty()) {
-                view.showError("Chưa có hóa đơn nào trong ngày hôm nay");
+                view.showError(msg("ui.order.no_receipt_today"));
                 return;
             }
 
             // Delegate to view to show dialog
             view.showReprintReceiptDialog(payments, this::reprintReceipt);
         } catch (Exception e) {
-            view.showError("Lỗi khi tải danh sách hóa đơn: " + e.getMessage());
+            view.showError(msg("ui.order.load_receipts_failed", e.getMessage()));
         }
     }
 
@@ -853,15 +856,19 @@ public class OrderScreenPresenter {
      */
     public void reprintReceipt(Long paymentId) {
         if (reprintReceiptUseCase == null) {
-            view.showError("Chức năng in lại hóa đơn chưa được khởi tạo");
+            view.showError(msg("ui.order.reprint_receipt_not_ready"));
             return;
         }
 
         try {
             reprintReceiptUseCase.execute(paymentId);
-            view.showSuccess("Đã gửi lệnh in lại hóa đơn #" + paymentId);
+            view.showSuccess(msg("ui.order.reprint_receipt_success", paymentId));
         } catch (Exception e) {
-            view.showError("Lỗi khi in lại hóa đơn: " + e.getMessage());
+            view.showError(msg("ui.order.reprint_receipt_failed", e.getMessage()));
         }
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 }

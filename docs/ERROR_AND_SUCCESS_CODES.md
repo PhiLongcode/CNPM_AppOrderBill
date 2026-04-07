@@ -102,6 +102,8 @@ Handler tập trung: `@RestControllerAdvice` map `DomainException` → `ProblemD
 
 **Chuỗi thành công có tham số (POS / refactor bàn):** các key `success.*` trong `messages.properties` / `messages_en.properties`, ví dụ `success.transferOrderBetweenTables`, `success.renameTable`, `success.setTableReserved`, `success.clearTableReservation`, `success.addTable`, `success.transferTableById` — dùng với `DomainMessages.formatKey("success.xxx", args)` hoặc `MessageSource` tương đương.
 
+**Chuỗi UI JavaFX:** chuẩn key `ui.<module>.*` (ví dụ `ui.order.*`, `ui.dashboard.*`, `ui.customer.*`, `ui.menu.*`, `ui.table.*`, `ui.admin.*`) và **không hard-code literal user-facing** trực tiếp trong controller/presenter.
+
 ---
 
 ## 7. Lộ trình refactor (đề xuất)

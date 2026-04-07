@@ -12,6 +12,7 @@ import com.giadinh.apporderbill.javafx.order.handlers.CheckoutHandler;
 import com.giadinh.apporderbill.javafx.order.handlers.MenuItemHandler;
 import com.giadinh.apporderbill.javafx.order.handlers.OrderItemHandler;
 import com.giadinh.apporderbill.javafx.order.handlers.TableHandler;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -158,6 +159,7 @@ public class OrderScreenController implements OrderScreenView {
     private ToggleGroup tableFilterGroup;
     private Long currentOrderId;
     private Set<String> tablesInUse = new HashSet<>();
+    private boolean discountListenerInitialized;
 
     @FXML
     public void initialize() {
@@ -326,6 +328,7 @@ public class OrderScreenController implements OrderScreenView {
         if (tableHandler != null) {
             tableHandler.setPresenter(presenter);
         }
+        setupDiscountListener();
 
         // Refresh table status after presenter is set
         refreshTablesInUse();
@@ -335,6 +338,31 @@ public class OrderScreenController implements OrderScreenView {
         javafx.application.Platform.runLater(() -> {
             setupKeyboardShortcutsAfterSceneReady();
         });
+    }
+
+    private void setupDiscountListener() {
+        if (discountListenerInitialized || discountField == null) {
+            return;
+        }
+        discountListenerInitialized = true;
+        discountField.textProperty().addListener((obs, oldV, newV) -> {
+            if (presenter == null || presenter.getCurrentOrderId() == null) {
+                return;
+            }
+            long discountAmount = parseDiscountAmount(newV);
+            presenter.calculateTotalWithDiscount(discountAmount, null);
+        });
+    }
+
+    private long parseDiscountAmount(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(raw.trim().replace(",", ""));
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 
     public void setMenuItemRepository(
@@ -439,11 +467,11 @@ public class OrderScreenController implements OrderScreenView {
     @Override
     public void showQuickRestockDialog(MenuItemOutput menuItem) {
         if (menuItem == null || menuItem.getMenuItemId() == null) {
-            showError("Không xác định được món để nhập kho.");
+            showError(msg("ui.order.restock_item_unknown"));
             return;
         }
         if (menuItemRepository == null) {
-            showError("Chức năng nhập kho nhanh chưa sẵn sàng (thiếu MenuItemRepository).");
+            showError(msg("ui.order.restock_not_ready"));
             return;
         }
 
@@ -453,10 +481,9 @@ public class OrderScreenController implements OrderScreenView {
         }
 
         TextInputDialog dialog = new TextInputDialog("0");
-        dialog.setTitle("Nhập kho nhanh");
-        dialog.setHeaderText("Nhập thêm hàng cho: " + menuItem.getName());
-        dialog.setContentText("Tồn hiện tại (đã trừ các bàn đang order): " + currentStock
-                + "\n\nSố lượng nhập thêm:");
+        dialog.setTitle(msg("ui.order.restock_dialog_title"));
+        dialog.setHeaderText(msg("ui.order.restock_dialog_header", menuItem.getName()));
+        dialog.setContentText(msg("ui.order.restock_dialog_content", currentStock));
 
         Optional<String> result = dialog.showAndWait();
         if (result.isEmpty()) {
@@ -466,14 +493,14 @@ public class OrderScreenController implements OrderScreenView {
         try {
             long addQty = Long.parseLong(result.get().trim());
             if (addQty <= 0) {
-                showError("Số lượng nhập thêm phải lớn hơn 0");
+                showError(msg("ui.order.restock_quantity_positive"));
                 return;
             }
 
             // Lấy lại MenuItem mới nhất từ DB để tránh lệch dữ liệu
             var menuItemOpt = menuItemRepository.findById(menuItem.getMenuItemId());
             if (menuItemOpt.isEmpty()) {
-                showError("Không tìm thấy món trong hệ thống để nhập kho.");
+                showError(msg("ui.order.restock_item_not_found"));
                 return;
             }
 
@@ -484,15 +511,14 @@ public class OrderScreenController implements OrderScreenView {
             entity.updateStock(newStock);
             menuItemRepository.save(entity);
 
-            showSuccess("Đã nhập thêm " + addQty + " vào kho cho '" + menuItem.getName()
-                    + "'.\nTồn cũ: " + oldStock + " → Tồn mới: " + newStock);
+            showSuccess(msg("ui.order.restock_success", addQty, menuItem.getName(), oldStock, newStock));
 
             // Cập nhật lại menu trên màn Order
             refreshMenuItems();
         } catch (NumberFormatException e) {
-            showError("Số lượng không hợp lệ");
+            showError(msg("ui.order.quantity_invalid"));
         } catch (Exception e) {
-            showError("Lỗi khi nhập kho: " + e.getMessage());
+            showError(msg("ui.order.restock_failed", e.getMessage()));
         }
     }
 
@@ -507,7 +533,7 @@ public class OrderScreenController implements OrderScreenView {
             System.out.println("Đã load " + items.size() + " món từ database");
 
             if (items.isEmpty()) {
-                showError("Không có món nào trong menu. Vui lòng kiểm tra database.");
+                showError(msg("ui.order.menu_empty"));
                 return;
             }
 
@@ -518,17 +544,17 @@ public class OrderScreenController implements OrderScreenView {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            showError("Lỗi khi tải menu: " + e.getMessage());
+            showError(msg("ui.order.load_menu_failed", e.getMessage()));
         }
     }
 
     private void onMenuItemClicked(MenuItemOutput menuItem) {
         if (presenter == null) {
-            showError("Presenter chưa được khởi tạo");
+            showError(msg("ui.order.presenter_not_ready"));
             return;
         }
         if (presenter.getCurrentOrderId() == null) {
-            showError("Vui lòng chọn bàn ở phần \"Danh sách bàn\" phía dưới màn hình, rồi bấm lại món để thêm vào order.");
+            showError(msg("ui.order.select_table_in_list_first"));
             return;
         }
 
@@ -561,9 +587,9 @@ public class OrderScreenController implements OrderScreenView {
             }
             currentOrderId = presenter.getCurrentOrderId();
         } catch (NumberFormatException e) {
-            showError("Số lượng không hợp lệ");
+            showError(msg("ui.order.quantity_invalid"));
         } catch (Exception e) {
-            showError("Lỗi khi thêm món: " + e.getMessage());
+            showError(msg("ui.order.add_item_failed", e.getMessage()));
         }
     }
 
@@ -617,7 +643,7 @@ public class OrderScreenController implements OrderScreenView {
     // Handler callback method
     private void handleTableSelected(String tableNumber, Long orderId) {
         currentOrderId = orderId;
-        updateOrderStatus("Đang phục vụ");
+        updateOrderStatus(msg("ui.order.status_serving"));
         refreshTablesInUse();
         updateTableButtonStyles();
     }
@@ -651,25 +677,24 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     protected void onCancelItemClick() {
         if (selectedOrderItem == null) {
-            showError("Vui lòng chọn một món để hủy");
+            showError(msg("ui.order.select_item_to_cancel"));
             return;
         }
         
         if (presenter == null) {
-            showError("Hệ thống chưa sẵn sàng");
+            showError(msg("ui.order.system_not_ready"));
             return;
         }
 
         if (selectedOrderItem.isCanceled()) {
-            showError("Món này đã bị hủy rồi");
+            showError(msg("ui.order.item_already_canceled"));
             return;
         }
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Xác nhận hủy món");
+        confirmAlert.setTitle(msg("ui.order.confirm_cancel_title"));
         confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("Bạn có chắc chắn muốn HỦY món '" +
-                selectedOrderItem.getName() + "'?\n(Món sẽ vẫn hiển thị nhưng bị gạch ngang)");
+        confirmAlert.setContentText(msg("ui.order.confirm_cancel_message", selectedOrderItem.getName()));
         confirmAlert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 presenter.cancelItem(selectedOrderItem.getOrderItemId());
@@ -685,30 +710,29 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     protected void onDeleteItemClick() {
         if (selectedOrderItem == null) {
-            showError("Vui lòng chọn một món để xóa");
+            showError(msg("ui.order.select_item_to_delete"));
             return;
         }
         
         if (presenter == null) {
-            showError("Hệ thống chưa sẵn sàng");
+            showError(msg("ui.order.system_not_ready"));
             return;
         }
 
         if (selectedOrderItem.isPrintedToKitchen()) {
-            showError("Không thể xóa món đã in phiếu bếp. Vui lòng dùng chức năng 'Hủy món'");
+            showError(msg("ui.order.cannot_delete_printed_item"));
             return;
         }
 
         if (selectedOrderItem.isCanceled()) {
-            showError("Món này đã bị hủy rồi");
+            showError(msg("ui.order.item_already_canceled"));
             return;
         }
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Xác nhận xóa");
+        confirmAlert.setTitle(msg("ui.order.confirm_delete_title"));
         confirmAlert.setHeaderText(null);
-        confirmAlert.setContentText("Bạn có chắc chắn muốn XÓA HOÀN TOÀN món '" +
-                selectedOrderItem.getName() + "'?\n(Món chưa in phiếu bếp)");
+        confirmAlert.setContentText(msg("ui.order.confirm_delete_message", selectedOrderItem.getName()));
         confirmAlert.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 presenter.deleteItem(selectedOrderItem.getOrderItemId());
@@ -767,7 +791,7 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     protected void onPrintSelectedItemsClick() {
         if (currentOrderId == null) {
-            showError("Vui lòng chọn bàn trước");
+            showError(msg("ui.order.select_table_first"));
             return;
         }
 
@@ -782,7 +806,7 @@ public class OrderScreenController implements OrderScreenView {
                 .collect(Collectors.toList());
 
         if (selectedItemIds.isEmpty()) {
-            showError("Vui lòng chọn ít nhất một món để in");
+            showError(msg("ui.order.select_items_first"));
             return;
         }
 
@@ -885,7 +909,7 @@ public class OrderScreenController implements OrderScreenView {
     @Override
     public void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Lỗi");
+        alert.setTitle(msg("ui.common.error_title"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -894,7 +918,7 @@ public class OrderScreenController implements OrderScreenView {
     @Override
     public void showSuccess(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thành công");
+        alert.setTitle(msg("ui.common.success_title"));
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
@@ -907,12 +931,16 @@ public class OrderScreenController implements OrderScreenView {
         alert.setHeaderText(null);
         alert.setContentText(message);
 
-        ButtonType yesButton = new ButtonType("Có, lưu hóa đơn", ButtonBar.ButtonData.YES);
-        ButtonType noButton = new ButtonType("Không, giữ để in lại", ButtonBar.ButtonData.NO);
+        ButtonType yesButton = new ButtonType(msg("ui.order.confirm_yes_save_receipt"), ButtonBar.ButtonData.YES);
+        ButtonType noButton = new ButtonType(msg("ui.order.confirm_no_keep_for_reprint"), ButtonBar.ButtonData.NO);
         alert.getButtonTypes().setAll(yesButton, noButton);
 
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == yesButton;
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 
     @Override

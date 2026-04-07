@@ -2,6 +2,7 @@ package com.giadinh.apporderbill.javafx.order.handlers;
 
 import com.giadinh.apporderbill.menu.usecase.GetActiveMenuItemsUseCase;
 import com.giadinh.apporderbill.menu.usecase.dto.MenuItemOutput;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import com.giadinh.apporderbill.shared.util.VietnameseTextUtils;
 import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import javafx.collections.FXCollections;
@@ -93,7 +94,7 @@ public class MenuItemHandler {
             System.out.println("Đã load " + items.size() + " món từ database");
 
             if (items.isEmpty()) {
-                showError("Không có món nào trong menu. Vui lòng kiểm tra database.");
+                showError(msg("ui.order.menu_empty"));
                 return;
             }
 
@@ -136,7 +137,7 @@ public class MenuItemHandler {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            showError("Lỗi khi tải menu: " + e.getMessage());
+            showError(msg("ui.order.load_menu_failed", e.getMessage()));
         }
     }
 
@@ -367,7 +368,7 @@ public class MenuItemHandler {
                 if (presenter != null) {
                     presenter.openQuickRestockDialog(item);
                 } else {
-                    showError("Chức năng nhập kho nhanh chưa sẵn sàng.");
+                    showError(msg("ui.order.restock_not_ready"));
                 }
                 // Ngăn sự kiện click lan lên card (tránh thêm món ngoài ý muốn)
                 e.consume();
@@ -427,5 +428,9 @@ public class MenuItemHandler {
             n = n.getParent();
         }
         return false;
+    }
+
+    private String msg(String key, Object... args) {
+        return DomainMessages.formatKey(key, args);
     }
 }
