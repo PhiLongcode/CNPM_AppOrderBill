@@ -135,8 +135,12 @@ public class OrderPosApplication extends Application {
                         com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase =
                                         new com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase(tableRepository);
 
-                        PrinterService printerService = new SimplePrinterService(orderRepository, menuItemRepository,
-                                        printTemplateRepository, printerConfigRepository);
+                        // POS uses JavaFX-based printer service with preview + templates.
+                        PrinterService printerService = new com.giadinh.apporderbill.shared.service.RichPrinterService(
+                                        orderRepository,
+                                        paymentRepository,
+                                        printTemplateRepository,
+                                        printerConfigRepository);
 
                         // Initialize Use Cases - Order Management
                         OpenOrCreateOrderUseCase openOrCreateOrderUseCase = new OpenOrCreateOrderUseCase(

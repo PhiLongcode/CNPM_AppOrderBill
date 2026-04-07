@@ -67,6 +67,13 @@ public class ModuleRepositoryImpl implements ModuleRepository {
             try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
                 pstmt.setString(1, module.getName());
                 pstmt.executeUpdate();
+                // SQLite way to get generated id.
+                try (Statement s = connection.createStatement();
+                        ResultSet rs = s.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        module.setId(rs.getInt(1));
+                    }
+                }
             } catch (SQLException e) {
                 System.err.println("Error saving new module: " + e.getMessage());
                 e.printStackTrace();

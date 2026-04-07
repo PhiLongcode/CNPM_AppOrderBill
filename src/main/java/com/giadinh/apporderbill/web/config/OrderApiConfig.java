@@ -23,6 +23,7 @@ import com.giadinh.apporderbill.printer.repository.SqlitePrinterConfigRepository
 
 import com.giadinh.apporderbill.shared.service.PrinterService;
 import com.giadinh.apporderbill.shared.service.SimplePrinterService;
+import com.giadinh.apporderbill.shared.service.DefaultPrinterService;
 
 import com.giadinh.apporderbill.orders.OrdersComponent;
 import com.giadinh.apporderbill.orders.OrdersComponentImpl;
@@ -99,8 +100,8 @@ public class OrderApiConfig {
             MenuItemRepository menuItemRepository,
             PrintTemplateRepository printTemplateRepository,
             PrinterConfigRepository printerConfigRepository) {
-        return new SimplePrinterService(orderRepository, menuItemRepository, printTemplateRepository,
-                printerConfigRepository);
+        // REST/server-side: no JavaFX preview; default to console printer.
+        return new DefaultPrinterService();
     }
 
     // --- Component Implementations ---
