@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.catalog.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.Objects;
 
 public class MenuItem {
@@ -20,19 +23,19 @@ public class MenuItem {
                       boolean isStockManaged, int currentStockQuantity, int minStockQuantity, 
                       int maxStockQuantity, String unitOfMeasureName, MenuItemStatus status) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên món ăn không được trống.");
+            throw new DomainException(ErrorCode.MENU_ITEM_NAME_REQUIRED);
         }
         if (price <= 0) {
-            throw new IllegalArgumentException("Giá bán phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.MENU_ITEM_PRICE_INVALID);
         }
         if (categoryName == null || categoryName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Loại món không được trống.");
+            throw new DomainException(ErrorCode.MENU_ITEM_CATEGORY_REQUIRED);
         }
         if (isStockManaged && (minStockQuantity < 0 || maxStockQuantity < minStockQuantity)) {
-            throw new IllegalArgumentException("Số lượng tồn kho min/max không hợp lệ.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_LEVELS_INVALID);
         }
         if (isStockManaged && currentStockQuantity < 0) {
-            throw new IllegalArgumentException("Số lượng tồn kho hiện tại không hợp lệ.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_CURRENT_INVALID);
         }
 
         this.id = id;
@@ -69,21 +72,21 @@ public class MenuItem {
     // Setters (chỉ cho các thuộc tính có thể thay đổi nghiệp vụ)
     public void setName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên món ăn không được trống.");
+            throw new DomainException(ErrorCode.MENU_ITEM_NAME_REQUIRED);
         }
         this.name = name;
     }
 
     public void setPrice(double price) {
         if (price <= 0) {
-            throw new IllegalArgumentException("Giá bán phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.MENU_ITEM_PRICE_INVALID);
         }
         this.price = price;
     }
 
     public void setCategoryName(String categoryName) {
         if (categoryName == null || categoryName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Loại món không được trống.");
+            throw new DomainException(ErrorCode.MENU_ITEM_CATEGORY_REQUIRED);
         }
         this.categoryName = categoryName;
     }
@@ -97,7 +100,7 @@ public class MenuItem {
     public void setStatus(MenuItemStatus status) {
         // Logic nghiệp vụ: nếu món hết hàng, không thể đặt ACTIVE
         if (this.isStockManaged && this.currentStockQuantity == 0 && status == MenuItemStatus.ACTIVE) {
-            throw new IllegalStateException("Không thể đặt món ăn active khi hết hàng.");
+            throw new DomainException(ErrorCode.MENU_ITEM_CANNOT_ACTIVATE_OUT_OF_STOCK);
         }
         this.status = status;
     }
@@ -111,13 +114,13 @@ public class MenuItem {
      */
     public int decreaseStock(int quantity) {
         if (!isStockManaged) {
-            throw new IllegalStateException("Món ăn này không được quản lý tồn kho.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_NOT_TRACKED);
         }
         if (quantity <= 0) {
-            throw new IllegalArgumentException("Số lượng giảm phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_DECREASE_INVALID);
         }
         if (this.currentStockQuantity < quantity) {
-            throw new IllegalStateException("Không đủ hàng trong kho.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_INSUFFICIENT);
         }
         this.currentStockQuantity -= quantity;
         if (this.currentStockQuantity == 0) {
@@ -135,10 +138,10 @@ public class MenuItem {
      */
     public int increaseStock(int quantity) {
         if (!isStockManaged) {
-            throw new IllegalStateException("Món ăn này không được quản lý tồn kho.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_NOT_TRACKED);
         }
         if (quantity <= 0) {
-            throw new IllegalArgumentException("Số lượng tăng phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.MENU_ITEM_STOCK_INCREASE_INVALID);
         }
         this.currentStockQuantity += quantity;
         if (this.currentStockQuantity > 0 && this.status == MenuItemStatus.OUT_OF_STOCK) {

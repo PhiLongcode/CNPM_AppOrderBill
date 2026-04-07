@@ -2,6 +2,8 @@ package com.giadinh.apporderbill.catalog.repository;
 
 import com.giadinh.apporderbill.catalog.model.MenuItem;
 import com.giadinh.apporderbill.catalog.model.MenuItemStatus;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.shared.util.SqliteConnectionProvider;
 
 import java.sql.Connection;
@@ -149,7 +151,7 @@ public class SqliteMenuItemRepository implements MenuItemRepository {
 
     private Connection getConnection() throws Exception {
         if (connectionProvider == null) {
-            throw new IllegalStateException("SqliteConnectionProvider is not configured.");
+            throw new DomainException(ErrorCode.SQLITE_CONNECTION_NOT_CONFIGURED);
         }
         return connectionProvider.getConnection();
     }

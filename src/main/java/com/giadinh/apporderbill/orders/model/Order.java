@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.orders.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,7 +79,7 @@ public class Order {
 
     public void updateTableId(String newTableId) {
         if (newTableId == null || newTableId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Table ID mới không được trống.");
+            throw new DomainException(ErrorCode.ORDER_NEW_TABLE_ID_REQUIRED);
         }
         this.tableId = newTableId;
     }
@@ -87,7 +90,7 @@ public class Order {
             this.items.add(item);
             calculateTotalAmount();
         } else {
-            throw new IllegalStateException("Không thể thêm món vào đơn hàng đã hoàn thành hoặc hủy.");
+            throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
         }
     }
 
@@ -101,9 +104,9 @@ public class Order {
                     return;
                 }
             }
-            throw new IllegalArgumentException("Không tìm thấy món ăn trong đơn hàng.");
+            throw new DomainException(ErrorCode.ORDER_ITEM_NOT_FOUND);
         } else {
-            throw new IllegalStateException("Không thể cập nhật món trong đơn hàng đã hoàn thành hoặc hủy.");
+            throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
         }
     }
 
@@ -114,10 +117,10 @@ public class Order {
             if (removed) {
                 calculateTotalAmount();
             } else {
-                throw new IllegalArgumentException("Không tìm thấy món ăn trong đơn hàng.");
+                throw new DomainException(ErrorCode.ORDER_ITEM_NOT_FOUND);
             }
         } else {
-            throw new IllegalStateException("Không thể xóa món khỏi đơn hàng đã hoàn thành hoặc hủy.");
+            throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
         }
     }
     

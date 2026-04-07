@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.identity.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -14,7 +17,7 @@ public class Role {
 
     public Role(String name, String description) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên vai trò không được trống.");
+            throw new DomainException(ErrorCode.ROLE_NAME_REQUIRED);
         }
         this.roleId = UUID.randomUUID().toString();
         this.name = name;

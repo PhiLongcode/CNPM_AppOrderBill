@@ -59,9 +59,8 @@ public class IdentityConfig {
     @Bean
     public LoginUseCase loginUseCase(UserRepository userRepository,
                                      RoleGroupRepository roleGroupRepository,
-                                     PermissionAssignmentRepository permissionAssignmentRepository,
-                                     FunctionRepository functionRepository) {
-        return new LoginUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
+                                     PermissionAssignmentRepository permissionAssignmentRepository) {
+        return new LoginUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository);
     }
 
     @Bean

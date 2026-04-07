@@ -53,11 +53,14 @@ public class BillingComponentImpl implements BillingComponent {
         deletePaymentsByDateRangeUseCase.execute(start, end);
     }
     @Override
-    public PrintReceiptOutput printReceipt(PrintReceiptInput input) { return printReceiptUseCase.execute(input); }
+    public PrintReceiptOutput printReceipt(PrintReceiptInput input) {
+        printReceiptUseCase.execute(input);
+        return new PrintReceiptOutput();
+    }
     @Override
     public PrintReceiptOutput reprintReceipt(Long paymentId) {
         reprintReceiptUseCase.execute(paymentId);
-        return new PrintReceiptOutput(true, "In lại hóa đơn thành công.");
+        return new PrintReceiptOutput();
     }
 }
 

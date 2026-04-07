@@ -34,8 +34,10 @@
         </VBox>
     </top>
 
-    <!-- Main Content: Split between Menu (left) and Order (right) -->
+    <!-- Main: SplitPane dọc — thanh kéo giữa (menu+order) và danh sách bàn -->
     <center>
+        <SplitPane dividerPositions="0.78" orientation="VERTICAL" maxHeight="1.7976931348623157E308"
+                   style="-fx-background-color: #f5f5f5;">
         <SplitPane dividerPositions="0.55" orientation="HORIZONTAL">
             <!-- LEFT PANEL: Menu Items -->
             <VBox spacing="0">
@@ -211,29 +213,36 @@
                 </HBox>
             </VBox>
         </SplitPane>
-    </center>
 
-    <!-- Bottom: Table Grid -->
-    <bottom>
-        <VBox spacing="5" style="-fx-background-color: white; -fx-padding: 10;">
-            <Label text="Danh sách bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-            <HBox spacing="5">
-                <children>
-                    <ToggleButton fx:id="allTablesFilterBtn" text="Tất cả" selected="true"/>
-                    <ToggleButton fx:id="inUseTablesFilterBtn" text="Đang dùng"/>
-                    <ToggleButton fx:id="emptyTablesFilterBtn" text="Trống"/>
-                    <Region HBox.hgrow="ALWAYS"/>
-                    <Button fx:id="addTableButton" text="+ Thêm bàn" onAction="#onAddTableClick"
-                            style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;; -fx-padding: 10 20 10 20;"/>
-                </children>
-            </HBox>
-            <ScrollPane fitToWidth="true" prefViewportHeight="120">
-                <content>
-                    <FlowPane fx:id="tableContainer" hgap="10" vgap="10" prefWrapLength="1000"
-                              style="-fx-padding: 5; -fx-font-weight: bold; -fx-font-size: 18px;">
-                    </FlowPane>
-                </content>
-            </ScrollPane>
-        </VBox>
-    </bottom>
+            <!-- Dưới: danh sách bàn (cùng ranh giới với vùng nút thanh toán phía trên) -->
+            <VBox spacing="0" style="-fx-background-color: white;" VBox.vgrow="ALWAYS">
+                <VBox spacing="0" style="-fx-background-color: white; -fx-padding: 10 10 5 10;">
+                    <SplitPane dividerPositions="0.75" orientation="HORIZONTAL"
+                               maxWidth="1.7976931348623157E308"
+                               style="-fx-background-color: white;">
+                        <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-background-color: white;">
+                            <children>
+                                <Label text="Danh sách bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                <ToggleButton fx:id="allTablesFilterBtn" text="Tất cả" selected="true"/>
+                                <ToggleButton fx:id="inUseTablesFilterBtn" text="Đang dùng"/>
+                                <ToggleButton fx:id="emptyTablesFilterBtn" text="Trống"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                            </children>
+                        </HBox>
+                        <Button fx:id="addTableButton" text="+ Thêm bàn" onAction="#onAddTableClick"
+                                minWidth="120" prefWidth="150"
+                                style="-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 16 10 16;"/>
+                    </SplitPane>
+                </VBox>
+                <ScrollPane fitToWidth="true" minHeight="80" VBox.vgrow="ALWAYS"
+                            style="-fx-background-color: white; -fx-padding: 0 10 10 10;">
+                    <content>
+                        <FlowPane fx:id="tableContainer" hgap="10" vgap="10" prefWrapLength="1000"
+                                  style="-fx-padding: 5; -fx-font-weight: bold; -fx-font-size: 18px;">
+                        </FlowPane>
+                    </content>
+                </ScrollPane>
+            </VBox>
+        </SplitPane>
+    </center>
 </BorderPane>

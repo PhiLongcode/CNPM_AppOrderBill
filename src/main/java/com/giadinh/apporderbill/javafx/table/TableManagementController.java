@@ -4,6 +4,7 @@ import com.giadinh.apporderbill.table.usecase.AddTableUseCase;
 import com.giadinh.apporderbill.table.usecase.ClearTableUseCase;
 import com.giadinh.apporderbill.table.usecase.DeleteTableUseCase;
 import com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase;
+import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.table.usecase.dto.AddTableInput;
 import com.giadinh.apporderbill.table.usecase.dto.ClearTableInput;
 import com.giadinh.apporderbill.table.usecase.dto.DeleteTableInput;
@@ -94,9 +95,10 @@ public class TableManagementController {
             alert(Alert.AlertType.WARNING, "Tên bàn không được để trống.");
             return;
         }
-        var out = addTableUseCase.execute(new AddTableInput(name));
-        if (!out.isSuccess()) {
-            alert(Alert.AlertType.ERROR, out.getMessage());
+        try {
+            addTableUseCase.execute(new AddTableInput(name));
+        } catch (DomainException e) {
+            alert(Alert.AlertType.ERROR, e.getMessage());
             return;
         }
         onRefresh();

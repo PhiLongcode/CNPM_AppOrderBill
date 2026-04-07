@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.kitchen.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintKitchenTicketOutput;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintSelectedItemsInput;
 import com.giadinh.apporderbill.orders.model.Order;
@@ -26,11 +28,11 @@ public class PrintSelectedItemsUseCase {
 
     public PrintKitchenTicketOutput execute(PrintSelectedItemsInput input) {
         if (input == null || input.getOrderId() == null || input.getOrderItemIds() == null || input.getOrderItemIds().isEmpty()) {
-            throw new IllegalArgumentException("Thiếu danh sách món đã chọn.");
+            throw new DomainException(ErrorCode.KITCHEN_SELECTED_ITEMS_REQUIRED);
         }
 
         Order order = orderRepository.findById(String.valueOf(input.getOrderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy order."));
+                .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
 
         HashSet<String> selected = new HashSet<>();
         input.getOrderItemIds().forEach(id -> selected.add(String.valueOf(id)));
@@ -69,14 +71,14 @@ public class PrintSelectedItemsUseCase {
         }
 
         if (count == 0) {
-            throw new IllegalStateException("Không có món để in.");
+            throw new DomainException(ErrorCode.KITCHEN_NO_ITEMS_TO_PRINT);
         }
 
         content.append("============================\n");
-        boolean ok = printerService.printKitchenTicket(content.toString());
-        return ok
-                ? new PrintKitchenTicketOutput(true, null)
-                : new PrintKitchenTicketOutput(false, "Không gửi được lệnh in món đã chọn.");
+        if (!printerService.printKitchenTicket(content.toString())) {
+            throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
+        }
+        return new PrintKitchenTicketOutput(true, null);
     }
 }
 

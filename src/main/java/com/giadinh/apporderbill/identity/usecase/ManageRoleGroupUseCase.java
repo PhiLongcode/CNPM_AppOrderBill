@@ -8,8 +8,9 @@ import com.giadinh.apporderbill.identity.repository.FunctionRepository;
 import com.giadinh.apporderbill.identity.repository.PermissionAssignmentRepository;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageRoleGroupInput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageRoleGroupOutput;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,44 +32,41 @@ public class ManageRoleGroupUseCase {
 
     public ManageRoleGroupOutput create(ManageRoleGroupInput input) {
         if (roleGroupRepository.findByName(input.getName()).isPresent()) {
-            return new ManageRoleGroupOutput(false, "Tên nhóm quyền đã tồn tại.", 0);
+            throw new DomainException(ErrorCode.ROLE_GROUP_NAME_DUPLICATE);
         }
 
-        RoleGroup newRoleGroup = new RoleGroup(0, input.getName(), input.getDescription()); // ID sẽ được DB tự động tạo
+        RoleGroup newRoleGroup = new RoleGroup(0, input.getName(), input.getDescription());
         roleGroupRepository.save(newRoleGroup);
 
-        // Gán các quyền ban đầu
         if (input.getFunctionIds() != null && !input.getFunctionIds().isEmpty()) {
             for (Integer functionId : input.getFunctionIds()) {
                 Optional<Function> functionOptional = functionRepository.findById(functionId);
                 if (functionOptional.isPresent()) {
-                    PermissionAssignment assignment = new PermissionAssignment(0, newRoleGroup.getId(), functionId, true, false); // Mặc định có quyền xem
+                    PermissionAssignment assignment = new PermissionAssignment(0, newRoleGroup.getId(), functionId, true, false);
                     permissionAssignmentRepository.save(assignment);
                 }
             }
         }
 
-        return new ManageRoleGroupOutput(true, "Tạo nhóm quyền thành công.", newRoleGroup.getId());
+        return new ManageRoleGroupOutput(newRoleGroup.getId());
     }
 
     public ManageRoleGroupOutput update(int roleGroupId, ManageRoleGroupInput input) {
         Optional<RoleGroup> existingRoleGroupOptional = roleGroupRepository.findById(roleGroupId);
         if (existingRoleGroupOptional.isEmpty()) {
-            return new ManageRoleGroupOutput(false, "Nhóm quyền không tồn tại.", roleGroupId);
+            throw new DomainException(ErrorCode.ROLE_GROUP_NOT_FOUND);
         }
         RoleGroup existingRoleGroup = existingRoleGroupOptional.get();
 
-        // Kiểm tra trùng tên
         Optional<RoleGroup> roleGroupWithSameName = roleGroupRepository.findByName(input.getName());
         if (roleGroupWithSameName.isPresent() && roleGroupWithSameName.get().getId() != roleGroupId) {
-            return new ManageRoleGroupOutput(false, "Tên nhóm quyền đã tồn tại bởi nhóm khác.", roleGroupId);
+            throw new DomainException(ErrorCode.ROLE_GROUP_NAME_DUPLICATE);
         }
 
         existingRoleGroup.setName(input.getName());
         existingRoleGroup.setDescription(input.getDescription());
         roleGroupRepository.save(existingRoleGroup);
 
-        // Cập nhật quyền hạn: xóa hết quyền cũ và thêm lại quyền mới
         List<PermissionAssignment> currentAssignments = permissionAssignmentRepository.findByRoleGroupId(roleGroupId);
         for (PermissionAssignment assignment : currentAssignments) {
             permissionAssignmentRepository.delete(assignment.getId());
@@ -78,17 +76,16 @@ public class ManageRoleGroupUseCase {
             for (Integer functionId : input.getFunctionIds()) {
                 Optional<Function> functionOptional = functionRepository.findById(functionId);
                 if (functionOptional.isPresent()) {
-                    PermissionAssignment assignment = new PermissionAssignment(0, roleGroupId, functionId, true, false); // Mặc định có quyền xem
+                    PermissionAssignment assignment = new PermissionAssignment(0, roleGroupId, functionId, true, false);
                     permissionAssignmentRepository.save(assignment);
                 }
             }
         }
 
-        return new ManageRoleGroupOutput(true, "Cập nhật nhóm quyền thành công.", roleGroupId);
+        return new ManageRoleGroupOutput(roleGroupId);
     }
 
     public void delete(int roleGroupId) {
-        // Xóa tất cả các phân quyền liên quan trước
         List<PermissionAssignment> assignments = permissionAssignmentRepository.findByRoleGroupId(roleGroupId);
         for (PermissionAssignment assignment : assignments) {
             permissionAssignmentRepository.delete(assignment.getId());

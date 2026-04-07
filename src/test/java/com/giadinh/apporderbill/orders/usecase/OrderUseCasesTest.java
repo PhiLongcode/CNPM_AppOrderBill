@@ -28,7 +28,7 @@ class OrderUseCasesTest {
         assertEquals(100000, total.getSubtotal());
         assertEquals(90000, total.getFinalAmount());
 
-        CancelOrderUseCase cancelUseCase = new CancelOrderUseCase(repo, null);
+        CancelOrderUseCase cancelUseCase = new CancelOrderUseCase(repo, null, null);
         cancelUseCase.execute(new CancelOrderInput(1L, "test", "tester"));
         assertEquals(OrderStatus.CANCELLED, repo.findById("1").orElseThrow().getStatus());
     }

@@ -1,6 +1,8 @@
 package com.giadinh.apporderbill.javafx.admin;
 
 import com.giadinh.apporderbill.identity.IdentityComponent;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import com.giadinh.apporderbill.identity.model.Function;
 import com.giadinh.apporderbill.identity.model.PermissionAssignment;
 import com.giadinh.apporderbill.identity.model.RoleGroup;
@@ -93,9 +95,10 @@ public class AdminManagementController {
         Optional<UserFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         UserFormResult input = result.get();
-        var output = identityComponent.createUser(new ManageUserInput(input.username(), input.password(), input.roleGroupId()));
-        if (!output.isSuccess()) {
-            showError(output.getMessage());
+        try {
+            identityComponent.createUser(new ManageUserInput(input.username(), input.password(), input.roleGroupId()));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();
@@ -113,9 +116,10 @@ public class AdminManagementController {
         Optional<UserFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         UserFormResult input = result.get();
-        var output = identityComponent.updateUser(selected.getId(), new ManageUserInput(input.username(), input.password(), input.roleGroupId()));
-        if (!output.isSuccess()) {
-            showError(output.getMessage());
+        try {
+            identityComponent.updateUser(selected.getId(), new ManageUserInput(input.username(), input.password(), input.roleGroupId()));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();
@@ -139,9 +143,10 @@ public class AdminManagementController {
         Optional<RoleFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         RoleFormResult input = result.get();
-        var out = identityComponent.createRoleGroup(new ManageRoleGroupInput(input.name(), input.description(), Set.of()));
-        if (!out.isSuccess()) {
-            showError(out.getMessage());
+        try {
+            identityComponent.createRoleGroup(new ManageRoleGroupInput(input.name(), input.description(), Set.of()));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();
@@ -160,11 +165,12 @@ public class AdminManagementController {
         Optional<RoleFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         RoleFormResult input = result.get();
-        var out = identityComponent.updateRoleGroup(
-                selected.getId(),
-                new ManageRoleGroupInput(input.name(), input.description(), existingFunctions));
-        if (!out.isSuccess()) {
-            showError(out.getMessage());
+        try {
+            identityComponent.updateRoleGroup(
+                    selected.getId(),
+                    new ManageRoleGroupInput(input.name(), input.description(), existingFunctions));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();
@@ -188,10 +194,11 @@ public class AdminManagementController {
         Optional<PermissionFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         PermissionFormResult input = result.get();
-        var out = identityComponent.createPermissionAssignment(
-                new ManagePermissionAssignmentInput(input.roleGroupId(), input.functionId(), input.canView(), input.canOperate()));
-        if (!out.isSuccess()) {
-            showError(out.getMessage());
+        try {
+            identityComponent.createPermissionAssignment(
+                    new ManagePermissionAssignmentInput(input.roleGroupId(), input.functionId(), input.canView(), input.canOperate()));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();
@@ -208,11 +215,12 @@ public class AdminManagementController {
         Optional<PermissionFormResult> result = dialog.showAndWait();
         if (result.isEmpty()) return;
         PermissionFormResult input = result.get();
-        var out = identityComponent.updatePermissionAssignment(
-                selected.getId(),
-                new ManagePermissionAssignmentInput(input.roleGroupId(), input.functionId(), input.canView(), input.canOperate()));
-        if (!out.isSuccess()) {
-            showError(out.getMessage());
+        try {
+            identityComponent.updatePermissionAssignment(
+                    selected.getId(),
+                    new ManagePermissionAssignmentInput(input.roleGroupId(), input.functionId(), input.canView(), input.canOperate()));
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
             return;
         }
         refreshAll();

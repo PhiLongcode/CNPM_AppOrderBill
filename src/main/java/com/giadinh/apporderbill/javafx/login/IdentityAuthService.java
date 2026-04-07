@@ -33,7 +33,7 @@ public class IdentityAuthService {
             UserRepository userRepository = new UserRepositoryImpl(connection);
             new IdentityDataInitializer(moduleRepository, functionRepository, roleGroupRepository,
                     permissionAssignmentRepository, userRepository).run();
-            this.loginUseCase = new LoginUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
+            this.loginUseCase = new LoginUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository);
             this.checkAccessUseCase = new CheckAccessUseCase(userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
         } catch (Exception e) {
             throw new RuntimeException("Không thể khởi tạo IdentityAuthService", e);

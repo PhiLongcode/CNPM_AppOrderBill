@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.orders.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.UUID;
 
 public class OrderItem {
@@ -14,7 +17,7 @@ public class OrderItem {
     // Constructor cho OrderItem mới
     public OrderItem(String orderId, String menuItemId, String menuItemName, int quantity, double price) {
         if (quantity <= 0) {
-            throw new IllegalArgumentException("Số lượng món ăn phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.ORDER_ITEM_QUANTITY_INVALID);
         }
         this.orderItemId = UUID.randomUUID().toString();
         this.orderId = orderId;
@@ -71,7 +74,7 @@ public class OrderItem {
     // Cập nhật số lượng
     public void updateQuantity(int newQuantity) {
         if (newQuantity <= 0) {
-            throw new IllegalArgumentException("Số lượng món ăn phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.ORDER_ITEM_QUANTITY_INVALID);
         }
         this.quantity = newQuantity;
     }

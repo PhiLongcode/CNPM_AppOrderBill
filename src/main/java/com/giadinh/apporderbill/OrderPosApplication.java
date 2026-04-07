@@ -49,8 +49,7 @@ public class OrderPosApplication extends Application {
                         loginStage.setScene(loginScene);
                         loginStage.showAndWait();
                         com.giadinh.apporderbill.javafx.login.LoginController loginController = loginLoader.getController();
-                        if (loginController == null || loginController.getLoginOutput() == null
-                                        || !loginController.getLoginOutput().isSuccess()) {
+                        if (loginController == null || loginController.getLoginOutput() == null) {
                                 Platform.exit();
                                 return;
                         }
@@ -103,7 +102,7 @@ public class OrderPosApplication extends Application {
                         com.giadinh.apporderbill.identity.repository.UserRepository userRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.UserRepositoryImpl(
                                         identityConnection);
                         com.giadinh.apporderbill.identity.usecase.LoginUseCase loginUseCase = new com.giadinh.apporderbill.identity.usecase.LoginUseCase(
-                                        userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
+                                        userRepository, roleGroupRepository, permissionAssignmentRepository);
                         com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase checkAccessUseCase = new com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase(
                                         userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
                         com.giadinh.apporderbill.identity.usecase.ManageUserUseCase manageUserUseCase = new com.giadinh.apporderbill.identity.usecase.ManageUserUseCase(
@@ -153,7 +152,16 @@ public class OrderPosApplication extends Application {
                         CalculateOrderTotalUseCase calculateOrderTotalUseCase = new CalculateOrderTotalUseCase(
                                         orderRepository);
                         CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(orderRepository,
-                                        menuItemRepository);
+                                        menuItemRepository, tableRepository);
+
+                        com.giadinh.apporderbill.orders.usecase.TransferOrderBetweenTablesUseCase transferOrderBetweenTablesUseCase = new com.giadinh.apporderbill.orders.usecase.TransferOrderBetweenTablesUseCase(
+                                        orderRepository, tableRepository);
+                        com.giadinh.apporderbill.orders.usecase.ReleaseEmptyActiveOrderUseCase releaseEmptyActiveOrderUseCase = new com.giadinh.apporderbill.orders.usecase.ReleaseEmptyActiveOrderUseCase(
+                                        orderRepository, tableRepository);
+                        com.giadinh.apporderbill.table.usecase.RenameTableUseCase renameTableUseCase = new com.giadinh.apporderbill.table.usecase.RenameTableUseCase(
+                                        tableRepository, orderRepository);
+                        com.giadinh.apporderbill.table.usecase.SetTableReservationUseCase setTableReservationUseCase = new com.giadinh.apporderbill.table.usecase.SetTableReservationUseCase(
+                                        tableRepository, orderRepository);
 
                         // Initialize Use Cases - Kitchen
                         PrintKitchenTicketUseCase printKitchenTicketUseCase = new PrintKitchenTicketUseCase(
@@ -331,6 +339,10 @@ public class OrderPosApplication extends Application {
                                         controller.setDeleteTableUseCase(deleteTableUseCase);
                                         controller.setClearTableUseCase(clearTableUseCase);
                                         controller.setGetAllTablesUseCase(getAllTablesUseCase);
+                                        controller.setTransferOrderBetweenTablesUseCase(transferOrderBetweenTablesUseCase);
+                                        controller.setReleaseEmptyActiveOrderUseCase(releaseEmptyActiveOrderUseCase);
+                                        controller.setRenameTableUseCase(renameTableUseCase);
+                                        controller.setSetTableReservationUseCase(setTableReservationUseCase);
 
                                         // Inject reprint use cases vào presenter
                                         presenter.setReprintUseCases(getTodayPaymentsUseCase, reprintReceiptUseCase);

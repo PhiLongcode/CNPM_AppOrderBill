@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.table.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.UUID;
 
 public class Table {
@@ -44,13 +47,19 @@ public class Table {
         this.tableName = tableName;
     }
 
+    public void setStatus(TableStatus status) {
+        if (status != null) {
+            this.status = status;
+        }
+    }
+
     // Phương thức gán Order cho bàn
     public void assignOrder(String orderId) {
-        if (this.status == TableStatus.AVAILABLE) {
+        if (this.status == TableStatus.AVAILABLE || this.status == TableStatus.RESERVED) {
             this.currentOrderId = orderId;
             this.status = TableStatus.OCCUPIED; // Chuyển trạng thái thành đang phục vụ
         } else {
-            throw new IllegalStateException("Bàn đang không trống hoặc đã có đơn hàng.");
+            throw new DomainException(ErrorCode.TABLE_NOT_AVAILABLE_FOR_ASSIGN);
         }
     }
 

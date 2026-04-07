@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.customer.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.customer.model.Customer;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
 
@@ -25,10 +27,10 @@ public class CustomerUseCases {
 
     public Customer create(String name, String phone, int points) {
         if (phone == null || phone.isBlank()) {
-            throw new IllegalArgumentException("Số điện thoại không được để trống.");
+            throw new DomainException(ErrorCode.CUSTOMER_PHONE_REQUIRED);
         }
         if (repository.findByPhone(phone.trim()).isPresent()) {
-            throw new IllegalArgumentException("Số điện thoại đã tồn tại.");
+            throw new DomainException(ErrorCode.CUSTOMER_PHONE_DUPLICATE);
         }
         return repository.save(new Customer(null, name, phone, points));
     }
@@ -37,7 +39,7 @@ public class CustomerUseCases {
         Customer existing = repository.findById(id).orElseThrow();
         repository.findByPhone(phone).ifPresent(found -> {
             if (!found.getId().equals(id)) {
-                throw new IllegalArgumentException("Số điện thoại đã tồn tại.");
+                throw new DomainException(ErrorCode.CUSTOMER_PHONE_DUPLICATE);
             }
         });
         existing.setName(name);

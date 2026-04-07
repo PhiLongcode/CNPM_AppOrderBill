@@ -1,13 +1,13 @@
 package com.giadinh.apporderbill.identity.usecase;
 
 import com.giadinh.apporderbill.identity.model.PermissionAssignment;
-import com.giadinh.apporderbill.identity.model.RoleGroup;
-import com.giadinh.apporderbill.identity.model.Function;
 import com.giadinh.apporderbill.identity.repository.PermissionAssignmentRepository;
 import com.giadinh.apporderbill.identity.repository.RoleGroupRepository;
 import com.giadinh.apporderbill.identity.repository.FunctionRepository;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentInput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentOutput;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 
 import java.util.Optional;
 
@@ -27,50 +27,45 @@ public class ManagePermissionAssignmentUseCase {
 
     public ManagePermissionAssignmentOutput create(ManagePermissionAssignmentInput input) {
         if (roleGroupRepository.findById(input.getRoleGroupId()).isEmpty()) {
-            return new ManagePermissionAssignmentOutput(false, "Nhóm quyền không tồn tại.", 0);
+            throw new DomainException(ErrorCode.ROLE_GROUP_NOT_FOUND);
         }
         if (functionRepository.findById(input.getFunctionId()).isEmpty()) {
-            return new ManagePermissionAssignmentOutput(false, "Chức năng không tồn tại.", 0);
+            throw new DomainException(ErrorCode.IDENTITY_FUNCTION_NOT_FOUND);
         }
 
-        // Kiểm tra xem phân quyền này đã tồn tại chưa
         if (permissionAssignmentRepository.findByRoleGroupAndFunction(input.getRoleGroupId(), input.getFunctionId()).isPresent()) {
-            return new ManagePermissionAssignmentOutput(false, "Phân quyền cho nhóm và chức năng này đã tồn tại.", 0);
+            throw new DomainException(ErrorCode.PERMISSION_ASSIGNMENT_DUPLICATE);
         }
 
         PermissionAssignment newAssignment = new PermissionAssignment(0, input.getRoleGroupId(), input.getFunctionId(), input.isCanView(), input.isCanOperate());
         permissionAssignmentRepository.save(newAssignment);
-        return new ManagePermissionAssignmentOutput(true, "Tạo phân quyền thành công.", newAssignment.getId());
+        return new ManagePermissionAssignmentOutput(newAssignment.getId());
     }
 
     public ManagePermissionAssignmentOutput update(int assignmentId, ManagePermissionAssignmentInput input) {
         Optional<PermissionAssignment> existingAssignmentOptional = permissionAssignmentRepository.findById(assignmentId);
         if (existingAssignmentOptional.isEmpty()) {
-            return new ManagePermissionAssignmentOutput(false, "Phân quyền không tồn tại.", assignmentId);
+            throw new DomainException(ErrorCode.PERMISSION_ASSIGNMENT_NOT_FOUND);
         }
         PermissionAssignment existingAssignment = existingAssignmentOptional.get();
 
         if (roleGroupRepository.findById(input.getRoleGroupId()).isEmpty()) {
-            return new ManagePermissionAssignmentOutput(false, "Nhóm quyền không tồn tại.", assignmentId);
+            throw new DomainException(ErrorCode.ROLE_GROUP_NOT_FOUND);
         }
         if (functionRepository.findById(input.getFunctionId()).isEmpty()) {
-            return new ManagePermissionAssignmentOutput(false, "Chức năng không tồn tại.", assignmentId);
+            throw new DomainException(ErrorCode.IDENTITY_FUNCTION_NOT_FOUND);
         }
 
-        // Kiểm tra xem có phân quyền khác trùng với thông tin mới không (nếu có thay đổi roleGroupId hoặc functionId)
         Optional<PermissionAssignment> existingDuplicateAssignment = permissionAssignmentRepository.findByRoleGroupAndFunction(input.getRoleGroupId(), input.getFunctionId());
         if (existingDuplicateAssignment.isPresent() && existingDuplicateAssignment.get().getId() != assignmentId) {
-            return new ManagePermissionAssignmentOutput(false, "Phân quyền trùng lặp đã tồn tại.", assignmentId);
+            throw new DomainException(ErrorCode.PERMISSION_ASSIGNMENT_DUPLICATE);
         }
 
-        // Cập nhật thông tin phân quyền
-        // existingAssignment.setRoleGroupId(input.getRoleGroupId()); // Không cho phép thay đổi FKs trực tiếp sau khi tạo
-        // existingAssignment.setFunctionId(input.getFunctionId());   // Nếu muốn thay đổi, cần xóa và tạo lại
         existingAssignment.setCanView(input.isCanView());
         existingAssignment.setCanOperate(input.isCanOperate());
 
         permissionAssignmentRepository.save(existingAssignment);
-        return new ManagePermissionAssignmentOutput(true, "Cập nhật phân quyền thành công.", assignmentId);
+        return new ManagePermissionAssignmentOutput(assignmentId);
     }
 
     public void delete(int assignmentId) {

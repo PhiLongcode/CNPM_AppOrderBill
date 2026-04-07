@@ -40,7 +40,7 @@ public class OrdersComponentImpl implements OrdersComponent {
             public void save(com.giadinh.apporderbill.table.model.Table t){}
             public void delete(String id){}
         }, null);
-        this.cancelOrderUseCase = new CancelOrderUseCase(orderRepository, menuItemRepository);
+        this.cancelOrderUseCase = new CancelOrderUseCase(orderRepository, menuItemRepository, null);
     }
     public OpenOrCreateOrderOutput openOrCreateOrder(OpenOrCreateOrderInput input){ return openOrCreateOrderUseCase.execute(input); }
     public GetOrderDetailsOutput getOrderDetails(GetOrderDetailsInput input){ return getOrderDetailsUseCase.execute(input); }

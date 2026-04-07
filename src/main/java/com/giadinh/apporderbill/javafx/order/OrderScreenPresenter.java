@@ -14,6 +14,8 @@ import com.giadinh.apporderbill.kitchen.usecase.dto.PrintSelectedItemsInput;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.orders.usecase.dto.*;
 import com.giadinh.apporderbill.orders.model.Order;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 
 import java.util.HashSet;
 import java.util.List;
@@ -155,7 +157,7 @@ public class OrderScreenPresenter {
 
             updateView(output);
             view.showSuccess("Đã mở order cho bàn " + tableNumber);
-        } catch (IllegalArgumentException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi mở order: " + e.getMessage());
@@ -215,9 +217,7 @@ public class OrderScreenPresenter {
             view.clearItemInputFields();
         } catch (NumberFormatException e) {
             view.showError("Số lượng và đơn giá phải là số hợp lệ");
-        } catch (IllegalArgumentException e) {
-            view.showError(e.getMessage());
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi thêm món: " + e.getMessage());
@@ -256,9 +256,7 @@ public class OrderScreenPresenter {
             
             // Refresh menu items để cập nhật tồn kho realtime
             view.refreshMenuItems();
-        } catch (IllegalArgumentException e) {
-            view.showError(e.getMessage());
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi thêm món: " + e.getMessage());
@@ -370,8 +368,7 @@ public class OrderScreenPresenter {
                 // Vẫn refresh order vì món đã được đánh dấu là đã in
                 refreshOrder();
             }
-        } catch (IllegalStateException e) {
-            // Không có món cần in
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi in phiếu bếp: " + e.getMessage());
@@ -418,8 +415,11 @@ public class OrderScreenPresenter {
                 PrintReceiptInput receiptInput = new PrintReceiptInput(output.getPaymentId(), output.getOrderId());
                 printReceiptUseCase.execute(receiptInput);
                 printSuccess = true;
+            } catch (DomainException e) {
+                System.err.println("In hóa đơn thất bại: " + DomainMessages.format(e));
+                view.showError("Thanh toán đã lưu thành công!\n\nNhưng in hóa đơn thất bại: " + DomainMessages.format(e) +
+                        "\n\nBạn có thể in lại từ lịch sử thanh toán.");
             } catch (Exception e) {
-                // In thất bại - thông báo nhưng thanh toán đã được lưu
                 System.err.println("In hóa đơn thất bại: " + e.getMessage());
                 view.showError("Thanh toán đã lưu thành công!\n\nNhưng in hóa đơn thất bại: " + e.getMessage() +
                         "\n\nBạn có thể in lại từ lịch sử thanh toán.");
@@ -447,7 +447,7 @@ public class OrderScreenPresenter {
                 System.out.println("! Thanh toán thành công cho order #" + completedOrderId + " nhưng in bị hủy/lỗi");
             }
 
-        } catch (IllegalArgumentException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi thanh toán: " + e.getMessage());
@@ -513,6 +513,20 @@ public class OrderScreenPresenter {
     }
 
     /**
+     * Reset UI sau khi xóa order rỗng (mở nhầm bàn) cho đúng bàn đang chọn.
+     */
+    public void clearCurrentOrderUiAfterEmptyRelease() {
+        currentOrderId = null;
+        currentTableNumber = null;
+        view.displayTableNumber("");
+        view.displayOrderItems(List.of());
+        view.displayTotalAmount(0);
+        view.displayFinalAmount(0);
+        view.displayDiscountAmount(0);
+        view.refreshMenuItems();
+    }
+
+    /**
      * Lấy Order hiện tại với đầy đủ thông tin.
      */
     public Order getCurrentOrder() {
@@ -569,7 +583,7 @@ public class OrderScreenPresenter {
             
             // Refresh menu items để cập nhật tồn kho realtime
             view.refreshMenuItems();
-        } catch (IllegalArgumentException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi cập nhật số lượng: " + e.getMessage());
@@ -597,9 +611,7 @@ public class OrderScreenPresenter {
             
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
-        } catch (IllegalArgumentException e) {
-            view.showError(e.getMessage());
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi hủy món: " + e.getMessage());
@@ -627,9 +639,7 @@ public class OrderScreenPresenter {
             
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
-        } catch (IllegalArgumentException e) {
-            view.showError(e.getMessage());
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi xóa món: " + e.getMessage());
@@ -709,7 +719,7 @@ public class OrderScreenPresenter {
 
             // Refresh order details
             refreshCurrentOrder();
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi in lại phiếu bếp: " + e.getMessage());
@@ -742,7 +752,7 @@ public class OrderScreenPresenter {
 
             // Refresh order details
             refreshCurrentOrder();
-        } catch (IllegalStateException e) {
+        } catch (DomainException e) {
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError("Lỗi khi in món đã chọn: " + e.getMessage());

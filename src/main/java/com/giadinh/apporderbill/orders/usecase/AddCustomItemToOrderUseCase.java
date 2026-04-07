@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.orders.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.orders.model.OrderItem;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.usecase.dto.AddCustomItemInput;
@@ -14,7 +16,7 @@ public class AddCustomItemToOrderUseCase {
 
     public AddCustomItemOutput execute(AddCustomItemInput input) {
         var order = orderRepository.findById(String.valueOf(input.getOrderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy order."));
+                .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
 
         OrderItem item = new OrderItem(
                 order.getOrderId(),

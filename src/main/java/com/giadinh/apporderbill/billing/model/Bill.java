@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.billing.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -14,7 +17,7 @@ public class Bill {
     // Constructor cho Bill mới
     public Bill(String orderId, double totalAmount) {
         if (totalAmount <= 0) {
-            throw new IllegalArgumentException("Tổng số tiền hóa đơn phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.BILL_TOTAL_INVALID);
         }
         this.billId = UUID.randomUUID().toString();
         this.orderId = orderId;
@@ -65,7 +68,7 @@ public class Bill {
     // Phương thức thực hiện thanh toán cho hóa đơn
     public void processPayment(double amount) {
         if (amount <= 0) {
-            throw new IllegalArgumentException("Số tiền thanh toán phải lớn hơn 0.");
+            throw new DomainException(ErrorCode.BILL_PAYMENT_AMOUNT_INVALID);
         }
         if (this.status == BillStatus.PENDING) {
             this.paidAmount += amount;
@@ -73,9 +76,9 @@ public class Bill {
                 this.status = BillStatus.PAID; // Nếu số tiền trả đủ hoặc hơn, chuyển sang PAID
             }
         } else if (this.status == BillStatus.PAID) {
-            throw new IllegalStateException("Hóa đơn đã được thanh toán hoàn tất.");
+            throw new DomainException(ErrorCode.BILL_ALREADY_PAID);
         } else {
-            throw new IllegalStateException("Không thể thanh toán hóa đơn ở trạng thái hiện tại.");
+            throw new DomainException(ErrorCode.BILL_PAYMENT_STATE_INVALID);
         }
     }
 }

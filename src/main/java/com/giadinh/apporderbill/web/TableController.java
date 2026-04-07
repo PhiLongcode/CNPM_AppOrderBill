@@ -3,6 +3,7 @@ package com.giadinh.apporderbill.web;
 import com.giadinh.apporderbill.table.TableComponent;
 import com.giadinh.apporderbill.table.usecase.dto.*;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +29,7 @@ public class TableController {
 
     @PostMapping
     public ResponseEntity<AddTableOutput> addTable(@RequestBody AddTableInput input) {
-        return ResponseEntity.ok(tableComponent.addTable(input));
+        return ResponseEntity.status(HttpStatus.CREATED).body(tableComponent.addTable(input));
     }
 
     @DeleteMapping

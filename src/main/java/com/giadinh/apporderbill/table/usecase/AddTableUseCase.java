@@ -1,9 +1,10 @@
 package com.giadinh.apporderbill.table.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.table.model.Table;
 import com.giadinh.apporderbill.table.repository.TableRepository;
 import com.giadinh.apporderbill.table.usecase.dto.AddTableInput;
-import com.giadinh.apporderbill.table.usecase.dto.AddTableOutput;
 
 public class AddTableUseCase {
     private final TableRepository tableRepository;
@@ -12,16 +13,16 @@ public class AddTableUseCase {
         this.tableRepository = tableRepository;
     }
 
-    public AddTableOutput execute(AddTableInput input) {
+    public String execute(AddTableInput input) {
         if (input == null || input.getTableName() == null || input.getTableName().isBlank()) {
-            return new AddTableOutput(false, "Tên bàn không hợp lệ.", null);
+            throw new DomainException(ErrorCode.TABLE_ADD_NAME_INVALID);
         }
-        if (tableRepository.findByTableName(input.getTableName()).isPresent()) {
-            return new AddTableOutput(false, "Bàn đã tồn tại.", null);
+        String name = input.getTableName().trim();
+        if (tableRepository.findByTableName(name).isPresent()) {
+            throw new DomainException(ErrorCode.TABLE_NAME_DUPLICATE);
         }
-        Table table = new Table(input.getTableName().trim());
+        Table table = new Table(name);
         tableRepository.save(table);
-        return new AddTableOutput(true, "Tạo bàn thành công.", table.getTableId());
+        return table.getTableId();
     }
 }
-

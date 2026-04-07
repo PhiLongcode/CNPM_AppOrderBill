@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.catalog.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.Objects;
 
 public class Category {
@@ -10,7 +13,7 @@ public class Category {
     // Constructor
     public Category(int id, String name, String description) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên danh mục không được trống.");
+            throw new DomainException(ErrorCode.CATEGORY_NAME_REQUIRED);
         }
         this.id = id;
         this.name = name;
@@ -25,7 +28,7 @@ public class Category {
     // Setters (cho các thuộc tính có thể thay đổi)
     public void setName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên danh mục không được trống.");
+            throw new DomainException(ErrorCode.CATEGORY_NAME_REQUIRED);
         }
         this.name = name;
     }

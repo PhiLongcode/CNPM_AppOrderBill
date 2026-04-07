@@ -4,6 +4,8 @@ import com.giadinh.apporderbill.menu.repository.MenuItemRepository;
 import com.giadinh.apporderbill.menu.service.ExcelService;
 import com.giadinh.apporderbill.menu.usecase.dto.ImportMenuFromExcelInput;
 import com.giadinh.apporderbill.menu.usecase.dto.ImportMenuFromExcelOutput;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 
 public class ImportMenuFromExcelUseCase {
     private final MenuItemRepository repository;
@@ -16,14 +18,19 @@ public class ImportMenuFromExcelUseCase {
 
     public ImportMenuFromExcelOutput execute(ImportMenuFromExcelInput input) {
         if (excelService == null) {
-            return new ImportMenuFromExcelOutput(false, "Chua cau hinh ExcelService.", 0);
+            throw new DomainException(ErrorCode.MENU_IMPORT_EXCEL_NOT_CONFIGURED);
         }
-        var imported = excelService.importMenu(input == null ? null : input.getFilePath());
-        if (imported != null) {
-            imported.forEach(repository::save);
+        try {
+            var imported = excelService.importMenu(input == null ? null : input.getFilePath());
+            if (imported != null) {
+                imported.forEach(repository::save);
+            }
+            int count = imported == null ? 0 : imported.size();
+            return new ImportMenuFromExcelOutput(count);
+        } catch (DomainException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DomainException(ErrorCode.INTERNAL_ERROR, null, e.getMessage(), null);
         }
-        int count = imported == null ? 0 : imported.size();
-        return new ImportMenuFromExcelOutput(true, "Import menu thanh cong.", count);
     }
 }
-

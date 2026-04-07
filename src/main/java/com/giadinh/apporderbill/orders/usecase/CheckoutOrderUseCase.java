@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.orders.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.billing.model.Payment;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
@@ -28,20 +30,16 @@ public class CheckoutOrderUseCase {
     }
 
     public CheckoutOrderOutput execute(CheckoutOrderInput input) {
-        try {
-            if (input == null || input.getOrderId() == null) {
-                return new CheckoutOrderOutput(false, "Thiếu thông tin order để thanh toán.", null, null);
-            }
+        if (input == null || input.getOrderId() == null) {
+            throw new DomainException(ErrorCode.CHECKOUT_ORDER_ID_REQUIRED);
+        }
 
+        try {
             Order order = orderRepository.findById(String.valueOf(input.getOrderId()))
-                    .orElseThrow(() -> new IllegalArgumentException("Đơn hàng không tồn tại."));
+                    .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
 
             if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.IN_PROGRESS) {
-                return new CheckoutOrderOutput(
-                        false,
-                        "Đơn hàng không thể thanh toán ở trạng thái hiện tại.",
-                        null,
-                        input.getOrderId());
+                throw new DomainException(ErrorCode.CHECKOUT_ORDER_NOT_PAYABLE_STATE);
             }
 
             long totalAmount = Math.round(order.getTotalAmount());
@@ -52,11 +50,7 @@ public class CheckoutOrderUseCase {
                 finalAmount = Math.max(0L, finalAmount - discountByPercent);
             }
             if (input.getPaidAmount() < finalAmount) {
-                return new CheckoutOrderOutput(
-                        false,
-                        "Số tiền khách đưa không đủ. Cần: " + finalAmount + " VNĐ",
-                        null,
-                        input.getOrderId());
+                throw new DomainException(ErrorCode.CHECKOUT_PAID_AMOUNT_INSUFFICIENT, finalAmount);
             }
 
             Payment payment = new Payment(
@@ -70,7 +64,6 @@ public class CheckoutOrderUseCase {
                     input.getCashier() == null ? "SYSTEM" : input.getCashier());
             payment = paymentRepository.save(payment);
 
-            // Auto loyalty points: 1 point per 10,000 VND paid.
             if (customerUseCases != null) {
                 int pointsEarned = (int) (finalAmount / 10_000L);
                 customerUseCases.addPointsByPhone(input.getCustomerPhone(), pointsEarned);
@@ -87,24 +80,12 @@ public class CheckoutOrderUseCase {
                 });
             }
 
-            return new CheckoutOrderOutput(
-                    true,
-                    "Thanh toán và giải phóng bàn thành công.",
-                    payment.getPaymentId(),
-                    input.getOrderId());
+            return new CheckoutOrderOutput(payment.getPaymentId(), input.getOrderId());
 
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return new CheckoutOrderOutput(
-                    false,
-                    "Lỗi thanh toán: " + e.getMessage(),
-                    null,
-                    input == null ? null : input.getOrderId());
+        } catch (DomainException e) {
+            throw e;
         } catch (Exception e) {
-            return new CheckoutOrderOutput(
-                    false,
-                    "Đã xảy ra lỗi không xác định khi thanh toán: " + e.getMessage(),
-                    null,
-                    input == null ? null : input.getOrderId());
+            throw new DomainException(ErrorCode.INTERNAL_ERROR, null, e.getMessage(), null);
         }
     }
 }

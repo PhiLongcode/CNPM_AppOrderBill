@@ -33,7 +33,7 @@ public class TableComponentImpl implements TableComponent {
 
     @Override
     public AddTableOutput addTable(AddTableInput input) {
-        return addTableUseCase.execute(input);
+        return new AddTableOutput(addTableUseCase.execute(input));
     }
 
     @Override

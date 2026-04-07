@@ -1,6 +1,8 @@
 package com.giadinh.apporderbill.javafx.login;
 
 import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -23,13 +25,12 @@ public class LoginController {
 
     @FXML
     private void onLoginClick() {
-        LoginOutput out = authService.login(usernameField.getText(), passwordField.getText());
-        if (out.isSuccess()) {
-            loginOutput = out;
+        try {
+            loginOutput = authService.login(usernameField.getText(), passwordField.getText());
             close();
-            return;
+        } catch (DomainException e) {
+            messageLabel.setText(DomainMessages.format(e));
         }
-        messageLabel.setText(out.getMessage());
     }
 
     @FXML

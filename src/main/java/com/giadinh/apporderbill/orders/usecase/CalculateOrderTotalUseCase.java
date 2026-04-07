@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.orders.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.usecase.dto.CalculateOrderTotalInput;
 import com.giadinh.apporderbill.orders.usecase.dto.CalculateOrderTotalOutput;
@@ -13,7 +15,7 @@ public class CalculateOrderTotalUseCase {
 
     public CalculateOrderTotalOutput execute(CalculateOrderTotalInput input) {
         var order = orderRepository.findById(String.valueOf(input.getOrderId()))
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy order."));
+                .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
         long subtotal = OrderUseCaseSupport.total(order);
         long discount = Math.max(0, input.getDiscountAmount());
         if (input.getDiscountPercent() != null && input.getDiscountPercent() > 0) {

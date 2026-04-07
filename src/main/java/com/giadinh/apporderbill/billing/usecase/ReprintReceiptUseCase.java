@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.billing.usecase;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.shared.service.PrinterService;
 
@@ -14,7 +16,7 @@ public class ReprintReceiptUseCase {
 
     public void execute(Long paymentId) {
         var payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hóa đơn."));
+                .orElseThrow(() -> new DomainException(ErrorCode.BILL_NOT_FOUND));
         String content = "=== IN LAI HOA DON ===\n"
                 + "Payment: #" + payment.getPaymentId() + "\n"
                 + "Order: " + payment.getOrderId() + "\n"

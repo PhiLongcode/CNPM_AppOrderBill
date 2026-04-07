@@ -4,6 +4,8 @@ import com.giadinh.apporderbill.catalog.model.Category;
 import com.giadinh.apporderbill.catalog.repository.CategoryRepository;
 import com.giadinh.apporderbill.catalog.usecase.dto.ManageCategoryInput;
 import com.giadinh.apporderbill.catalog.usecase.dto.ManageCategoryOutput;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
 
 import java.util.Optional;
 
@@ -17,32 +19,31 @@ public class ManageCategoryUseCase {
 
     public ManageCategoryOutput create(ManageCategoryInput input) {
         if (categoryRepository.findByName(input.getName()).isPresent()) {
-            return new ManageCategoryOutput(false, "Tên danh mục đã tồn tại.", 0);
+            throw new DomainException(ErrorCode.CATEGORY_NAME_DUPLICATE);
         }
 
-        Category newCategory = new Category(0, input.getName(), input.getDescription()); // ID sẽ được DB tự động tạo
+        Category newCategory = new Category(0, input.getName(), input.getDescription());
         categoryRepository.save(newCategory);
-        return new ManageCategoryOutput(true, "Tạo danh mục thành công.", newCategory.getId());
+        return new ManageCategoryOutput(newCategory.getId());
     }
 
     public ManageCategoryOutput update(int categoryId, ManageCategoryInput input) {
         Optional<Category> existingCategoryOptional = categoryRepository.findById(categoryId);
         if (existingCategoryOptional.isEmpty()) {
-            return new ManageCategoryOutput(false, "Danh mục không tồn tại.", categoryId);
+            throw new DomainException(ErrorCode.CATEGORY_NOT_FOUND);
         }
         Category existingCategory = existingCategoryOptional.get();
 
-        // Kiểm tra trùng tên danh mục (trừ chính nó)
         Optional<Category> categoryWithSameName = categoryRepository.findByName(input.getName());
         if (categoryWithSameName.isPresent() && categoryWithSameName.get().getId() != categoryId) {
-            return new ManageCategoryOutput(false, "Tên danh mục đã tồn tại bởi danh mục khác.", categoryId);
+            throw new DomainException(ErrorCode.CATEGORY_NAME_DUPLICATE);
         }
 
         existingCategory.setName(input.getName());
         existingCategory.setDescription(input.getDescription());
 
         categoryRepository.save(existingCategory);
-        return new ManageCategoryOutput(true, "Cập nhật danh mục thành công.", categoryId);
+        return new ManageCategoryOutput(categoryId);
     }
 
     public void delete(int categoryId) {

@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.identity.model;
 
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,7 +13,7 @@ public class Permission {
 
     public Permission(String name, String description) {
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên quyền không được trống.");
+            throw new DomainException(ErrorCode.PERMISSION_NAME_REQUIRED);
         }
         this.permissionId = UUID.randomUUID().toString();
         this.name = name;

@@ -1,16 +1,11 @@
 package com.giadinh.apporderbill.table.usecase.dto;
 
+/** Success payload for transfer-by-table-id flow. Failures use {@link com.giadinh.apporderbill.shared.error.DomainException}. */
 public class TransferTableOutput {
-    private boolean success;
-    private String message;
+    private final String message;
 
-    public TransferTableOutput(boolean success, String message) {
-        this.success = success;
+    public TransferTableOutput(String message) {
         this.message = message;
-    }
-
-    public boolean isSuccess() {
-        return success;
     }
 
     public String getMessage() {

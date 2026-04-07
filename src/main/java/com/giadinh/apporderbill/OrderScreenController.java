@@ -142,6 +142,11 @@ public class OrderScreenController implements OrderScreenView {
     private com.giadinh.apporderbill.table.usecase.DeleteTableUseCase deleteTableUseCase;
     private com.giadinh.apporderbill.table.usecase.ClearTableUseCase clearTableUseCase;
     private com.giadinh.apporderbill.table.usecase.GetAllTablesUseCase getAllTablesUseCase;
+    private com.giadinh.apporderbill.table.usecase.RenameTableUseCase renameTableUseCase;
+    private com.giadinh.apporderbill.table.usecase.SetTableReservationUseCase setTableReservationUseCase;
+    private com.giadinh.apporderbill.orders.usecase.TransferOrderBetweenTablesUseCase transferOrderBetweenTablesUseCase;
+    private com.giadinh.apporderbill.orders.usecase.ReleaseEmptyActiveOrderUseCase releaseEmptyActiveOrderUseCase;
+    private com.giadinh.apporderbill.orders.repository.OrderRepository orderRepository;
 
     // Handlers
     private MenuItemHandler menuItemHandler;
@@ -268,6 +273,7 @@ public class OrderScreenController implements OrderScreenView {
                 tableHandler.setErrorHandler(this::showError);
                 tableHandler.setSuccessHandler(this::showSuccess);
                 tableHandler.setTableSelectionHandler(this::handleTableSelected);
+                tableHandler.setOnTablesChanged(this::refreshTableLayout);
             } else {
                 System.err.println("WARNING: Some table fields are null, TableHandler not initialized");
             }
@@ -341,8 +347,51 @@ public class OrderScreenController implements OrderScreenView {
 
     public void setOrderRepository(
             com.giadinh.apporderbill.orders.repository.OrderRepository orderRepository) {
+        this.orderRepository = orderRepository;
         if (checkoutHandler != null) {
             checkoutHandler.setOrderRepository(orderRepository);
+        }
+        if (tableHandler != null) {
+            tableHandler.setOrderRepository(orderRepository);
+        }
+    }
+
+    private void refreshTableLayout() {
+        if (tableHandler != null) {
+            tableHandler.loadTablesFromDatabase();
+            refreshTablesInUse();
+            updateTableButtonStyles();
+        }
+    }
+
+    public void setTransferOrderBetweenTablesUseCase(
+            com.giadinh.apporderbill.orders.usecase.TransferOrderBetweenTablesUseCase useCase) {
+        this.transferOrderBetweenTablesUseCase = useCase;
+        if (tableHandler != null) {
+            tableHandler.setTransferOrderBetweenTablesUseCase(useCase);
+        }
+    }
+
+    public void setReleaseEmptyActiveOrderUseCase(
+            com.giadinh.apporderbill.orders.usecase.ReleaseEmptyActiveOrderUseCase useCase) {
+        this.releaseEmptyActiveOrderUseCase = useCase;
+        if (tableHandler != null) {
+            tableHandler.setReleaseEmptyActiveOrderUseCase(useCase);
+        }
+    }
+
+    public void setRenameTableUseCase(com.giadinh.apporderbill.table.usecase.RenameTableUseCase useCase) {
+        this.renameTableUseCase = useCase;
+        if (tableHandler != null) {
+            tableHandler.setRenameTableUseCase(useCase);
+        }
+    }
+
+    public void setSetTableReservationUseCase(
+            com.giadinh.apporderbill.table.usecase.SetTableReservationUseCase useCase) {
+        this.setTableReservationUseCase = useCase;
+        if (tableHandler != null) {
+            tableHandler.setSetTableReservationUseCase(useCase);
         }
     }
 
