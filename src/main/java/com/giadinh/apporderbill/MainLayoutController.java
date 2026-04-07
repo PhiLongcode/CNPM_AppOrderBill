@@ -72,7 +72,7 @@ public class MainLayoutController {
     protected void showOrderScreen() {
         try {
             if (orderScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/order/order-screen.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/order/order-screen.fxml"));
                 orderScreen = loader.load();
                 orderScreenController = loader.getController();
             } else {
@@ -91,7 +91,7 @@ public class MainLayoutController {
     protected void showDashboardScreen() {
         try {
             if (dashboardScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/dashboard/dashboard.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/dashboard/dashboard.fxml"));
                 dashboardScreen = loader.load();
                 dashboardController = loader.getController();
 
@@ -153,7 +153,7 @@ public class MainLayoutController {
     protected void showMenuManagementScreen() {
         try {
             if (menuManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/menu/menu-management.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/menu/menu-management.fxml"));
                 menuManagementScreen = loader.load();
                 menuManagementController = loader.getController();
 
@@ -174,8 +174,13 @@ public class MainLayoutController {
                 }
             }
             contentPane.getChildren().setAll(menuManagementScreen);
-        } catch (IOException e) {
-            showError("Lỗi khi tải màn hình quản lý menu: " + e.getMessage());
+        } catch (Exception e) {
+            String detail = e.getMessage();
+            if (e.getCause() != null && e.getCause().getMessage() != null && !e.getCause().getMessage().isBlank()) {
+                detail = e.getCause().getMessage();
+            }
+            showError("Lỗi khi tải màn hình quản lý menu: " + detail);
+            e.printStackTrace();
         }
     }
 
@@ -183,7 +188,7 @@ public class MainLayoutController {
     protected void showCustomerManagementScreen() {
         try {
             if (customerManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/customer/customer-management.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/customer/customer-management.fxml"));
                 customerManagementScreen = loader.load();
                 com.giadinh.apporderbill.javafx.customer.CustomerManagementController controller = loader.getController();
                 if (customerUseCases != null) {
@@ -200,7 +205,7 @@ public class MainLayoutController {
     protected void showTableManagementScreen() {
         try {
             if (tableManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/table/table-management.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/table/table-management.fxml"));
                 tableManagementScreen = loader.load();
                 tableManagementController = loader.getController();
                 if (addTableUseCase != null && deleteTableUseCase != null && clearTableUseCase != null
@@ -229,7 +234,7 @@ public class MainLayoutController {
     protected void showAdminManagementScreen() {
         try {
             if (adminManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/admin/admin-management.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/admin/admin-management.fxml"));
                 adminManagementScreen = loader.load();
                 com.giadinh.apporderbill.javafx.admin.AdminManagementController controller = loader.getController();
                 if (identityComponent != null) {
@@ -316,7 +321,7 @@ public class MainLayoutController {
     protected void showPrinterConfigScreen() {
         try {
             if (printerConfigScreen == null) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("javafx/printer/printer-config.fxml"));
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/printer/printer-config.fxml"));
                 printerConfigScreen = loader.load();
                 com.giadinh.apporderbill.javafx.printer.PrinterConfigController printerController = loader
                         .getController();
@@ -437,17 +442,7 @@ public class MainLayoutController {
     protected void showUserGuideScreen() {
         try {
             if (userGuideScreen == null) {
-                // Thử đường dẫn tương đối trước (giống các màn hình khác)
-                java.net.URL resource = getClass().getResource("javafx/guide/user-guide.fxml");
-                if (resource == null) {
-                    // Nếu không tìm thấy, thử đường dẫn tuyệt đối
-                    resource = getClass().getResource("/com/giadinh/apporderbill/javafx/guide/user-guide.fxml");
-                }
-                if (resource == null) {
-                    showError("Không tìm thấy file hướng dẫn sử dụng. Vui lòng kiểm tra lại.");
-                    return;
-                }
-                FXMLLoader loader = new FXMLLoader(resource);
+                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/guide/user-guide.fxml"));
                 userGuideScreen = loader.load();
             }
             contentPane.getChildren().setAll(userGuideScreen);
@@ -501,6 +496,15 @@ public class MainLayoutController {
 
     public OrderScreenController getOrderScreenController() {
         return orderScreenController;
+    }
+
+    private java.net.URL requireFxml(String relativePath) throws IOException {
+        String normalizedPath = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
+        java.net.URL resource = getClass().getResource("/com/giadinh/apporderbill/" + normalizedPath);
+        if (resource == null) {
+            throw new IOException("Không tìm thấy file FXML: /com/giadinh/apporderbill/" + normalizedPath);
+        }
+        return resource;
     }
 
     private void showError(String message) {

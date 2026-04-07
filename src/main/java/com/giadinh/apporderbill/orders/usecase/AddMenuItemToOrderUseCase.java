@@ -21,14 +21,32 @@ public class AddMenuItemToOrderUseCase {
         var menu = menuItemRepository.findById(input.getMenuItemId())
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy món trong menu."));
 
+        String targetMenuItemId = String.valueOf(menu.getMenuItemId());
+
+        // Nếu món đã có trong order (cùng menuItemId, chưa có ghi chú riêng) thì cộng dồn
+        // thay vì tạo thêm dòng mới.
+        for (OrderItem existing : order.getItems()) {
+            String note = existing.getNote();
+            boolean hasCustomNote = note != null && !note.isBlank();
+            if (targetMenuItemId.equals(existing.getMenuItemId()) && !hasCustomNote) {
+                existing.updateQuantity(existing.getQuantity() + input.getQuantity());
+                order.recomputeTotalFromItems();
+                orderRepository.save(order);
+                return new AddCustomItemOutput(
+                        order.getTableNumber(),
+                        OrderUseCaseSupport.toOutputs(order),
+                        OrderUseCaseSupport.total(order));
+            }
+        }
+
         OrderItem item = new OrderItem(
                 order.getOrderId(),
-                String.valueOf(menu.getMenuItemId()),
+                targetMenuItemId,
                 menu.getName(),
                 input.getQuantity(),
                 menu.getUnitPrice());
-        if (input.getNotes() != null) {
-            item.setNote(input.getNotes());
+        if (input.getNotes() != null && !input.getNotes().isBlank()) {
+            item.setNote(input.getNotes().trim());
         }
 
         order.addOrderItem(item);

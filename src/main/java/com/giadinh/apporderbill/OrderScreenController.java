@@ -490,7 +490,26 @@ public class OrderScreenController implements OrderScreenView {
                 quickQuantityField.setText("1");
             }
 
-            presenter.onAddMenuItem(menuItem.getMenuItemId(), quantity);
+            // Nếu đã có dòng cùng món và chưa in phiếu bếp thì cộng dồn số lượng vào dòng đó.
+            // Món đã in phiếu bếp sẽ tạo dòng mới để tách rõ phần add-on.
+            OrderItemViewModel unprintedSameItem = null;
+            if (orderItemHandler != null) {
+                unprintedSameItem = orderItemHandler.getItemViewModels().stream()
+                        .filter(item -> !item.isCanceled())
+                        .filter(item -> !item.isPrintedToKitchen())
+                        .filter(item -> item.getName() != null && item.getName().equals(menuItem.getName()))
+                        .filter(item -> item.getUnitPrice() == menuItem.getUnitPrice())
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            if (unprintedSameItem != null) {
+                presenter.updateItemQuantity(
+                        unprintedSameItem.getOrderItemId(),
+                        unprintedSameItem.getQuantity() + quantity);
+            } else {
+                presenter.onAddMenuItem(menuItem.getMenuItemId(), quantity);
+            }
             currentOrderId = presenter.getCurrentOrderId();
         } catch (NumberFormatException e) {
             showError("Số lượng không hợp lệ");
