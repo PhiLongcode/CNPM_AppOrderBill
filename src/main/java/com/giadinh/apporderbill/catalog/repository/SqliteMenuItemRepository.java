@@ -160,6 +160,45 @@ public class SqliteMenuItemRepository implements MenuItemRepository {
     }
 
     @Override
+    public boolean decreaseStockAtomic(int id, int quantity) {
+        if (quantity <= 0) {
+            return true;
+        }
+        String sql = """
+                UPDATE menu_items
+                SET stock_qty = stock_qty - ?, updated_at = datetime('now')
+                WHERE id = ? AND stock_tracked = 1 AND stock_qty >= ?
+                """;
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, id);
+            ps.setInt(3, quantity);
+            return ps.executeUpdate() > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean increaseStockAtomic(int id, int quantity) {
+        if (quantity <= 0) {
+            return true;
+        }
+        String sql = """
+                UPDATE menu_items
+                SET stock_qty = stock_qty + ?, updated_at = datetime('now')
+                WHERE id = ? AND stock_tracked = 1
+                """;
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, quantity);
+            ps.setInt(2, id);
+            return ps.executeUpdate() > 0;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    @Override
     public void delete(int id) {
         String sql = "DELETE FROM menu_items WHERE id = ?";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {

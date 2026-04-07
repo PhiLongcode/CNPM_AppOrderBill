@@ -3,6 +3,7 @@ package com.giadinh.apporderbill.orders;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
+import com.giadinh.apporderbill.orders.service.ConfigurableOrderCodeService;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.orders.usecase.dto.*;
 import com.giadinh.apporderbill.table.repository.TableRepository;
@@ -23,7 +24,10 @@ public class OrdersComponentImpl implements OrdersComponent {
 
     public OrdersComponentImpl(OrderRepository orderRepository, MenuItemRepository menuItemRepository,
             PaymentRepository paymentRepository) {
-        this.openOrCreateOrderUseCase = new OpenOrCreateOrderUseCase(orderRepository, menuItemRepository);
+        this.openOrCreateOrderUseCase = new OpenOrCreateOrderUseCase(
+                orderRepository,
+                menuItemRepository,
+                new ConfigurableOrderCodeService());
         this.getOrderDetailsUseCase = new GetOrderDetailsUseCase(orderRepository, menuItemRepository);
         this.addMenuItemToOrderUseCase = new AddMenuItemToOrderUseCase(orderRepository, menuItemRepository);
         this.addCustomItemToOrderUseCase = new AddCustomItemToOrderUseCase(orderRepository);

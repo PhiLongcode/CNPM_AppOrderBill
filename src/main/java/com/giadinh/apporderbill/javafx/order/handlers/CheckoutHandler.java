@@ -141,20 +141,29 @@ public class CheckoutHandler {
 
             Dialog<Void> dialog = new Dialog<>();
             dialog.setDialogPane(dialogPane);
+            dialog.setResizable(true);
+            dialogPane.setPrefSize(1100, 760);
+            dialogPane.setMinSize(860, 620);
             if (window instanceof Window owner) {
                 dialog.initOwner(owner);
             }
             dialog.setTitle(msg("ui.order.checkout_dialog_title"));
 
             String tableInfo = presenter.getCurrentTableNumber() == null ? "" : msg("ui.order.table_label", presenter.getCurrentTableNumber());
-            controller.initSummary(totalAmount, finalAmount, tableInfo);
+            controller.initSummary(totalAmount, finalAmount, tableInfo, presenter.getCurrentOrderDisplayCode());
+            controller.setItemDiscountPercentUpdater((orderItemId, discountPercent) ->
+                    presenter.updateItemDiscount(orderItemId, discountPercent));
+            controller.setOrderItemsSupplier(presenter::getCurrentOrderItemsForCheckout);
+            controller.setOrderItems(presenter.getCurrentOrderItemsForCheckout());
 
             controller.getCancelButton().setOnAction(e -> dialog.close());
             controller.getConfirmButton().setOnAction(e -> {
                 CheckoutDialogController.Result result = controller.buildResult();
-                Long beforeOrderId = presenter.getCurrentOrderId();
-                presenter.checkout(result.paidAmount(), result.paymentMethod(), result.discountAmount(), null);
-                boolean success = beforeOrderId != null && presenter.getCurrentOrderId() == null;
+                boolean success = presenter.checkout(
+                        result.paidAmount(),
+                        result.paymentMethod(),
+                        result.discountAmount(),
+                        null);
                 if (success) {
                     paidAmount = String.valueOf(result.paidAmount());
                     paymentMethod = result.paymentMethod();

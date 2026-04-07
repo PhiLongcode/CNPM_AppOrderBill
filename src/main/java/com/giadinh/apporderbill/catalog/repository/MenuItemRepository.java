@@ -21,6 +21,8 @@ public interface MenuItemRepository {
     List<MenuItem> findByCategoryName(String categoryName);
     List<MenuItem> findByStatus(MenuItemStatus status);
     void save(MenuItem menuItem);
+    boolean decreaseStockAtomic(int id, int quantity);
+    boolean increaseStockAtomic(int id, int quantity);
     void delete(int id);
     default void delete(Long id) {
         if (id != null) {

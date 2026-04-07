@@ -22,6 +22,12 @@ public class AddMenuItemToOrderUseCase {
                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
         var menu = menuItemRepository.findById(input.getMenuItemId().intValue())
                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_MENU_ITEM_NOT_FOUND));
+        if (menu.isStockTracked()) {
+            boolean ok = menuItemRepository.decreaseStockAtomic(menu.getId(), input.getQuantity());
+            if (!ok) {
+                throw new DomainException(ErrorCode.MENU_ITEM_STOCK_INSUFFICIENT);
+            }
+        }
 
         String targetMenuItemId = String.valueOf(menu.getMenuItemId());
 

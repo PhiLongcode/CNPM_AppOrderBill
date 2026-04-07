@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public class Order {
     private String orderId;
+    private String orderCode;
     private String tableId; // ID của bàn
     private LocalDateTime orderDate;
     private OrderStatus status;
@@ -20,6 +21,7 @@ public class Order {
     // Constructor cho Order mới
     public Order(String tableId) {
         this.orderId = UUID.randomUUID().toString();
+        this.orderCode = null;
         this.tableId = tableId;
         this.orderDate = LocalDateTime.now();
         this.status = OrderStatus.PENDING; // Mặc định là đang chờ
@@ -30,6 +32,7 @@ public class Order {
     // Constructor cho việc tải Order từ Repository
     public Order(String orderId, String tableId, LocalDateTime orderDate, OrderStatus status, double totalAmount) {
         this.orderId = orderId;
+        this.orderCode = null;
         this.tableId = tableId;
         this.orderDate = orderDate;
         this.status = status;
@@ -39,6 +42,14 @@ public class Order {
 
     public String getOrderId() {
         return orderId;
+    }
+
+    public String getOrderCode() {
+        return orderCode;
+    }
+
+    public void setOrderCode(String orderCode) {
+        this.orderCode = orderCode;
     }
 
     public Long getId() {

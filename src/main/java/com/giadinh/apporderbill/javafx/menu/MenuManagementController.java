@@ -1,18 +1,27 @@
 package com.giadinh.apporderbill.javafx.menu;
 
+import com.giadinh.apporderbill.catalog.usecase.dto.ImportConflictStrategy;
 import com.giadinh.apporderbill.catalog.usecase.dto.MenuItemOutput;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +53,8 @@ public class MenuManagementController {
     @FXML private CheckMenuItem showBaseUnitColumn;
     @FXML private CheckMenuItem showActiveColumn;
     @FXML private CheckMenuItem showCreatedAtColumn;
+    @FXML private HBox stockWarningBanner;
+    @FXML private Label stockWarningLabel;
 
     private final ObservableList<MenuItemRow> displayedRows = FXCollections.observableArrayList();
     private final List<MenuItemRow> allRows = new ArrayList<>();
@@ -113,6 +124,7 @@ public class MenuManagementController {
     @FXML
     public void initialize() {
         menuItemsTable.setItems(displayedRows);
+        menuItemsTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         idColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleObjectProperty<>(c.getValue().getId()));
         nameColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getName()));
         categoryColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getCategory()));
@@ -132,6 +144,7 @@ public class MenuManagementController {
 
     public void setPresenter(MenuManagementPresenter presenter) {
         this.presenter = presenter;
+        reloadFromDatabase();
     }
 
     public void reloadFromDatabase() {
@@ -149,24 +162,191 @@ public class MenuManagementController {
         }
         categoryFilter.getItems().setAll(allRows.stream().map(MenuItemRow::getCategory).filter(Objects::nonNull).distinct().sorted().toList());
         applyFilters();
+        updateStockWarningBanner();
     }
 
-    @FXML private void onAddClick() { showInfo(msg("ui.menu.feature_add_in_progress")); }
-    @FXML private void onEditClick() { showInfo(msg("ui.menu.feature_edit_in_progress")); }
-    @FXML private void onDeleteClick() {
+    @FXML private void onAddClick() {
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        MenuItemDialogController.Result result = MenuItemDialogController.showDialog(null);
+        if (result == null) {
+            return;
+        }
+        try {
+            presenter.createMenuItem(null, result);
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.create_success"));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
+
+    @FXML private void onEditClick() {
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
         MenuItemRow selected = menuItemsTable.getSelectionModel().getSelectedItem();
-        if (selected == null) {
+        if (selected == null || selected.getId() == null) {
+            showInfo(msg("ui.menu.select_item_to_edit"));
+            return;
+        }
+        MenuItemDialogController.Result result = MenuItemDialogController.showDialog(selected);
+        if (result == null) {
+            return;
+        }
+        try {
+            presenter.updateMenuItem(selected.getId(), result);
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.update_success"));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
+
+    @FXML private void onDeleteClick() {
+        List<MenuItemRow> selectedRows = new ArrayList<>(menuItemsTable.getSelectionModel().getSelectedItems());
+        if (selectedRows.isEmpty()) {
             showInfo(msg("ui.menu.select_item_to_delete"));
             return;
         }
-        allRows.remove(selected);
-        applyFilters();
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        ButtonType yes = new ButtonType(msg("ui.common.yes"));
+        ButtonType no = new ButtonType(msg("ui.common.no"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                msg("ui.menu.delete_multi_confirm", selectedRows.size()),
+                yes, no);
+        confirm.setHeaderText(null);
+        if (confirm.showAndWait().orElse(no) != yes) {
+            return;
+        }
+        try {
+            int deletedCount = 0;
+            for (MenuItemRow row : selectedRows) {
+                if (row.getId() == null) {
+                    continue;
+                }
+                presenter.deleteMenuItem(row.getId());
+                deletedCount++;
+            }
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.delete_multi_success", deletedCount));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
     }
-    @FXML private void onToggleActiveClick() { showInfo(msg("ui.menu.feature_toggle_in_progress")); }
-    @FXML private void onAddStockClick() { showInfo(msg("ui.menu.feature_stock_in_progress")); }
+
+    @FXML private void onToggleActiveClick() {
+        MenuItemRow selected = menuItemsTable.getSelectionModel().getSelectedItem();
+        if (selected == null || selected.getId() == null) {
+            showInfo(msg("ui.menu.select_item_to_toggle"));
+            return;
+        }
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        try {
+            presenter.toggleActive(selected.getId(), selected.isActive());
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.toggle_success"));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
+
+    @FXML private void onAddStockClick() {
+        MenuItemRow selected = menuItemsTable.getSelectionModel().getSelectedItem();
+        if (selected == null || selected.getId() == null) {
+            showInfo(msg("ui.menu.select_item_to_stock"));
+            return;
+        }
+        if (!selected.isStockTracked()) {
+            showInfo(msg("ui.menu.stock_not_tracked"));
+            return;
+        }
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        TextInputDialog inputDialog = new TextInputDialog("1");
+        inputDialog.setTitle(msg("ui.menu.stock_add_title"));
+        inputDialog.setHeaderText(null);
+        inputDialog.setContentText(msg("ui.menu.stock_add_prompt"));
+        var value = inputDialog.showAndWait();
+        if (value.isEmpty()) {
+            return;
+        }
+        try {
+            long delta = Long.parseLong(value.get().trim());
+            if (delta <= 0) {
+                showError(msg("ui.menu.stock_positive_required"));
+                return;
+            }
+            long currentStock = selected.getStockValue() == null ? 0L : selected.getStockValue();
+            presenter.addStock(selected.getId(), delta, currentStock);
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.stock_add_success"));
+        } catch (NumberFormatException ex) {
+            showError(msg("ui.menu.stock_invalid_number"));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
+
     @FXML private void onRefreshClick() { reloadFromDatabase(); }
-    @FXML private void onImportClick() { showInfo(msg("ui.menu.feature_import_in_progress")); }
-    @FXML private void onExportClick() { showInfo(msg("ui.menu.feature_export_in_progress")); }
+    @FXML private void onImportClick() {
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        FileChooser chooser = new FileChooser();
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Excel Files", "*.xlsx", "*.xls"),
+                new FileChooser.ExtensionFilter("All Files", "*.*"));
+        File file = chooser.showOpenDialog(menuItemsTable.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        try {
+            ImportConflictStrategy strategy = askImportConflictStrategy();
+            if (strategy == null) {
+                return;
+            }
+            int imported = presenter.importFromExcel(file.getAbsolutePath(), strategy);
+            reloadFromDatabase();
+            showInfo(msg("ui.menu.import_success", imported));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
+
+    @FXML private void onExportClick() {
+        if (presenter == null) {
+            showError(msg("ui.menu.presenter_not_ready"));
+            return;
+        }
+        FileChooser chooser = new FileChooser();
+        chooser.setInitialFileName("menu-export.xlsx");
+        chooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Excel Files", "*.xlsx", "*.xls"),
+                new FileChooser.ExtensionFilter("All Files", "*.*"));
+        File file = chooser.showSaveDialog(menuItemsTable.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        try {
+            presenter.exportToExcel(file.getAbsolutePath());
+            showInfo(msg("ui.menu.export_success"));
+        } catch (Exception e) {
+            showError(errorMessage(e));
+        }
+    }
     @FXML private void onShowLowStock() { lowStockOnlyCheckBox.setSelected(true); applyFilters(); }
 
     @FXML
@@ -192,12 +372,36 @@ public class MenuManagementController {
         displayedRows.setAll(allRows.stream().filter(row -> {
             boolean matchKeyword = keyword.isEmpty() || (row.getName() != null && row.getName().toLowerCase().contains(keyword));
             boolean matchCategory = category == null || category.isBlank() || category.equals(row.getCategory());
-            boolean matchActive = !activeOnly || row.isActive();
-            boolean isLowStock = row.isStockTracked() && row.getStockValue() != null && row.getStockMin() != null
-                    && row.getStockValue() <= row.getStockMin();
+            boolean isLowStock = isLowOrOutOfStock(row);
+            boolean matchActive = !activeOnly || row.isActive() || (lowStockOnly && isLowStock);
             boolean matchStock = !lowStockOnly || isLowStock;
             return matchKeyword && matchCategory && matchActive && matchStock;
         }).collect(Collectors.toList()));
+    }
+
+    private boolean isLowOrOutOfStock(MenuItemRow row) {
+        if (!row.isStockTracked() || row.getStockValue() == null) {
+            return false;
+        }
+        if (row.getStockValue() <= 0) {
+            return true;
+        }
+        return row.getStockMin() != null && row.getStockValue() <= row.getStockMin();
+    }
+
+    private void updateStockWarningBanner() {
+        if (stockWarningBanner == null || stockWarningLabel == null) {
+            return;
+        }
+        long warningCount = allRows.stream().filter(this::isLowOrOutOfStock).count();
+        if (warningCount <= 0) {
+            stockWarningBanner.setManaged(false);
+            stockWarningBanner.setVisible(false);
+            return;
+        }
+        stockWarningBanner.setManaged(true);
+        stockWarningBanner.setVisible(true);
+        stockWarningLabel.setText(msg("ui.menu.stock_warning_with_count", warningCount));
     }
 
     private void showInfo(String content) {
@@ -205,6 +409,40 @@ public class MenuManagementController {
         a.setHeaderText(null);
         a.setContentText(content);
         a.showAndWait();
+    }
+
+    private void showError(String content) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setHeaderText(null);
+        a.setContentText(content);
+        a.showAndWait();
+    }
+
+    private String errorMessage(Exception e) {
+        return e.getMessage() == null || e.getMessage().isBlank()
+                ? msg("ui.menu.operation_failed")
+                : e.getMessage();
+    }
+
+    private ImportConflictStrategy askImportConflictStrategy() {
+        ButtonType replace = new ButtonType(msg("ui.menu.import_strategy_replace"));
+        ButtonType keep = new ButtonType(msg("ui.menu.import_strategy_keep"));
+        ButtonType createNew = new ButtonType(msg("ui.menu.import_strategy_new_id"));
+        ButtonType cancel = new ButtonType(msg("ui.common.cancel"), ButtonBar.ButtonData.CANCEL_CLOSE);
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION, msg("ui.menu.import_strategy_prompt"),
+                replace, keep, createNew, cancel);
+        dialog.setHeaderText(null);
+        ButtonType selected = dialog.showAndWait().orElse(cancel);
+        if (selected == replace) {
+            return ImportConflictStrategy.REPLACE;
+        }
+        if (selected == keep) {
+            return ImportConflictStrategy.KEEP_EXISTING;
+        }
+        if (selected == createNew) {
+            return ImportConflictStrategy.CREATE_NEW_ID;
+        }
+        return null;
     }
 
     private String msg(String key, Object... args) {

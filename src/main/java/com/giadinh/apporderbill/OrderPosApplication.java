@@ -19,6 +19,7 @@ import com.giadinh.apporderbill.kitchen.usecase.PrintSelectedItemsUseCase;
 import com.giadinh.apporderbill.catalog.usecase.*;
 import com.giadinh.apporderbill.catalog.service.ExcelService;
 import com.giadinh.apporderbill.orders.usecase.*;
+import com.giadinh.apporderbill.orders.service.ConfigurableOrderCodeService;
 import com.giadinh.apporderbill.printer.usecase.UpdatePrintTemplateUseCase;
 import com.giadinh.apporderbill.printer.usecase.UpdatePrinterConfigUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetDailyRevenueUseCase;
@@ -144,7 +145,8 @@ public class OrderPosApplication extends Application {
                         // Initialize Use Cases - Order Management
                         OpenOrCreateOrderUseCase openOrCreateOrderUseCase = new OpenOrCreateOrderUseCase(
                                         orderRepository,
-                                        menuItemRepository);
+                                        menuItemRepository,
+                                        new ConfigurableOrderCodeService());
                         AddCustomItemToOrderUseCase addCustomItemToOrderUseCase = new AddCustomItemToOrderUseCase(
                                         orderRepository);
                         AddMenuItemToOrderUseCase addMenuItemToOrderUseCase = new AddMenuItemToOrderUseCase(

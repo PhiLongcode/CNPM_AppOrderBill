@@ -166,6 +166,7 @@ public class MainLayoutController {
                                 getAllMenuItemsUseCase, importMenuFromExcelUseCase, exportMenuToExcelUseCase);
                     }
                     menuManagementController.setPresenter(menuManagementPresenter);
+                    menuManagementController.reloadFromDatabase();
                 }
             } else {
                 // Màn đã load trước đó: reload lại dữ liệu từ DB để cập nhật tồn kho

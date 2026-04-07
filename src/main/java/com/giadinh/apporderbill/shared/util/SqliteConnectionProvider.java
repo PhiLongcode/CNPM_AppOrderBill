@@ -49,12 +49,17 @@ public class SqliteConnectionProvider {
             s.execute("""
                     CREATE TABLE IF NOT EXISTS orders (
                         id TEXT PRIMARY KEY,
+                        order_code TEXT,
                         table_id TEXT,
                         order_date TEXT,
                         status TEXT NOT NULL,
                         total_amount REAL NOT NULL DEFAULT 0
                     )
                     """);
+            try {
+                s.execute("ALTER TABLE orders ADD COLUMN order_code TEXT");
+            } catch (Exception ignoredColumnExists) {
+            }
             s.execute("""
                     CREATE TABLE IF NOT EXISTS order_items (
                         id TEXT PRIMARY KEY,

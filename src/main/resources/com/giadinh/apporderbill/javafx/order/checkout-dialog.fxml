@@ -19,12 +19,11 @@
             </HBox>
             
             <!-- Main Content Area - 2 Column Layout with Resizable Divider -->
-            <SplitPane dividerPositions="0.6" styleClass="content-section" VBox.vgrow="ALWAYS">
+            <SplitPane dividerPositions="0.58" styleClass="content-section" VBox.vgrow="ALWAYS">
                 <!-- Left Column: Order Items List -->
-                <VBox spacing="8" styleClass="items-section">
+                <VBox spacing="8" styleClass="items-section" SplitPane.resizableWithParent="true">
                     <Label text="Danh sách món" styleClass="section-title"/>
-                    <TableView fx:id="itemsTableView" styleClass="items-table" VBox.vgrow="ALWAYS" 
-                               minHeight="400" prefWidth="400">
+                    <TableView fx:id="itemsTableView" styleClass="items-table" VBox.vgrow="ALWAYS">
                         <columns>
                             <TableColumn fx:id="itemIndexColumn" text="STT" prefWidth="50" minWidth="40"
                                          styleClass="center-column"/>
@@ -47,7 +46,8 @@
                 </VBox>
                 
                 <!-- Right Column: Payment Information with Scroll -->
-                <ScrollPane fitToWidth="true" styleClass="payment-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED">
+                <ScrollPane fitToWidth="true" styleClass="payment-scroll" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                            SplitPane.resizableWithParent="true">
                     <VBox spacing="15" styleClass="payment-info-section">
                         <Label text="Thông tin thanh toán" styleClass="section-title"/>
                         
@@ -122,11 +122,9 @@
             
             <!-- Action Buttons - Simplified -->
             <HBox spacing="15" styleClass="action-section" alignment="CENTER">
-                <Button fx:id="cancelButton" text="Hủy (ESC)" styleClass="cancel-btn-large" 
-                        minWidth="150"/>
+                <Button fx:id="cancelButton" text="Hủy (ESC)" styleClass="cancel-btn-large"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Button fx:id="confirmButton" text="THANH TOÁN" styleClass="confirm-btn-large" 
-                        minWidth="200"/>
+                <Button fx:id="confirmButton" text="THANH TOÁN" styleClass="confirm-btn-large"/>
             </HBox>
         </VBox>
     </content>

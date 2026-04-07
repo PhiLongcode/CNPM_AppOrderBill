@@ -31,7 +31,7 @@ public class SqliteOrderRepository implements OrderRepository {
         if (orderId == null) {
             return Optional.empty();
         }
-        String sqlOrder = "SELECT id, table_id, order_date, status, total_amount FROM orders WHERE id = ?";
+        String sqlOrder = "SELECT id, order_code, table_id, order_date, status, total_amount FROM orders WHERE id = ?";
         try (Connection c = connectionProvider.getConnection();
                 PreparedStatement ps = c.prepareStatement(sqlOrder)) {
             ps.setString(1, orderId);
@@ -81,13 +81,14 @@ public class SqliteOrderRepository implements OrderRepository {
             return;
         }
         String upsert = """
-                INSERT INTO orders (id, table_id, order_date, status, total_amount)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO orders (id, table_id, order_date, status, total_amount, order_code)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     table_id = excluded.table_id,
                     order_date = excluded.order_date,
                     status = excluded.status,
-                    total_amount = excluded.total_amount
+                    total_amount = excluded.total_amount,
+                    order_code = excluded.order_code
                 """;
         try (Connection c = connectionProvider.getConnection()) {
             c.setAutoCommit(false);
@@ -99,6 +100,7 @@ public class SqliteOrderRepository implements OrderRepository {
                     ps.setString(3, order.getOrderDate() != null ? order.getOrderDate().format(DT) : LocalDateTime.now().format(DT));
                     ps.setString(4, order.getStatus().name());
                     ps.setDouble(5, order.getTotalAmount());
+                    ps.setString(6, order.getOrderCode());
                     ps.executeUpdate();
                 }
                 try (PreparedStatement del = c.prepareStatement("DELETE FROM order_items WHERE order_id = ?")) {
@@ -182,6 +184,7 @@ public class SqliteOrderRepository implements OrderRepository {
 
     private static Order mapOrderHeader(ResultSet rs) throws Exception {
         String id = rs.getString("id");
+        String orderCode = rs.getString("order_code");
         String tableId = rs.getString("table_id");
         String dateStr = rs.getString("order_date");
         LocalDateTime orderDate = dateStr != null && !dateStr.isBlank()
@@ -195,6 +198,7 @@ public class SqliteOrderRepository implements OrderRepository {
         }
         double total = rs.getDouble("total_amount");
         Order order = new Order(id, tableId, orderDate, status, total);
+        order.setOrderCode(orderCode);
         return order;
     }
 

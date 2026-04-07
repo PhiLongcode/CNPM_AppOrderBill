@@ -11,13 +11,15 @@ public class CreateMenuItemUseCase {
     public CreateMenuItemUseCase(MenuItemRepository repository) { this.repository = repository; }
 
     public MenuItemOutput execute(CreateMenuItemInput input) {
+        int minStock = input.getStockMin() == null ? 0 : input.getStockMin().intValue();
+        int maxStock = input.getStockMax() == null ? Math.max(minStock, 0) : input.getStockMax().intValue();
         MenuItem item = new MenuItem(
                 0, input.getName(), input.getUnitPrice() == null ? 0L : input.getUnitPrice(),
                 input.getCategory(), input.getImageUrl(),
                 input.getStockTracked() != null && input.getStockTracked(),
                 input.getStockQty() == null ? 0 : input.getStockQty().intValue(),
-                input.getStockMin() == null ? 0 : input.getStockMin().intValue(),
-                0, input.getBaseUnit(), MenuItemStatus.ACTIVE);
+                minStock,
+                maxStock, input.getBaseUnit(), MenuItemStatus.ACTIVE);
         repository.save(item);
         return new MenuItemOutput(item.getMenuItemId(), item.getName(), item.getCategory(), item.getUnitPrice(),
                 item.getImageUrl(), item.getBaseUnit(), item.isStockTracked(), item.getStockQty(), item.getStockMin(),

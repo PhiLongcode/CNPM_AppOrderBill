@@ -251,6 +251,7 @@ public class OrderScreenController implements OrderScreenView {
                     updateTableButtonStyles();
                     // Refresh menu items để cập nhật tồn kho sau thanh toán
                     refreshMenuItems();
+                    showSuccess(msg("ui.order.checkout_success"));
                 });
             } else {
                 System.err.println("WARNING: Some checkout fields are null, CheckoutHandler not initialized");

@@ -31,7 +31,7 @@ public class MenuItem {
         if (categoryName == null || categoryName.trim().isEmpty()) {
             throw new DomainException(ErrorCode.MENU_ITEM_CATEGORY_REQUIRED);
         }
-        if (isStockManaged && (minStockQuantity < 0 || maxStockQuantity < minStockQuantity)) {
+        if (isStockManaged && (minStockQuantity <0 || maxStockQuantity < minStockQuantity)) {
             throw new DomainException(ErrorCode.MENU_ITEM_STOCK_LEVELS_INVALID);
         }
         if (isStockManaged && currentStockQuantity < 0) {

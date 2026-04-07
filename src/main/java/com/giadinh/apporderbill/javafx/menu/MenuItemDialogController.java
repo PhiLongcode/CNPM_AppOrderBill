@@ -311,8 +311,12 @@ public class MenuItemDialogController {
      */
     public static Result showDialog(MenuManagementController.MenuItemRow existingItem) {
         try {
-            FXMLLoader loader = new FXMLLoader(
-                    MenuItemDialogController.class.getResource("/com/giadinh/apporderbill/menu-item-dialog.fxml"));
+            var fxmlUrl = MenuItemDialogController.class.getResource(
+                    "/com/giadinh/apporderbill/javafx/menu/menu-item-dialog.fxml");
+            if (fxmlUrl == null) {
+                throw new IllegalStateException("menu-item-dialog.fxml not found");
+            }
+            FXMLLoader loader = new FXMLLoader(fxmlUrl);
             DialogPane dialogPane = loader.load();
             MenuItemDialogController controller = loader.getController();
 
@@ -347,7 +351,7 @@ public class MenuItemDialogController {
             });
 
             return dialog.showAndWait().orElse(null);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle(DomainMessages.formatKey("ui.common.error_title"));

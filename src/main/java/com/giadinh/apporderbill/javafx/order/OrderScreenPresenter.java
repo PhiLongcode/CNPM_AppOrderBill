@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Presenter chứa logic nghiệp vụ cho Order Screen.
@@ -218,6 +219,7 @@ public class OrderScreenPresenter {
         } catch (NumberFormatException e) {
             view.showError(msg("ui.order.quantity_price_invalid"));
         } catch (DomainException e) {
+            view.refreshMenuItems();
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError(msg("ui.order.add_item_failed", e.getMessage()));
@@ -512,6 +514,48 @@ public class OrderScreenPresenter {
         return currentTableNumber;
     }
 
+    public String getCurrentOrderDisplayCode() {
+        if (currentOrderId == null) {
+            return "";
+        }
+        try {
+            Order order = orderRepository.findById(String.valueOf(currentOrderId)).orElse(null);
+            if (order == null) {
+                return String.valueOf(currentOrderId);
+            }
+            if (order.getOrderCode() != null && !order.getOrderCode().isBlank()) {
+                return order.getOrderCode();
+            }
+            if (order.getOrderDate() == null) {
+                return String.valueOf(currentOrderId);
+            }
+            String datePart = order.getOrderDate().format(DateTimeFormatter.ofPattern("ddMMyy"));
+            long seq = Math.abs(currentOrderId % 100000);
+            return "ORDER" + datePart + String.format("%05d", seq);
+        } catch (Exception e) {
+            return String.valueOf(currentOrderId);
+        }
+    }
+
+    /**
+     * Danh sách dòng món (không bị hủy) để hiển thị trong dialog thanh toán — đồng bộ với GetOrderDetails.
+     */
+    public List<OrderItemViewModel> getCurrentOrderItemsForCheckout() {
+        if (currentOrderId == null) {
+            return List.of();
+        }
+        try {
+            GetOrderDetailsInput input = new GetOrderDetailsInput(currentOrderId);
+            GetOrderDetailsOutput output = getOrderDetailsUseCase.execute(input);
+            return convertToViewModels(output.getItems()).stream()
+                    .filter(vm -> !vm.isCanceled())
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Lỗi khi tải món cho thanh toán: " + e.getMessage());
+            return List.of();
+        }
+    }
+
     /**
      * Reset UI sau khi xóa order rỗng (mở nhầm bàn) cho đúng bàn đang chọn.
      */
@@ -584,6 +628,7 @@ public class OrderScreenPresenter {
             // Refresh menu items để cập nhật tồn kho realtime
             view.refreshMenuItems();
         } catch (DomainException e) {
+            view.refreshMenuItems();
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError(msg("ui.order.update_quantity_failed", e.getMessage()));
@@ -612,6 +657,7 @@ public class OrderScreenPresenter {
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
         } catch (DomainException e) {
+            view.refreshMenuItems();
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError(msg("ui.order.cancel_item_failed", e.getMessage()));
@@ -640,6 +686,7 @@ public class OrderScreenPresenter {
             // Refresh menu items để cập nhật tồn kho realtime (hoàn lại tồn kho)
             view.refreshMenuItems();
         } catch (DomainException e) {
+            view.refreshMenuItems();
             view.showError(e.getMessage());
         } catch (Exception e) {
             view.showError(msg("ui.order.delete_item_failed", e.getMessage()));
