@@ -2,6 +2,7 @@ package com.giadinh.apporderbill.web.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import com.giadinh.apporderbill.shared.util.DataModeConfig;
 import com.giadinh.apporderbill.shared.util.SqliteConnectionProvider;
@@ -23,6 +24,9 @@ import com.giadinh.apporderbill.printer.repository.SqlitePrinterConfigRepository
 
 import com.giadinh.apporderbill.shared.service.PrinterService;
 import com.giadinh.apporderbill.shared.service.DefaultPrinterService;
+import com.giadinh.apporderbill.customer.repository.CustomerRepository;
+import com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository;
+import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 
 import com.giadinh.apporderbill.orders.OrdersComponent;
 import com.giadinh.apporderbill.orders.OrdersComponentImpl;
@@ -44,6 +48,7 @@ import com.giadinh.apporderbill.system.SystemComponent;
 import com.giadinh.apporderbill.system.SystemComponentImpl;
 
 @Configuration
+@Profile("!api-mysql")
 public class OrderApiConfig {
 
     @Bean
@@ -159,5 +164,15 @@ public class OrderApiConfig {
     @Bean
     public SystemComponent systemComponent(SqliteConnectionProvider connectionProvider) {
         return new SystemComponentImpl(connectionProvider);
+    }
+
+    @Bean
+    public CustomerRepository customerRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqliteCustomerRepository(connectionProvider);
+    }
+
+    @Bean
+    public CustomerUseCases customerUseCases(CustomerRepository customerRepository) {
+        return new CustomerUseCases(customerRepository);
     }
 }
