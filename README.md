@@ -6,11 +6,12 @@
 
 ## 📌 Tính năng chính
 
-- **POS Desktop (JavaFX + SQLite)**
+- **POS Desktop (JavaFX + SQLite) - OFFLINE**
   - Quản lý bàn, gọi món, giảm giá, huỷ món.
   - In **phiếu bếp** và **hoá đơn** theo mẫu cấu hình.
   - Quản lý menu, tồn kho, import/export Excel.
   - Quản lý khách hàng và tích điểm.
+  - Quản lý phân quyền
 - **REST API (Spring Boot + Swagger)**
   - API cho menu, orders, billing, kitchen, tables, reporting, printer, system.
   - Phân quyền theo **user/role/permission** (module Identity).
@@ -118,11 +119,12 @@ Xem thêm:
 ### POS Desktop
 
 | Màn hình | Ảnh |
-|---------|-----|
+|---|---|
 | Order/Thu ngân | ![Màn hình order](docs/screenshots/ui-order-screen.png) |
 | Quản lý Menu | ![Quản lý menu](docs/screenshots/ui-menu-management.png) |
 | Quản lý phân quyền | ![Quản lý phân quyền](docs/screenshots/ui-permissions.png) |
 | Cấu hình máy in | ![Cấu hình máy in](docs/screenshots/ui-printer-config.png) |
+
 
 ### REST API (Swagger UI)
 
@@ -142,5 +144,4 @@ Dự án sử dụng giấy phép **MIT**. Xem file [`LICENSE`](LICENSE).
 
 ---
 
-Cập nhật: 2026-04-08.  
-Maintainer: (bạn có thể ghi tên/nhóm tại đây).***
+Cập nhật: 2026-04-01.
