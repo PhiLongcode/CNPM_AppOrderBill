@@ -86,7 +86,7 @@ public class MySqlOrderRepository implements OrderRepository {
                     del.setString(1, order.getOrderId());
                     del.executeUpdate();
                 }
-                String ins = "INSERT INTO order_items(id, order_id, menu_item_id, menu_item_name, quantity, price, note, status, is_printed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                String ins = "INSERT INTO order_items(id, order_id, menu_item_id, menu_item_name, quantity, price, note, status, is_printed, discount_percent, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 try (PreparedStatement ps = c.prepareStatement(ins)) {
                     for (OrderItem it : order.getItems()) {
                         ps.setString(1, it.getOrderItemId());
@@ -97,7 +97,9 @@ public class MySqlOrderRepository implements OrderRepository {
                         ps.setDouble(6, it.getPrice());
                         ps.setString(7, it.getNote() == null ? "" : it.getNote());
                         ps.setString(8, null);
-                        ps.setInt(9, 0);
+                        ps.setInt(9, it.isPrintedToKitchen() ? 1 : 0);
+                        ps.setDouble(10, it.getDiscountPercent() != null ? it.getDiscountPercent() : 0.0);
+                        ps.setDouble(11, it.getDiscountAmount() != null ? it.getDiscountAmount() : 0.0);
                         ps.addBatch();
                     }
                     ps.executeBatch();
@@ -156,11 +158,16 @@ public class MySqlOrderRepository implements OrderRepository {
     }
 
     private static void loadItems(Connection c, Order order) throws Exception {
-        String sql = "SELECT id, order_id, menu_item_id, menu_item_name, quantity, price, note FROM order_items WHERE order_id = ? ORDER BY id";
+        String sql = "SELECT id, order_id, menu_item_id, menu_item_name, quantity, price, note, discount_percent, discount_amount, is_printed FROM order_items WHERE order_id = ? ORDER BY id";
         try (PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, order.getOrderId());
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    Double discountPercent = rs.getDouble("discount_percent");
+                    if (rs.wasNull()) discountPercent = 0.0;
+                    Double discountAmount = rs.getDouble("discount_amount");
+                    if (rs.wasNull()) discountAmount = 0.0;
+                    
                     order.restoreOrderItem(new OrderItem(
                             rs.getString("id"),
                             rs.getString("order_id"),
@@ -168,7 +175,10 @@ public class MySqlOrderRepository implements OrderRepository {
                             rs.getString("menu_item_name"),
                             rs.getInt("quantity"),
                             rs.getDouble("price"),
-                            rs.getString("note") == null ? "" : rs.getString("note")));
+                            rs.getString("note") == null ? "" : rs.getString("note"),
+                            discountPercent,
+                            discountAmount,
+                            rs.getInt("is_printed") == 1));
                 }
             }
         }

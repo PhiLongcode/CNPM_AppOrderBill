@@ -26,9 +26,10 @@ final class OrderUseCaseSupport {
                     Math.round(item.getPrice()),
                     item.getNote(),
                     "unit",
-                    false,
-                    false,
-                    0.0));
+                    item.isPrintedToKitchen(), // printedToKitchen
+                    false, // canceled
+                    item.getDiscountPercent(),
+                    item.getDiscountAmount()));
         }
         return items;
     }

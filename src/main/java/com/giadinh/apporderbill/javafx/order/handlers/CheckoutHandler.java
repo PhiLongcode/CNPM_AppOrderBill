@@ -156,7 +156,10 @@ public class CheckoutHandler {
             controller.setOrderItemsSupplier(presenter::getCurrentOrderItemsForCheckout);
             controller.setOrderItems(presenter.getCurrentOrderItemsForCheckout());
 
-            controller.getCancelButton().setOnAction(e -> dialog.close());
+            controller.getCancelButton().setOnAction(e -> {
+                dialog.setResult(null);
+                dialog.close();
+            });
             controller.getConfirmButton().setOnAction(e -> {
                 CheckoutDialogController.Result result = controller.buildResult();
                 boolean success = presenter.checkout(
@@ -171,6 +174,7 @@ public class CheckoutHandler {
                     if (onCheckoutSuccessHandler != null) {
                         onCheckoutSuccessHandler.run();
                     }
+                    dialog.setResult(null);
                     dialog.close();
                 }
             });

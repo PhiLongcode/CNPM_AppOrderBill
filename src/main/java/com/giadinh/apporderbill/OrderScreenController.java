@@ -222,16 +222,19 @@ public class OrderScreenController implements OrderScreenView {
         }
     }
 
+    @FXML
+    private TableColumn<OrderItemViewModel, Double> discountAmountColumn;
+
     private void initializeHandlers() {
         try {
             // OrderItem Handler
             if (orderItemsTable != null && selectColumn != null && itemNumberColumn != null &&
                     nameColumn != null && quantityColumn != null && unitColumn != null && unitPriceColumn != null &&
-                    totalColumn != null && discountColumn != null && notesColumn != null && printedColumn != null && actionColumn != null) {
+                    totalColumn != null && discountColumn != null && discountAmountColumn != null && notesColumn != null && printedColumn != null && actionColumn != null) {
 
                 orderItemHandler = new OrderItemHandler(
                         orderItemsTable, selectColumn, itemNumberColumn, nameColumn,
-                        quantityColumn, unitColumn, unitPriceColumn, totalColumn, discountColumn, notesColumn,
+                        quantityColumn, unitColumn, unitPriceColumn, totalColumn, discountColumn, discountAmountColumn, notesColumn,
                         printedColumn, actionColumn);
                 orderItemHandler.setErrorHandler(this::showError);
                 orderItemHandler.setOnRowSelectedCallback(this::onOrderItemRowSelected);

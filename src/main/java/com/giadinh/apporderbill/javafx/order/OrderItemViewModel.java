@@ -11,10 +11,11 @@ public class OrderItemViewModel {
     private final boolean printedToKitchen;
     private final boolean canceled;
     private final Double discountPercent;
+    private final Double discountAmount;
     private boolean selected;
 
     public OrderItemViewModel(Long orderItemId, String name, int quantity, long unitPrice, long totalPrice,
-            String notes, String unitName, boolean printedToKitchen, boolean canceled, Double discountPercent) {
+            String notes, String unitName, boolean printedToKitchen, boolean canceled, Double discountPercent, Double discountAmount) {
         this.orderItemId = orderItemId;
         this.name = name;
         this.quantity = quantity;
@@ -25,6 +26,7 @@ public class OrderItemViewModel {
         this.printedToKitchen = printedToKitchen;
         this.canceled = canceled;
         this.discountPercent = discountPercent;
+        this.discountAmount = discountAmount;
         this.selected = false;
     }
 
@@ -38,7 +40,7 @@ public class OrderItemViewModel {
     public boolean isPrintedToKitchen() { return printedToKitchen; }
     public boolean isCanceled() { return canceled; }
     public Double getDiscountPercent() { return discountPercent; }
+    public Double getDiscountAmount() { return discountAmount; }
     public boolean isSelected() { return selected; }
     public void setSelected(boolean selected) { this.selected = selected; }
 }
-

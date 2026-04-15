@@ -358,6 +358,7 @@ public class OrderScreenPresenter {
 
             if (output.isPrinted()) {
                 // In thành công - refresh order để cập nhật trạng thái món đã in
+                view.showSuccess(msg("ui.order.print_kitchen_success"));
                 refreshOrder();
             } else {
                 // In thất bại hoặc bị hủy
@@ -502,7 +503,8 @@ public class OrderScreenPresenter {
                         item.getUnitName(),
                         item.isPrintedToKitchen(),
                         item.isCanceled(),
-                        item.getDiscountPercent()))
+                        item.getDiscountPercent(),
+                        item.getDiscountAmount()))
                 .collect(Collectors.toList());
     }
 
@@ -730,7 +732,7 @@ public class OrderScreenPresenter {
         }
 
         try {
-            UpdateOrderItemDiscountInput input = new UpdateOrderItemDiscountInput(currentOrderId, orderItemId, discountPercent);
+            UpdateOrderItemDiscountInput input = new UpdateOrderItemDiscountInput(currentOrderId, orderItemId, discountPercent, 0.0);
             UpdateOrderItemDiscountOutput output = updateOrderItemDiscountUseCase.execute(input);
 
             // Update view

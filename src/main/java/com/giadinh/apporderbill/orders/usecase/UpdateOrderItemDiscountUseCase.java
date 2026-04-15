@@ -18,7 +18,24 @@ public class UpdateOrderItemDiscountUseCase {
     public UpdateOrderItemDiscountOutput execute(UpdateOrderItemDiscountInput input) {
         var order = orderRepository.findById(String.valueOf(input.getOrderId()))
                 .orElseThrow(() -> new DomainException(ErrorCode.ORDER_NOT_FOUND));
-        // Current OrderItem model has no discount field yet. Keep item list unchanged.
+        
+        boolean found = false;
+        long orderItemIndex = input.getOrderItemId() - 1; // get 0-index based list index
+        if (orderItemIndex >= 0 && orderItemIndex < order.getItems().size()) {
+            var item = order.getItems().get((int) orderItemIndex);
+            if (input.getDiscountPercent() != null) {
+                item.setDiscountPercent(input.getDiscountPercent());
+            }
+            if (input.getDiscountAmount() != null) {
+                item.setDiscountAmount(input.getDiscountAmount());
+            }
+            found = true;
+        }
+
+        if (!found) {
+             throw new DomainException(ErrorCode.ORDER_ITEM_NOT_FOUND);
+        }
+
         orderRepository.save(order);
         return new UpdateOrderItemDiscountOutput(OrderUseCaseSupport.toOutputs(order), OrderUseCaseSupport.total(order));
     }

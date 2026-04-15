@@ -138,7 +138,7 @@ public class Order {
     // Phương thức tính toán lại tổng tiền của đơn hàng
     private void calculateTotalAmount() {
         this.totalAmount = this.items.stream()
-                .mapToDouble(item -> item.getQuantity() * item.getPrice())
+                .mapToDouble(OrderItem::getLineTotal)
                 .sum();
     }
 
@@ -150,5 +150,11 @@ public class Order {
     // Thêm OrderItem đã có sẵn vào danh sách (dùng khi tải từ DB)
     public void restoreOrderItem(OrderItem item) {
         this.items.add(item);
+    }
+
+    public void markAllItemsAsPrinted() {
+        for (OrderItem item : items) {
+            item.setPrintedToKitchen(true);
+        }
     }
 }

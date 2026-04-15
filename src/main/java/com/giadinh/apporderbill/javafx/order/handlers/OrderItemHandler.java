@@ -5,6 +5,9 @@ import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
@@ -13,7 +16,10 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
+import javafx.util.converter.DoubleStringConverter;
+import javafx.util.converter.IntegerStringConverter;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -37,10 +43,12 @@ public class OrderItemHandler {
             TableColumn<OrderItemViewModel, Long> unitPriceColumn,
             TableColumn<OrderItemViewModel, Long> totalColumn,
             TableColumn<OrderItemViewModel, Double> discountColumn,
+            TableColumn<OrderItemViewModel, Double> discountAmountColumn,
             TableColumn<OrderItemViewModel, String> notesColumn,
             TableColumn<OrderItemViewModel, Boolean> printedColumn,
             TableColumn<OrderItemViewModel, Void> actionColumn) {
         this.orderItemsTable = orderItemsTable;
+        this.orderItemsTable.setEditable(true);
         this.orderItemsTable.setItems(itemViewModels);
         this.orderItemsTable.setRowFactory(tv -> {
             TableRow<OrderItemViewModel> row = new TableRow<>();
@@ -60,14 +68,75 @@ public class OrderItemHandler {
             String n = c.getValue().getName();
             return new ReadOnlyStringWrapper(n != null ? n : "");
         });
-        quantityColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getQuantity()));
+        
+        // Cấu hình các cột editable dùng SimpleProperty
+        quantityColumn.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantity()).asObject());
+        quantityColumn.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+        quantityColumn.setOnEditCommit(event -> {
+            OrderItemViewModel vm = event.getRowValue();
+            if (vm != null && presenter != null && !vm.isCanceled()) {
+                presenter.updateItemQuantity(vm.getOrderItemId(), event.getNewValue());
+            } else {
+                orderItemsTable.refresh();
+            }
+        });
+
         unitColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().getUnitName() != null ? c.getValue().getUnitName() : ""));
         unitPriceColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getUnitPrice()));
         totalColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getTotalPrice()));
-        discountColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getDiscountPercent()));
-        notesColumn.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+        
+        discountColumn.setCellValueFactory(c -> {
+            Double val = c.getValue().getDiscountPercent();
+            return new SimpleDoubleProperty(val != null ? val : 0.0).asObject();
+        });
+        discountColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        discountColumn.setOnEditCommit(event -> {
+            OrderItemViewModel vm = event.getRowValue();
+            if (vm != null && presenter != null && !vm.isCanceled()) {
+                presenter.updateItemDiscount(vm.getOrderItemId(), event.getNewValue());
+            } else {
+                orderItemsTable.refresh();
+            }
+        });
+
+        discountAmountColumn.setCellValueFactory(c -> {
+            Double val = c.getValue().getDiscountAmount();
+            return new SimpleDoubleProperty(val != null ? val : 0.0).asObject();
+        });
+        discountAmountColumn.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        discountAmountColumn.setOnEditCommit(event -> {
+            OrderItemViewModel vm = event.getRowValue();
+            if (vm != null && presenter != null && !vm.isCanceled()) {
+               var updateDiscountUseCase = presenter.getUpdateOrderItemDiscountUseCase();
+               if(updateDiscountUseCase != null) {
+                   try {
+                       var input = new com.giadinh.apporderbill.orders.usecase.dto.UpdateOrderItemDiscountInput(
+                                      presenter.getCurrentOrderId(), vm.getOrderItemId(), vm.getDiscountPercent(), event.getNewValue());
+                       var output = updateDiscountUseCase.execute(input);
+                       presenter.refreshOrder();
+                   } catch (Exception e) {
+                       errorHandler.accept(e.getMessage());
+                       orderItemsTable.refresh();
+                   }
+               }
+            } else {
+                orderItemsTable.refresh();
+            }
+        });
+
+        notesColumn.setCellValueFactory(c -> new SimpleStringProperty(
                 c.getValue().getNotes() != null ? c.getValue().getNotes() : ""));
+        notesColumn.setCellFactory(TextFieldTableCell.forTableColumn());
+        notesColumn.setOnEditCommit(event -> {
+            OrderItemViewModel vm = event.getRowValue();
+            if (vm != null && presenter != null && !vm.isCanceled()) {
+                presenter.updateItemNote(vm.getOrderItemId(), event.getNewValue());
+            } else {
+                 orderItemsTable.refresh();
+            }
+        });
+        
         printedColumn.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isPrintedToKitchen()));
 
         unitPriceColumn.setCellFactory(col -> new TableCell<OrderItemViewModel, Long>() {
@@ -94,6 +163,8 @@ public class OrderItemHandler {
             }
         });
 
+        // Commented out overridden discountColumn cell factory since we are using TextFieldTableCell
+        /*
         discountColumn.setCellFactory(col -> new TableCell<OrderItemViewModel, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
@@ -107,6 +178,7 @@ public class OrderItemHandler {
                 }
             }
         });
+        */
 
         printedColumn.setCellFactory(col -> new TableCell<OrderItemViewModel, Boolean>() {
             @Override

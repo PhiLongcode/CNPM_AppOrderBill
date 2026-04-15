@@ -60,6 +60,12 @@ public class PrintKitchenTicketUseCase {
         if (!printerService.printKitchenTicket(content.toString())) {
             throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
         }
+
+        if (!input.isReprint()) {
+            order.markAllItemsAsPrinted();
+            orderRepository.save(order);
+        }
+        
         return new PrintKitchenTicketOutput(true, null);
     }
 }

@@ -73,6 +73,14 @@ public class SqliteConnectionProvider {
                         is_printed INTEGER NOT NULL DEFAULT 0
                     )
                     """);
+            try {
+                s.execute("ALTER TABLE order_items ADD COLUMN discount_percent REAL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE order_items ADD COLUMN discount_amount REAL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
             s.execute("""
                     CREATE TABLE IF NOT EXISTS payments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,

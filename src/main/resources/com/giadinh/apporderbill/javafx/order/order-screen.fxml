@@ -117,20 +117,21 @@
                             </children>
                         </HBox>
                     </HBox>
-                    <TableView fx:id="orderItemsTable" VBox.vgrow="ALWAYS" minHeight="350">
+                    <TableView fx:id="orderItemsTable" VBox.vgrow="ALWAYS" minHeight="350" editable="true">
                     <columns>
                         <TableColumn fx:id="selectColumn" text="☑" prefWidth="45" resizable="false"/>
-                         <TableColumn fx:id="printedColumn" text="Đã in" prefWidth="70" minWidth="50"/>
-                        <TableColumn fx:id="itemNumberColumn" text="#" prefWidth="50" resizable="false"/>
-                        <TableColumn fx:id="nameColumn" text="Tên món" prefWidth="200" minWidth="150"/>
-                        <TableColumn fx:id="quantityColumn" text="SL" prefWidth="70" minWidth="50"/>
-                        <TableColumn fx:id="unitColumn" text="ĐVT" prefWidth="70" minWidth="50"/>
-                        <TableColumn fx:id="unitPriceColumn" text="Đơn giá" prefWidth="120" minWidth="90"/>
-                        <TableColumn fx:id="totalColumn" text="Thành tiền" prefWidth="130" minWidth="100"/>
-                        <TableColumn fx:id="discountColumn" text="Giảm giá (%)" prefWidth="100" minWidth="80"/>
-                        <TableColumn fx:id="notesColumn" text="Ghi chú" prefWidth="180" minWidth="130"/>
+                         <TableColumn fx:id="printedColumn" text="Đã in" prefWidth="70" minWidth="50" editable="false"/>
+                        <TableColumn fx:id="itemNumberColumn" text="#" prefWidth="50" resizable="false" editable="false"/>
+                        <TableColumn fx:id="nameColumn" text="Tên món" prefWidth="200" minWidth="150" editable="false"/>
+                        <TableColumn fx:id="quantityColumn" text="SL" prefWidth="70" minWidth="50" editable="true"/>
+                        <TableColumn fx:id="unitColumn" text="ĐVT" prefWidth="70" minWidth="50" editable="false"/>
+                        <TableColumn fx:id="unitPriceColumn" text="Đơn giá" prefWidth="120" minWidth="90" editable="false"/>
+                        <TableColumn fx:id="totalColumn" text="Thành tiền" prefWidth="130" minWidth="100" editable="false"/>
+                        <TableColumn fx:id="discountAmountColumn" text="Giảm giá (VNĐ)" prefWidth="110" minWidth="90" editable="true"/>
+                        <TableColumn fx:id="discountColumn" text="Giảm giá (%)" prefWidth="100" minWidth="80" editable="true"/>
+                        <TableColumn fx:id="notesColumn" text="Ghi chú" prefWidth="180" minWidth="130" editable="true"/>
                        
-                        <TableColumn fx:id="actionColumn" text="Thao tác" prefWidth="90" minWidth="80"/>
+                        <TableColumn fx:id="actionColumn" text="Thao tác" prefWidth="90" minWidth="80" editable="false"/>
                     </columns>
                 </TableView>
                 </VBox>
