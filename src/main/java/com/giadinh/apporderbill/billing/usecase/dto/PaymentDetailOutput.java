@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.billing.usecase.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class PaymentDetailOutput {
     private final Long paymentId;
@@ -15,11 +16,14 @@ public class PaymentDetailOutput {
     private final Double discountPercent;
     private final String cashier;
     private final LocalDateTime paidAt;
+    private final List<PaymentItemOutput> items;
+
+    public record PaymentItemOutput(String name, int qty, String unit, long unitPrice, String discountText, long lineTotal) {}
 
     public PaymentDetailOutput(Long paymentId, String orderId, String tableNumber,
             long totalAmount, long finalAmount, long paidAmount,
             String paymentMethod, Long discountAmount, Double discountPercent,
-            String cashier, LocalDateTime paidAt) {
+            String cashier, LocalDateTime paidAt, List<PaymentItemOutput> items) {
         this.paymentId = paymentId;
         this.orderId = orderId;
         this.tableNumber = tableNumber;
@@ -32,6 +36,7 @@ public class PaymentDetailOutput {
         this.discountPercent = discountPercent;
         this.cashier = cashier;
         this.paidAt = paidAt;
+        this.items = items != null ? items : List.of();
     }
 
     public Long getPaymentId() { return paymentId; }
@@ -46,5 +51,6 @@ public class PaymentDetailOutput {
     public Double getDiscountPercent() { return discountPercent; }
     public String getCashier() { return cashier; }
     public LocalDateTime getPaidAt() { return paidAt; }
+    public List<PaymentItemOutput> getItems() { return items; }
 }
 

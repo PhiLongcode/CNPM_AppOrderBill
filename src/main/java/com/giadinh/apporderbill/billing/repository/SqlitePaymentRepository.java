@@ -23,56 +23,59 @@ public class SqlitePaymentRepository implements PaymentRepository {
 
     @Override
     public Payment save(Payment payment) {
-        String sql;
         boolean isInsert = payment.getPaymentId() == null;
-        if (isInsert) {
-            sql = """
-                INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
-        } else {
-            sql = """
-                UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?
-                WHERE id = ?
-            """;
-        }
-
-        try (Connection c = connectionProvider.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            
-            ps.setString(1, payment.getOrderId());
-            ps.setLong(2, payment.getTotalAmount());
-            ps.setLong(3, payment.getFinalAmount());
-            ps.setLong(4, payment.getPaidAmount());
-            ps.setString(5, payment.getPaymentMethod());
-            if (payment.getDiscountAmount() != null) {
-                ps.setLong(6, payment.getDiscountAmount());
-            } else {
-                ps.setNull(6, java.sql.Types.INTEGER);
-            }
-            if (payment.getDiscountPercent() != null) {
-                ps.setDouble(7, payment.getDiscountPercent());
-            } else {
-                ps.setNull(7, java.sql.Types.REAL);
-            }
-            ps.setString(8, payment.getCashier());
-            ps.setString(9, payment.getPaidAt() != null ? payment.getPaidAt().format(DT) : LocalDateTime.now().format(DT));
-
-            if (!isInsert) {
-                ps.setLong(10, payment.getPaymentId());
-                ps.executeUpdate();
-            } else {
-                ps.executeUpdate();
-                try (ResultSet rs = ps.getGeneratedKeys()) {
+        try (Connection c = connectionProvider.getConnection()) {
+            if (isInsert) {
+                String sql = """
+                    INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    bindParams(ps, payment);
+                    ps.executeUpdate();
+                }
+                // SQLite JDBC does not support RETURN_GENERATED_KEYS, use last_insert_rowid() instead
+                try (PreparedStatement ps2 = c.prepareStatement("SELECT last_insert_rowid()");
+                     ResultSet rs = ps2.executeQuery()) {
                     if (rs.next()) {
                         payment.setPaymentId(rs.getLong(1));
                     }
+                }
+            } else {
+                String sql = """
+                    UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?
+                    WHERE id = ?
+                """;
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    bindParams(ps, payment);
+                    ps.setLong(10, payment.getPaymentId());
+                    ps.executeUpdate();
                 }
             }
         } catch (Exception e) {
             System.err.println("SqlitePaymentRepository.save: " + e.getMessage());
         }
         return payment;
+    }
+
+    private void bindParams(PreparedStatement ps, Payment payment) throws Exception {
+        ps.setString(1, payment.getOrderId());
+        ps.setLong(2, payment.getTotalAmount());
+        ps.setLong(3, payment.getFinalAmount());
+        ps.setLong(4, payment.getPaidAmount());
+        ps.setString(5, payment.getPaymentMethod());
+        if (payment.getDiscountAmount() != null) {
+            ps.setLong(6, payment.getDiscountAmount());
+        } else {
+            ps.setNull(6, java.sql.Types.INTEGER);
+        }
+        if (payment.getDiscountPercent() != null) {
+            ps.setDouble(7, payment.getDiscountPercent());
+        } else {
+            ps.setNull(7, java.sql.Types.REAL);
+        }
+        ps.setString(8, payment.getCashier());
+        ps.setString(9, payment.getPaidAt() != null ? payment.getPaidAt().format(DT) : LocalDateTime.now().format(DT));
     }
 
     @Override

@@ -46,6 +46,15 @@ public class PaymentDetailDialogController {
         paidAmountLabel.setText(detail.getPaidAmount() + " VNĐ");
         changeAmountLabel.setText(detail.getChangeAmount() + " VNĐ");
         itemsTable.getItems().clear();
+        for (PaymentDetailOutput.PaymentItemOutput item : detail.getItems()) {
+            itemsTable.getItems().add(new ItemRow(
+                    item.name(),
+                    item.qty(),
+                    item.unit(),
+                    item.unitPrice(),
+                    item.discountText(),
+                    item.lineTotal()));
+        }
     }
 
     public static class ItemRow {

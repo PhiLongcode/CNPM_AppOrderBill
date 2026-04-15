@@ -67,6 +67,16 @@ public class DashboardController {
         paymentMethodColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getPaymentMethod()));
         paymentTimeColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(
                 c.getValue().getPaidAt() == null ? "" : c.getValue().getPaidAt().toString()));
+
+        if (dateColumn != null) {
+            dateColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getDate()));
+        }
+        if (revenueColumn != null) {
+            revenueColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(c.getValue().getRevenue()));
+        }
+        if (billsColumn != null) {
+            billsColumn.setCellValueFactory(c -> new javafx.beans.property.SimpleObjectProperty<>(c.getValue().getBills()));
+        }
     }
 
     public void init(
@@ -88,19 +98,112 @@ public class DashboardController {
         this.getPaymentDetailUseCase = g;
         this.deletePaymentsByDateRangeUseCase = h;
         this.reprintReceiptUseCase = i;
+        // Load payments first, then stats that depend on them
+        onRefreshPaymentsClick();
+        onRefreshClick();
+    }
+
+    // Track current filter mode
+    private enum Period { TODAY, WEEK, MONTH, CUSTOM }
+    private Period currentPeriod = Period.TODAY;
+
+    @FXML private javafx.scene.control.ToggleButton todayBtn;
+    @FXML private javafx.scene.control.ToggleButton weekBtn;
+    @FXML private javafx.scene.control.ToggleButton monthBtn;
+    @FXML private javafx.scene.control.ToggleButton customBtn;
+
+    @FXML
+    private void onTodayClick() {
+        currentPeriod = Period.TODAY;
+        startDatePicker.setValue(null);
+        endDatePicker.setValue(null);
         onRefreshClick();
         onRefreshPaymentsClick();
     }
 
     @FXML
+    private void onWeekClick() {
+        currentPeriod = Period.WEEK;
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1L);
+        startDatePicker.setValue(weekStart);
+        endDatePicker.setValue(weekStart.plusDays(6));
+        onRefreshClick();
+        loadPaymentsByCurrentPeriod();
+    }
+
+    @FXML
+    private void onMonthClick() {
+        currentPeriod = Period.MONTH;
+        LocalDate today = LocalDate.now();
+        startDatePicker.setValue(today.withDayOfMonth(1));
+        endDatePicker.setValue(today.withDayOfMonth(today.lengthOfMonth()));
+        onRefreshClick();
+        loadPaymentsByCurrentPeriod();
+    }
+
+    @FXML
+    private void onCustomClick() {
+        currentPeriod = Period.CUSTOM;
+        // Just change mode; user picks dates then hits Làm mới
+    }
+
+    @FXML
     private void onRefreshClick() {
         if (getDailyRevenueUseCase == null) return;
-        long amount = getDailyRevenueUseCase.execute(LocalDate.now()).getTotalRevenue();
-        totalRevenueLabel.setText(amount + " VNĐ");
+
+        com.giadinh.apporderbill.reporting.usecase.dto.RevenueSummaryOutput summary;
+        switch (currentPeriod) {
+            case WEEK -> summary = getWeeklyRevenueUseCase.execute(LocalDate.now());
+            case MONTH -> summary = getMonthlyRevenueUseCase.execute(LocalDate.now());
+            case CUSTOM -> {
+                LocalDate s = startDatePicker.getValue();
+                LocalDate e = endDatePicker.getValue();
+                if (s == null || e == null) {
+                    summary = getDailyRevenueUseCase.execute(LocalDate.now());
+                } else {
+                    summary = getRevenueByDateRangeUseCase.execute(
+                        new com.giadinh.apporderbill.reporting.usecase.dto.GetRevenueByDateRangeInput(
+                            s.atStartOfDay(), e.atTime(java.time.LocalTime.MAX)));
+                    loadPaymentsByCurrentPeriod();
+                }
+            }
+            default -> summary = getDailyRevenueUseCase.execute(LocalDate.now());
+        }
+
+        long amount = summary.getTotalRevenue();
+
+        // Populate daily revenue table grouped by date
+        if (dailyRevenueTable != null) {
+            var grouped = summary.getItems().stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                    com.giadinh.apporderbill.reporting.usecase.dto.RevenueOutput::getPeriod,
+                    java.util.stream.Collectors.summarizingLong(
+                        com.giadinh.apporderbill.reporting.usecase.dto.RevenueOutput::getAmount)));
+            var rows = grouped.entrySet().stream()
+                .map(entry -> new DailyRevenueRow(
+                    entry.getKey(),
+                    String.format("%,d VNĐ", entry.getValue().getSum()),
+                    (int) entry.getValue().getCount()))
+                .sorted((a2, b2) -> b2.getDate().compareTo(a2.getDate()))
+                .toList();
+            dailyRevenueTable.getItems().setAll(rows);
+        }
+
         int bills = paymentRows.size();
+        totalRevenueLabel.setText(String.format("%,d VNĐ", amount));
         totalBillsLabel.setText(String.valueOf(bills));
-        averageBillLabel.setText((bills == 0 ? 0 : amount / bills) + " VNĐ");
+        averageBillLabel.setText(String.format("%,d VNĐ", bills == 0 ? 0 : amount / bills));
     }
+
+    private void loadPaymentsByCurrentPeriod() {
+        LocalDate s = startDatePicker.getValue();
+        LocalDate e = endDatePicker.getValue();
+        if (s != null && e != null && getPaymentsByDateRangeUseCase != null) {
+            paymentRows.setAll(getPaymentsByDateRangeUseCase.execute(s.atStartOfDay(), e.atTime(23, 59, 59)));
+        }
+    }
+
 
     @FXML
     private void onLoadPaymentsClick() {

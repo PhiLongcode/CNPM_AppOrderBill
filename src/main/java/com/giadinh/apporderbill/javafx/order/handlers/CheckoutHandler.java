@@ -4,6 +4,8 @@ import com.giadinh.apporderbill.javafx.order.CheckoutDialogController;
 import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
@@ -139,7 +141,7 @@ public class CheckoutHandler {
             loader.setController(controller);
             loader.load();
 
-            Dialog<Void> dialog = new Dialog<>();
+            Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setDialogPane(dialogPane);
             dialog.setResizable(true);
             dialogPane.setPrefSize(1100, 760);
@@ -149,6 +151,15 @@ public class CheckoutHandler {
             }
             dialog.setTitle(msg("ui.order.checkout_dialog_title"));
 
+            // JavaFX Dialog.close() is blocked unless a ButtonType is registered.
+            // Add a hidden CLOSE button type to allow programmatic closing.
+            dialogPane.getButtonTypes().add(ButtonType.CLOSE);
+            Node closeNode = dialogPane.lookupButton(ButtonType.CLOSE);
+            if (closeNode != null) {
+                closeNode.setVisible(false);
+                closeNode.setManaged(false);
+            }
+
             String tableInfo = presenter.getCurrentTableNumber() == null ? "" : msg("ui.order.table_label", presenter.getCurrentTableNumber());
             controller.initSummary(totalAmount, finalAmount, tableInfo, presenter.getCurrentOrderDisplayCode());
             controller.setItemDiscountPercentUpdater((orderItemId, discountPercent) ->
@@ -156,10 +167,7 @@ public class CheckoutHandler {
             controller.setOrderItemsSupplier(presenter::getCurrentOrderItemsForCheckout);
             controller.setOrderItems(presenter.getCurrentOrderItemsForCheckout());
 
-            controller.getCancelButton().setOnAction(e -> {
-                dialog.setResult(null);
-                dialog.close();
-            });
+            controller.getCancelButton().setOnAction(e -> dialog.close());
             controller.getConfirmButton().setOnAction(e -> {
                 CheckoutDialogController.Result result = controller.buildResult();
                 boolean success = presenter.checkout(
@@ -171,11 +179,10 @@ public class CheckoutHandler {
                     paidAmount = String.valueOf(result.paidAmount());
                     paymentMethod = result.paymentMethod();
                     discountAmount = String.valueOf(result.discountAmount());
+                    dialog.close();
                     if (onCheckoutSuccessHandler != null) {
                         onCheckoutSuccessHandler.run();
                     }
-                    dialog.setResult(null);
-                    dialog.close();
                 }
             });
 

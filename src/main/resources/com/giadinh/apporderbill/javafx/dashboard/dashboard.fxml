@@ -16,10 +16,14 @@
             
             <HBox spacing="10" alignment="CENTER_LEFT">
                 <Label text="Chế độ:" style="-fx-text-fill: white;"/>
-                <ToggleButton fx:id="todayBtn" text="Hôm nay" selected="true"/>
-                <ToggleButton fx:id="weekBtn" text="Tuần này"/>
-                <ToggleButton fx:id="monthBtn" text="Tháng này"/>
-                <ToggleButton fx:id="customBtn" text="Tùy chọn"/>
+                <ToggleButton fx:id="todayBtn" text="Hôm nay" selected="true" onAction="#onTodayClick">
+                    <toggleGroup>
+                        <ToggleGroup fx:id="periodGroup"/>
+                    </toggleGroup>
+                </ToggleButton>
+                <ToggleButton fx:id="weekBtn" text="Tuần này" onAction="#onWeekClick" toggleGroup="$periodGroup"/>
+                <ToggleButton fx:id="monthBtn" text="Tháng này" onAction="#onMonthClick" toggleGroup="$periodGroup"/>
+                <ToggleButton fx:id="customBtn" text="Tùy chọn" onAction="#onCustomClick" toggleGroup="$periodGroup"/>
                 
                 <Region HBox.hgrow="ALWAYS"/>
                 
