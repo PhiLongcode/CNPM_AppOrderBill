@@ -29,9 +29,13 @@
                 <Label text="Cấu hình tích điểm:"
                        style="-fx-text-fill:#E3F2FD; -fx-font-weight:bold;"/>
                 <TextField fx:id="earnUnitAmountField" promptText="Tiền tích (VD: 10000)" prefWidth="120"/>
+                <Label fx:id="earnUnitInfoLabel" text="ⓘ" style="-fx-text-fill:#BBDEFB; -fx-font-weight:bold;"/>
                 <TextField fx:id="pointsPerUnitField" promptText="Điểm nhận" prefWidth="90"/>
+                <Label fx:id="pointsPerUnitInfoLabel" text="ⓘ" style="-fx-text-fill:#BBDEFB; -fx-font-weight:bold;"/>
                 <TextField fx:id="redeemPointsRequiredField" promptText="Điểm đổi" prefWidth="90"/>
+                <Label fx:id="redeemPointsInfoLabel" text="ⓘ" style="-fx-text-fill:#BBDEFB; -fx-font-weight:bold;"/>
                 <TextField fx:id="redeemValueField" promptText="Giá trị đổi" prefWidth="120"/>
+                <Label fx:id="redeemValueInfoLabel" text="ⓘ" style="-fx-text-fill:#BBDEFB; -fx-font-weight:bold;"/>
                 <Button text="💾 Lưu cấu hình" onAction="#onSaveLoyaltyConfig"
                         style="-fx-background-color:#43A047;-fx-text-fill:white;"/>
             </HBox>

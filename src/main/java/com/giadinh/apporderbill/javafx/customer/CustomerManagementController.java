@@ -40,6 +40,10 @@ public class CustomerManagementController {
     @FXML private TextField pointsPerUnitField;
     @FXML private TextField redeemPointsRequiredField;
     @FXML private TextField redeemValueField;
+    @FXML private Label earnUnitInfoLabel;
+    @FXML private Label pointsPerUnitInfoLabel;
+    @FXML private Label redeemPointsInfoLabel;
+    @FXML private Label redeemValueInfoLabel;
 
     private static final DateTimeFormatter DT_FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -100,6 +104,7 @@ public class CustomerManagementController {
         txBalanceColumn.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getBalanceAfter()));
         txNoteColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNote()));
         txOrderColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getOrderId()));
+        initLoyaltyHints();
     }
 
     public void setUseCases(CustomerUseCases useCases) {
@@ -280,5 +285,23 @@ public class CustomerManagementController {
             throw new IllegalArgumentException(msg(errorMessageKey));
         }
         return value;
+    }
+
+    private void initLoyaltyHints() {
+        installHint(earnUnitInfoLabel, "ui.customer.loyalty_hint_earn_unit");
+        installHint(pointsPerUnitInfoLabel, "ui.customer.loyalty_hint_points_per_unit");
+        installHint(redeemPointsInfoLabel, "ui.customer.loyalty_hint_redeem_points");
+        installHint(redeemValueInfoLabel, "ui.customer.loyalty_hint_redeem_value");
+    }
+
+    private void installHint(Label label, String key) {
+        if (label == null) {
+            return;
+        }
+        String message = msg(key);
+        Tooltip tooltip = new Tooltip(message);
+        Tooltip.install(label, tooltip);
+        label.setStyle(label.getStyle() + "; -fx-cursor: hand;");
+        label.setOnMouseClicked(event -> showInfo(message));
     }
 }
