@@ -34,6 +34,22 @@ public class SqlitePrintTemplateRepository implements PrintTemplateRepository {
             ps.setString(5, "");
             ps.setString(6, "");
             ps.executeUpdate();
+
+            ps.setString(1, "DRAFT");
+            ps.setString(2, "AppOrderBill");
+            ps.setString(3, "");
+            ps.setString(4, "");
+            ps.setString(5, "PHIEU TAM");
+            ps.setString(6, "");
+            ps.executeUpdate();
+
+            ps.setString(1, "TEST");
+            ps.setString(2, "AppOrderBill");
+            ps.setString(3, "");
+            ps.setString(4, "");
+            ps.setString(5, "TEST PRINTER");
+            ps.setString(6, "");
+            ps.executeUpdate();
         } catch (Exception ignored) {
         }
     }

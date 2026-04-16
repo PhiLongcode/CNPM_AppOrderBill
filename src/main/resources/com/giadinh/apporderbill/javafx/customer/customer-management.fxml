@@ -25,6 +25,16 @@
                 <Button text="🗑 Xóa"  onAction="#onDelete"
                         style="-fx-background-color:#F44336;-fx-text-fill:white;"/>
             </HBox>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Label text="Cấu hình tích điểm:"
+                       style="-fx-text-fill:#E3F2FD; -fx-font-weight:bold;"/>
+                <TextField fx:id="earnUnitAmountField" promptText="Tiền tích (VD: 10000)" prefWidth="120"/>
+                <TextField fx:id="pointsPerUnitField" promptText="Điểm nhận" prefWidth="90"/>
+                <TextField fx:id="redeemPointsRequiredField" promptText="Điểm đổi" prefWidth="90"/>
+                <TextField fx:id="redeemValueField" promptText="Giá trị đổi" prefWidth="120"/>
+                <Button text="💾 Lưu cấu hình" onAction="#onSaveLoyaltyConfig"
+                        style="-fx-background-color:#43A047;-fx-text-fill:white;"/>
+            </HBox>
         </VBox>
     </top>
 

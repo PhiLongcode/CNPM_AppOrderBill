@@ -6,6 +6,7 @@ import com.giadinh.apporderbill.identity.model.PermissionAssignment;
 import com.giadinh.apporderbill.identity.repository.UserRepository;
 import com.giadinh.apporderbill.identity.repository.RoleGroupRepository;
 import com.giadinh.apporderbill.identity.repository.PermissionAssignmentRepository;
+import com.giadinh.apporderbill.identity.security.PasswordHasher;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginInput;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
 import com.giadinh.apporderbill.shared.error.DomainException;
@@ -38,8 +39,14 @@ public class LoginUseCase {
 
         User user = userOptional.get();
 
-        if (!user.getPasswordHash().equals(input.getPassword())) {
+        if (!PasswordHasher.matches(input.getPassword(), user.getPasswordHash())) {
             throw new DomainException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        }
+
+        // Backward compatibility: auto-upgrade legacy plain-text values after successful login.
+        if (PasswordHasher.needsRehash(user.getPasswordHash())) {
+            user.setPasswordHash(PasswordHasher.hash(input.getPassword()));
+            userRepository.save(user);
         }
 
         Optional<RoleGroup> roleGroupOptional = roleGroupRepository.findById(user.getRoleGroupId());

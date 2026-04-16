@@ -146,6 +146,8 @@
 | POST   | `/api/v1/customers`        | `{name, phone, points}`  | `Customer` (`201`) |
 | PUT    | `/api/v1/customers/{id}`   | `{name, phone, points}`  | `Customer`         |
 | POST   | `/api/v1/customers/points` | `{phone, pointsToAdd}`   | `Customer`         |
+| GET    | `/api/v1/customers/loyalty-config` | -                | `{earnUnitAmount, pointsPerUnit, redeemPointsRequired, redeemValue}` |
+| PUT    | `/api/v1/customers/loyalty-config` | same as response | same as response |
 | DELETE | `/api/v1/customers/{id}`   | -                        | `204`              |
 
 
@@ -211,6 +213,7 @@
 - API write/read tables:
   - `orders`, `order_items`, `payments`, `menu_items`, `tables`
   - `printer_configs`, `print_templates`, `categories`
+  - `customers`, `point_transactions`, `settings` (loyalty config)
 
 ## 8) Docker Runtime
 

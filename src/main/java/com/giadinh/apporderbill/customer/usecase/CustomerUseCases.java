@@ -6,6 +6,7 @@ import com.giadinh.apporderbill.customer.model.Customer;
 import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
 import com.giadinh.apporderbill.customer.model.PointTransaction;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
 import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 public class CustomerUseCases {
     private final CustomerRepository repository;
     private PointTransactionRepository pointTransactionRepository;
+    private LoyaltyConfigRepository loyaltyConfigRepository;
     private LoyaltyConfig loyaltyConfig;
 
     public CustomerUseCases(CustomerRepository repository) {
@@ -32,7 +34,26 @@ public class CustomerUseCases {
         this.pointTransactionRepository = repo;
     }
 
+    public void setLoyaltyConfigRepository(LoyaltyConfigRepository loyaltyConfigRepository) {
+        this.loyaltyConfigRepository = loyaltyConfigRepository;
+    }
+
     public LoyaltyConfig getLoyaltyConfig() { return loyaltyConfig; }
+
+    public LoyaltyConfig reloadLoyaltyConfig() {
+        if (loyaltyConfigRepository == null) {
+            this.loyaltyConfig = LoyaltyConfig.defaults();
+            return this.loyaltyConfig;
+        }
+        this.loyaltyConfig = new GetLoyaltyConfigUseCase(loyaltyConfigRepository).execute();
+        return this.loyaltyConfig;
+    }
+
+    public LoyaltyConfig updateLoyaltyConfig(LoyaltyConfig config) {
+        LoyaltyConfig updated = new UpdateLoyaltyConfigUseCase(loyaltyConfigRepository).execute(config);
+        this.loyaltyConfig = updated;
+        return updated;
+    }
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
 

@@ -14,6 +14,8 @@ public class MySqlPrintTemplateRepository implements PrintTemplateRepository {
     private void initializeDefaults() {
         save(new PrintTemplate("RECEIPT", "AppOrderBill", "", "", "", "Cam on quy khach"));
         save(new PrintTemplate("KITCHEN", "AppOrderBill", "", "", "", ""));
+        save(new PrintTemplate("DRAFT", "AppOrderBill", "", "", "PHIEU TAM", ""));
+        save(new PrintTemplate("TEST", "AppOrderBill", "", "", "TEST PRINTER", ""));
     }
 
     @Override

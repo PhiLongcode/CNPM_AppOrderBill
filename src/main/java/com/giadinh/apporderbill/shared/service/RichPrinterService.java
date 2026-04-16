@@ -168,7 +168,8 @@ public class RichPrinterService implements PrinterService {
         Runnable r = () -> {
             try {
                 String documentId = docPrefix + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                Boolean ok = showPreviewDialog(title, content, documentId);
+                PrinterConfig cfg = safeGetConfig();
+                Boolean ok = showPreviewDialog(title, content, documentId, cfg);
                 future.complete(ok != null && ok);
             } catch (Exception e) {
                 future.complete(false);
@@ -187,7 +188,7 @@ public class RichPrinterService implements PrinterService {
         }
     }
 
-    private Boolean showPreviewDialog(String title, String content, String documentId) {
+    private Boolean showPreviewDialog(String title, String content, String documentId, PrinterConfig cfg) {
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle(msg("ui.printer.preview_title", title));
         dialog.setHeaderText(null);
@@ -220,7 +221,7 @@ public class RichPrinterService implements PrinterService {
             return true;
         }
         if ("PRINT".equals(result.get())) {
-            return printJavaFx(content == null ? "" : content);
+            return printJavaFx(content == null ? "" : content, cfg);
         }
         return false;
     }
@@ -234,26 +235,41 @@ public class RichPrinterService implements PrinterService {
         }
     }
 
-    private boolean printJavaFx(String content) {
+    private boolean printJavaFx(String content, PrinterConfig config) {
         try {
-            Printer printer = Printer.getDefaultPrinter();
+            Printer printer = resolvePrinter(config);
+            int copies = config == null ? 1 : Math.max(1, config.getCopies());
             PrinterJob job = PrinterJob.createPrinterJob(printer);
             if (job == null) return false;
 
-            // Cho phép user đổi printer/options
-            boolean ok = job.showPrintDialog(null);
+            boolean showDialog = config == null
+                    || config.getConnectionType() == null
+                    || "WINDOWS".equalsIgnoreCase(config.getConnectionType());
+            boolean ok = !showDialog || job.showPrintDialog(null);
             if (!ok) return false;
 
-            Node node = buildPrintableNode(content);
-            boolean printed = job.printPage(node);
-            if (printed) {
-                return job.endJob();
+            for (int i = 0; i < copies; i++) {
+                Node node = buildPrintableNode(content);
+                if (!job.printPage(node)) {
+                    job.cancelJob();
+                    return false;
+                }
             }
-            job.cancelJob();
-            return false;
+            return job.endJob();
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private Printer resolvePrinter(PrinterConfig config) {
+        if (config != null && config.getPrinterName() != null && !config.getPrinterName().isBlank()) {
+            for (Printer printer : Printer.getAllPrinters()) {
+                if (config.getPrinterName().trim().equalsIgnoreCase(printer.getName())) {
+                    return printer;
+                }
+            }
+        }
+        return Printer.getDefaultPrinter();
     }
 
     private Node buildPrintableNode(String content) {

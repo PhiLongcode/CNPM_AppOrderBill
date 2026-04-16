@@ -25,7 +25,11 @@ import com.giadinh.apporderbill.printer.repository.SqlitePrinterConfigRepository
 import com.giadinh.apporderbill.shared.service.PrinterService;
 import com.giadinh.apporderbill.shared.service.DefaultPrinterService;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
 import com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository;
+import com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.SqlitePointTransactionRepository;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 
 import com.giadinh.apporderbill.orders.OrdersComponent;
@@ -172,7 +176,23 @@ public class OrderApiConfig {
     }
 
     @Bean
-    public CustomerUseCases customerUseCases(CustomerRepository customerRepository) {
-        return new CustomerUseCases(customerRepository);
+    public PointTransactionRepository pointTransactionRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqlitePointTransactionRepository(connectionProvider);
+    }
+
+    @Bean
+    public LoyaltyConfigRepository loyaltyConfigRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqliteLoyaltyConfigRepository(connectionProvider);
+    }
+
+    @Bean
+    public CustomerUseCases customerUseCases(CustomerRepository customerRepository,
+                                             PointTransactionRepository pointTransactionRepository,
+                                             LoyaltyConfigRepository loyaltyConfigRepository) {
+        CustomerUseCases useCases = new CustomerUseCases(customerRepository);
+        useCases.setPointTransactionRepository(pointTransactionRepository);
+        useCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
+        useCases.setLoyaltyConfig(loyaltyConfigRepository.load());
+        return useCases;
     }
 }

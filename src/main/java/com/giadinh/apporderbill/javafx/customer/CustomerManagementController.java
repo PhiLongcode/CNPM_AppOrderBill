@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.javafx.customer;
 
 import com.giadinh.apporderbill.customer.model.Customer;
+import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
 import com.giadinh.apporderbill.customer.model.PointTransaction;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
@@ -35,6 +36,10 @@ public class CustomerManagementController {
     @FXML private TableColumn<PointTransaction, Integer> txBalanceColumn;
     @FXML private TableColumn<PointTransaction, String> txNoteColumn;
     @FXML private TableColumn<PointTransaction, String> txOrderColumn;
+    @FXML private TextField earnUnitAmountField;
+    @FXML private TextField pointsPerUnitField;
+    @FXML private TextField redeemPointsRequiredField;
+    @FXML private TextField redeemValueField;
 
     private static final DateTimeFormatter DT_FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -65,14 +70,14 @@ public class CustomerManagementController {
         txTypeColumn.setCellValueFactory(c -> {
             PointTransaction tx = c.getValue();
             String label = switch (tx.getType()) {
-                case EARN   -> "✅ Tích";
-                case REDEEM -> "🎁 Đổi";
+                case EARN   -> msg("ui.customer.tx_type_earn");
+                case REDEEM -> msg("ui.customer.tx_type_redeem");
             };
             return new SimpleStringProperty(label);
         });
         txDeltaColumn.setCellValueFactory(c -> {
             int delta = c.getValue().getDelta();
-            String s = (delta >= 0 ? "+" : "") + delta + " điểm";
+            String s = (delta >= 0 ? "+" : "") + delta + " " + msg("ui.customer.points_suffix");
             return new SimpleStringProperty(s);
         });
         // Color coding: green = earn, orange = redeem
@@ -99,6 +104,7 @@ public class CustomerManagementController {
 
     public void setUseCases(CustomerUseCases useCases) {
         this.useCases = useCases;
+        loadLoyaltyConfig();
         onRefresh();
     }
 
@@ -111,15 +117,16 @@ public class CustomerManagementController {
 
     @FXML private void onRefresh() {
         if (useCases == null) return;
+        loadLoyaltyConfig();
         rows.setAll(useCases.getAll(""));
         historyRows.clear();
-        historyCustomerLabel.setText("(chọn khách để xem)");
+        historyCustomerLabel.setText(msg("ui.customer.history_select_hint"));
         historyBalanceLabel.setText("");
     }
 
     @FXML private void onAdd() {
         if (useCases == null) return;
-        CustomerFormData data = showCustomerForm("Thêm khách hàng", null);
+        CustomerFormData data = showCustomerForm(msg("ui.customer.form_add_title"), null);
         if (data == null) return;
         try {
             useCases.create(data.name(), data.phone(), data.points());
@@ -133,7 +140,7 @@ public class CustomerManagementController {
         if (useCases == null) return;
         Customer selected = customerTable.getSelectionModel().getSelectedItem();
         if (selected == null) { showInfo(msg("ui.customer.select_customer")); return; }
-        CustomerFormData data = showCustomerForm("Sửa khách hàng", selected);
+        CustomerFormData data = showCustomerForm(msg("ui.customer.form_edit_title"), selected);
         if (data == null) return;
         try {
             useCases.update(selected.getId(), data.name(), data.phone(), data.points());
@@ -162,14 +169,14 @@ public class CustomerManagementController {
     private void showHistoryFor(Customer customer) {
         historyRows.clear();
         if (customer == null || useCases == null) {
-            historyCustomerLabel.setText("(chọn khách để xem)");
+            historyCustomerLabel.setText(msg("ui.customer.history_select_hint"));
             historyBalanceLabel.setText("");
             return;
         }
         historyCustomerLabel.setText(
                 (customer.getName() != null ? customer.getName() : "") +
                 " — " + customer.getPhone());
-        historyBalanceLabel.setText("Hiện có: " + customer.getPoints() + " điểm");
+        historyBalanceLabel.setText(msg("ui.customer.current_points", customer.getPoints()));
 
         List<PointTransaction> history = useCases.getPointHistory(customer.getId());
         historyRows.setAll(history);
@@ -197,9 +204,9 @@ public class CustomerManagementController {
 
         GridPane form = new GridPane();
         form.setHgap(10); form.setVgap(10);
-        form.addRow(0, new Label("Tên khách:"),     nameField);
-        form.addRow(1, new Label("Số điện thoại:"), phoneField);
-        form.addRow(2, new Label("Điểm (chỉ đọc nếu chỉnh sửa):"), pointsField);
+        form.addRow(0, new Label(msg("ui.customer.form_name_label")), nameField);
+        form.addRow(1, new Label(msg("ui.customer.form_phone_label")), phoneField);
+        form.addRow(2, new Label(msg("ui.customer.form_points_label")), pointsField);
         dialog.getDialogPane().setContent(form);
         dialog.getDialogPane().setPrefWidth(400);
 
@@ -221,5 +228,57 @@ public class CustomerManagementController {
 
     private String msg(String key, Object... args) {
         return DomainMessages.formatKey(key, args);
+    }
+
+    @FXML
+    private void onSaveLoyaltyConfig() {
+        if (useCases == null) return;
+        try {
+            LoyaltyConfig config = new LoyaltyConfig(
+                    parsePositiveLong(earnUnitAmountField, "ui.customer.loyalty_earn_unit_invalid"),
+                    parsePositiveInt(pointsPerUnitField, "ui.customer.loyalty_points_per_unit_invalid"),
+                    parsePositiveInt(redeemPointsRequiredField, "ui.customer.loyalty_redeem_points_invalid"),
+                    parsePositiveLong(redeemValueField, "ui.customer.loyalty_redeem_value_invalid")
+            );
+            useCases.updateLoyaltyConfig(config);
+            showInfo(msg("ui.customer.loyalty_save_success"));
+        } catch (Exception e) {
+            showInfo(e.getMessage());
+        }
+    }
+
+    private void loadLoyaltyConfig() {
+        if (useCases == null || earnUnitAmountField == null) return;
+        LoyaltyConfig config = useCases.reloadLoyaltyConfig();
+        earnUnitAmountField.setText(String.valueOf(config.getEarnUnitAmount()));
+        pointsPerUnitField.setText(String.valueOf(config.getPointsPerUnit()));
+        redeemPointsRequiredField.setText(String.valueOf(config.getRedeemPointsRequired()));
+        redeemValueField.setText(String.valueOf(config.getRedeemValue()));
+    }
+
+    private long parsePositiveLong(TextField field, String errorMessageKey) {
+        long value;
+        try {
+            value = Long.parseLong(field.getText().trim());
+        } catch (Exception e) {
+            throw new IllegalArgumentException(msg(errorMessageKey));
+        }
+        if (value <= 0) {
+            throw new IllegalArgumentException(msg(errorMessageKey));
+        }
+        return value;
+    }
+
+    private int parsePositiveInt(TextField field, String errorMessageKey) {
+        int value;
+        try {
+            value = Integer.parseInt(field.getText().trim());
+        } catch (Exception e) {
+            throw new IllegalArgumentException(msg(errorMessageKey));
+        }
+        if (value <= 0) {
+            throw new IllegalArgumentException(msg(errorMessageKey));
+        }
+        return value;
     }
 }

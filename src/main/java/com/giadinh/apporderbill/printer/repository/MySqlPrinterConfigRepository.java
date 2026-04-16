@@ -8,13 +8,21 @@ public class MySqlPrinterConfigRepository implements PrinterConfigRepository {
 
     public MySqlPrinterConfigRepository(MySqlConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
+        ensureDefaultRow();
     }
 
     @Override
     public PrinterConfig save(PrinterConfig config) {
         String sql = """
-                INSERT INTO printer_configs(printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO printer_configs(id, printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt)
+                VALUES (1, ?, ?, ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE
+                    printer_name=VALUES(printer_name),
+                    connection_type=VALUES(connection_type),
+                    paper_size=VALUES(paper_size),
+                    copies=VALUES(copies),
+                    default_kitchen=VALUES(default_kitchen),
+                    default_receipt=VALUES(default_receipt)
                 """;
         try (var c = connectionProvider.getConnection(); var ps = c.prepareStatement(sql)) {
             ps.setString(1, config.getPrinterName());
@@ -32,7 +40,7 @@ public class MySqlPrinterConfigRepository implements PrinterConfigRepository {
     public PrinterConfig getCurrent() {
         String sql = """
                 SELECT printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt
-                FROM printer_configs ORDER BY id DESC LIMIT 1
+                FROM printer_configs WHERE id = 1
                 """;
         try (var c = connectionProvider.getConnection(); var ps = c.prepareStatement(sql); var rs = ps.executeQuery()) {
             if (rs.next()) {
@@ -46,8 +54,14 @@ public class MySqlPrinterConfigRepository implements PrinterConfigRepository {
                 );
             }
         } catch (Exception ignored) {}
-        PrinterConfig defaults = new PrinterConfig("Default Printer", "WINDOWS", "80mm", 1, true, true);
-        save(defaults);
-        return defaults;
+        return defaults();
+    }
+
+    private void ensureDefaultRow() {
+        save(defaults());
+    }
+
+    private PrinterConfig defaults() {
+        return new PrinterConfig("Default Printer", "WINDOWS", "80mm", 1, true, true);
     }
 }

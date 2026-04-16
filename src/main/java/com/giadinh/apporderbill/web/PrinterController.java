@@ -28,21 +28,21 @@ public class PrinterController {
 
     @GetMapping("/configs")
     public ResponseEntity<List<PrinterConfigOutput>> getAllPrinterConfigs(@RequestHeader(value = "X-Username", required = false) String username) {
-        authorizationService.requireView(username, "Print Receipt");
+        authorizationService.requireView(username, "Manage Printer Config");
         return ResponseEntity.ok(printerComponent.getAllPrinterConfigs());
     }
 
     @PutMapping("/configs")
     public ResponseEntity<PrinterConfigOutput> updatePrinterConfig(@RequestHeader(value = "X-Username", required = false) String username,
                                                                    @RequestBody UpdatePrinterConfigInput input) {
-        authorizationService.requireOperate(username, "Print Receipt");
+        authorizationService.requireOperate(username, "Manage Printer Config");
         return ResponseEntity.ok(printerComponent.updatePrinterConfig(input));
     }
 
     @GetMapping("/templates/{type}")
     public ResponseEntity<PrintTemplateOutput> getPrintTemplate(@RequestHeader(value = "X-Username", required = false) String username,
                                                                 @PathVariable String type) {
-        authorizationService.requireView(username, "Print Receipt");
+        authorizationService.requireView(username, "Manage Printer Config");
         return printerComponent.getPrintTemplate(type)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -51,7 +51,7 @@ public class PrinterController {
     @PutMapping("/templates")
     public ResponseEntity<PrintTemplateOutput> updatePrintTemplate(@RequestHeader(value = "X-Username", required = false) String username,
                                                                    @RequestBody UpdatePrintTemplateInput input) {
-        authorizationService.requireOperate(username, "Print Receipt");
+        authorizationService.requireOperate(username, "Manage Printer Config");
         return ResponseEntity.ok(printerComponent.updatePrintTemplate(input));
     }
 }

@@ -3,6 +3,7 @@ package com.giadinh.apporderbill.identity.usecase;
 import com.giadinh.apporderbill.identity.model.User;
 import com.giadinh.apporderbill.identity.repository.UserRepository;
 import com.giadinh.apporderbill.identity.repository.RoleGroupRepository;
+import com.giadinh.apporderbill.identity.security.PasswordHasher;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageUserInput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageUserOutput;
 import com.giadinh.apporderbill.shared.error.DomainException;
@@ -28,7 +29,12 @@ public class ManageUserUseCase {
             throw new DomainException(ErrorCode.ROLE_GROUP_NOT_FOUND);
         }
 
-        User newUser = new User(0, input.getUsername(), input.getPassword(), input.getRoleGroupId());
+        User newUser = new User(
+                0,
+                input.getUsername(),
+                PasswordHasher.hash(input.getPassword()),
+                input.getRoleGroupId()
+        );
         userRepository.save(newUser);
         return new ManageUserOutput(newUser.getId());
     }
@@ -49,7 +55,7 @@ public class ManageUserUseCase {
             throw new DomainException(ErrorCode.ROLE_GROUP_NOT_FOUND);
         }
 
-        existingUser.setPasswordHash(input.getPassword());
+        existingUser.setPasswordHash(PasswordHasher.hash(input.getPassword()));
         existingUser.setRoleGroupId(input.getRoleGroupId());
 
         userRepository.save(existingUser);

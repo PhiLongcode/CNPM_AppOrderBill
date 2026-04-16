@@ -17,16 +17,20 @@
 - `POST /api/v1/customers` — tạo khách hàng
 - `PUT /api/v1/customers/{id}` — cập nhật
 - `POST /api/v1/customers/points` — cộng điểm theo phone
+- `GET /api/v1/customers/loyalty-config` — lấy cấu hình tích/đổi điểm
+- `PUT /api/v1/customers/loyalty-config` — cập nhật cấu hình tích/đổi điểm
 - `DELETE /api/v1/customers/{id}` — xoá
 
 ## Quyền (Authorization)
 
 - `Manage Customers`
+- `Manage Loyalty Config` (xem/sửa cấu hình tích điểm)
 
 ## Dữ liệu & persistence
 
 - SQLite: bảng `customers`
-- MySQL (profile `api-mysql`): bảng `customers`
+- SQLite: bảng `point_transactions`, `settings` (key `loyalty.*`)
+- MySQL (profile `api-mysql`): bảng `customers`, `point_transactions`, `settings`
 
 ## Luồng chính (tóm tắt)
 

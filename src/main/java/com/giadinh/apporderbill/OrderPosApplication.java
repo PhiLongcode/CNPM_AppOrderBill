@@ -89,11 +89,12 @@ public class OrderPosApplication extends Application {
                                         connectionProvider);
                         com.giadinh.apporderbill.customer.repository.PointTransactionRepository pointTransactionRepository = new com.giadinh.apporderbill.customer.repository.SqlitePointTransactionRepository(
                                         connectionProvider);
-                        com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository loyaltyConfigRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository(
+                        com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository loyaltyConfigRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository(
                                         connectionProvider);
                         com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases = new com.giadinh.apporderbill.customer.usecase.CustomerUseCases(
                                         customerRepository);
                         customerUseCases.setPointTransactionRepository(pointTransactionRepository);
+                        customerUseCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
                         customerUseCases.setLoyaltyConfig(loyaltyConfigRepository.load());
 
                         Connection identityConnection = connectionProvider.getConnection();

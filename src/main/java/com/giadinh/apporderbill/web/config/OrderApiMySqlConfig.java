@@ -8,7 +8,11 @@ import com.giadinh.apporderbill.catalog.CatalogComponent;
 import com.giadinh.apporderbill.catalog.CatalogComponentImpl;
 import com.giadinh.apporderbill.catalog.repository.*;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
 import com.giadinh.apporderbill.customer.repository.MySqlCustomerRepository;
+import com.giadinh.apporderbill.customer.repository.MySqlLoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.MySqlPointTransactionRepository;
+import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.kitchen.KitchenComponent;
 import com.giadinh.apporderbill.kitchen.KitchenComponentImpl;
@@ -152,7 +156,23 @@ public class OrderApiMySqlConfig {
     }
 
     @Bean
-    public CustomerUseCases customerUseCases(CustomerRepository customerRepository) {
-        return new CustomerUseCases(customerRepository);
+    public PointTransactionRepository pointTransactionRepository(MySqlConnectionProvider provider) {
+        return new MySqlPointTransactionRepository(provider);
+    }
+
+    @Bean
+    public LoyaltyConfigRepository loyaltyConfigRepository(MySqlConnectionProvider provider) {
+        return new MySqlLoyaltyConfigRepository(provider);
+    }
+
+    @Bean
+    public CustomerUseCases customerUseCases(CustomerRepository customerRepository,
+                                             PointTransactionRepository pointTransactionRepository,
+                                             LoyaltyConfigRepository loyaltyConfigRepository) {
+        CustomerUseCases useCases = new CustomerUseCases(customerRepository);
+        useCases.setPointTransactionRepository(pointTransactionRepository);
+        useCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
+        useCases.setLoyaltyConfig(loyaltyConfigRepository.load());
+        return useCases;
     }
 }

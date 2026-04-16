@@ -88,6 +88,14 @@ public class MySqlConnectionProvider {
                     )
                     """);
             s.execute("""
+                    CREATE TABLE IF NOT EXISTS customers (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        phone VARCHAR(32) NOT NULL UNIQUE,
+                        points INT NOT NULL DEFAULT 0
+                    )
+                    """);
+            s.execute("""
                     CREATE TABLE IF NOT EXISTS printer_configs (
                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                         printer_name VARCHAR(255),
@@ -107,6 +115,32 @@ public class MySqlConnectionProvider {
                         header TEXT,
                         footer TEXT
                     )
+                    """);
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS settings (
+                        `key` VARCHAR(191) PRIMARY KEY,
+                        `value` TEXT NOT NULL
+                    )
+                    """);
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS point_transactions (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        customer_id BIGINT NOT NULL,
+                        delta INT NOT NULL,
+                        balance_after INT NOT NULL,
+                        type VARCHAR(32) NOT NULL,
+                        note TEXT,
+                        order_id VARCHAR(64),
+                        created_at VARCHAR(64) NOT NULL
+                    )
+                    """);
+            s.execute("""
+                    INSERT INTO settings(`key`, `value`) VALUES
+                        ('loyalty.earnUnitAmount', '10000'),
+                        ('loyalty.pointsPerUnit', '1'),
+                        ('loyalty.redeemPointsRequired', '100'),
+                        ('loyalty.redeemValue', '5000')
+                    ON DUPLICATE KEY UPDATE `value` = `value`
                     """);
         } catch (Exception ignored) {
         }

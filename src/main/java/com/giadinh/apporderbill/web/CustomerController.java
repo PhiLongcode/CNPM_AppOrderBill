@@ -1,6 +1,7 @@
 package com.giadinh.apporderbill.web;
 
 import com.giadinh.apporderbill.customer.model.Customer;
+import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.web.security.ApiAuthorizationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,6 +52,30 @@ public class CustomerController {
         return ResponseEntity.ok(customerUseCases.addPointsByPhone(request.getPhone(), request.getPointsToAdd()));
     }
 
+    @GetMapping("/loyalty-config")
+    public ResponseEntity<LoyaltyConfigResponse> getLoyaltyConfig(
+            @RequestHeader(value = "X-Username", required = false) String username) {
+        authorizationService.requireView(username, "Manage Loyalty Config");
+        LoyaltyConfig config = customerUseCases.reloadLoyaltyConfig();
+        return ResponseEntity.ok(LoyaltyConfigResponse.from(config));
+    }
+
+    @PutMapping("/loyalty-config")
+    public ResponseEntity<LoyaltyConfigResponse> updateLoyaltyConfig(
+            @RequestHeader(value = "X-Username", required = false) String username,
+            @RequestBody LoyaltyConfigRequest request) {
+        authorizationService.requireOperate(username, "Manage Loyalty Config");
+        LoyaltyConfig updated = customerUseCases.updateLoyaltyConfig(
+                new LoyaltyConfig(
+                        request.getEarnUnitAmount(),
+                        request.getPointsPerUnit(),
+                        request.getRedeemPointsRequired(),
+                        request.getRedeemValue()
+                )
+        );
+        return ResponseEntity.ok(LoyaltyConfigResponse.from(updated));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@RequestHeader(value = "X-Username", required = false) String username,
                                        @PathVariable Long id) {
@@ -87,6 +112,68 @@ public class CustomerController {
 
         public int getPointsToAdd() {
             return pointsToAdd;
+        }
+    }
+
+    public static class LoyaltyConfigRequest {
+        private long earnUnitAmount;
+        private int pointsPerUnit;
+        private int redeemPointsRequired;
+        private long redeemValue;
+
+        public long getEarnUnitAmount() {
+            return earnUnitAmount;
+        }
+
+        public int getPointsPerUnit() {
+            return pointsPerUnit;
+        }
+
+        public int getRedeemPointsRequired() {
+            return redeemPointsRequired;
+        }
+
+        public long getRedeemValue() {
+            return redeemValue;
+        }
+    }
+
+    public static class LoyaltyConfigResponse {
+        private final long earnUnitAmount;
+        private final int pointsPerUnit;
+        private final int redeemPointsRequired;
+        private final long redeemValue;
+
+        private LoyaltyConfigResponse(long earnUnitAmount, int pointsPerUnit, int redeemPointsRequired, long redeemValue) {
+            this.earnUnitAmount = earnUnitAmount;
+            this.pointsPerUnit = pointsPerUnit;
+            this.redeemPointsRequired = redeemPointsRequired;
+            this.redeemValue = redeemValue;
+        }
+
+        public static LoyaltyConfigResponse from(LoyaltyConfig config) {
+            return new LoyaltyConfigResponse(
+                    config.getEarnUnitAmount(),
+                    config.getPointsPerUnit(),
+                    config.getRedeemPointsRequired(),
+                    config.getRedeemValue()
+            );
+        }
+
+        public long getEarnUnitAmount() {
+            return earnUnitAmount;
+        }
+
+        public int getPointsPerUnit() {
+            return pointsPerUnit;
+        }
+
+        public int getRedeemPointsRequired() {
+            return redeemPointsRequired;
+        }
+
+        public long getRedeemValue() {
+            return redeemValue;
         }
     }
 }

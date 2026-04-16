@@ -1,17 +1,17 @@
 package com.giadinh.apporderbill.customer.repository;
 
 import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
-import com.giadinh.apporderbill.shared.util.SqliteConnectionProvider;
+import com.giadinh.apporderbill.shared.util.MySqlConnectionProvider;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
+public class MySqlLoyaltyConfigRepository implements LoyaltyConfigRepository {
 
-    private final SqliteConnectionProvider connectionProvider;
+    private final MySqlConnectionProvider connectionProvider;
 
-    public SqliteLoyaltyConfigRepository(SqliteConnectionProvider connectionProvider) {
+    public MySqlLoyaltyConfigRepository(MySqlConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
     }
 
@@ -19,7 +19,7 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
     public LoyaltyConfig load() {
         LoyaltyConfig config = LoyaltyConfig.defaults();
         try (Connection c = connectionProvider.getConnection();
-             PreparedStatement ps = c.prepareStatement("SELECT key, value FROM settings WHERE key LIKE 'loyalty.%'");
+             PreparedStatement ps = c.prepareStatement("SELECT `key`, `value` FROM settings WHERE `key` LIKE 'loyalty.%'");
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 String key = rs.getString("key");
@@ -29,17 +29,22 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
                     case "loyalty.pointsPerUnit" -> config.setPointsPerUnit(parseInt(value, 1));
                     case "loyalty.redeemPointsRequired" -> config.setRedeemPointsRequired(parseInt(value, 100));
                     case "loyalty.redeemValue" -> config.setRedeemValue(parseLong(value, 5_000L));
+                    default -> {
+                    }
                 }
             }
         } catch (Exception e) {
-            System.err.println("SqliteLoyaltyConfigRepository.load: " + e.getMessage());
+            System.err.println("MySqlLoyaltyConfigRepository.load: " + e.getMessage());
         }
         return config;
     }
 
     @Override
     public void save(LoyaltyConfig config) {
-        String sql = "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)";
+        String sql = """
+                INSERT INTO settings(`key`, `value`) VALUES (?, ?)
+                ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)
+                """;
         try (Connection c = connectionProvider.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             upsert(ps, "loyalty.earnUnitAmount", String.valueOf(config.getEarnUnitAmount()));
@@ -47,7 +52,7 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
             upsert(ps, "loyalty.redeemPointsRequired", String.valueOf(config.getRedeemPointsRequired()));
             upsert(ps, "loyalty.redeemValue", String.valueOf(config.getRedeemValue()));
         } catch (Exception e) {
-            System.err.println("SqliteLoyaltyConfigRepository.save: " + e.getMessage());
+            System.err.println("MySqlLoyaltyConfigRepository.save: " + e.getMessage());
         }
     }
 
@@ -58,10 +63,18 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
     }
 
     private long parseLong(String s, long fallback) {
-        try { return Long.parseLong(s); } catch (Exception e) { return fallback; }
+        try {
+            return Long.parseLong(s);
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 
     private int parseInt(String s, int fallback) {
-        try { return Integer.parseInt(s); } catch (Exception e) { return fallback; }
+        try {
+            return Integer.parseInt(s);
+        } catch (Exception e) {
+            return fallback;
+        }
     }
 }

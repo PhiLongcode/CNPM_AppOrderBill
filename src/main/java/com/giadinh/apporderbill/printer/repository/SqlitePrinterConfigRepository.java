@@ -8,6 +8,7 @@ public class SqlitePrinterConfigRepository implements PrinterConfigRepository {
 
     public SqlitePrinterConfigRepository(SqliteConnectionProvider connectionProvider) {
         this.connectionProvider = connectionProvider;
+        ensureDefaultRow();
     }
 
     @Override
@@ -17,8 +18,15 @@ public class SqlitePrinterConfigRepository implements PrinterConfigRepository {
         }
         try (var c = connectionProvider.getConnection();
                 var ps = c.prepareStatement("""
-                        INSERT INTO printer_configs(printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO printer_configs(id, printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt)
+                        VALUES (1, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                            printer_name=excluded.printer_name,
+                            connection_type=excluded.connection_type,
+                            paper_size=excluded.paper_size,
+                            copies=excluded.copies,
+                            default_kitchen=excluded.default_kitchen,
+                            default_receipt=excluded.default_receipt
                         """)) {
             ps.setString(1, config.getPrinterName());
             ps.setString(2, config.getConnectionType());
@@ -39,8 +47,7 @@ public class SqlitePrinterConfigRepository implements PrinterConfigRepository {
                 var ps = c.prepareStatement("""
                         SELECT printer_name, connection_type, paper_size, copies, default_kitchen, default_receipt
                         FROM printer_configs
-                        ORDER BY id DESC
-                        LIMIT 1
+                        WHERE id = 1
                         """);
                 var rs = ps.executeQuery()) {
             if (rs.next()) {
@@ -54,10 +61,15 @@ public class SqlitePrinterConfigRepository implements PrinterConfigRepository {
             }
         } catch (Exception ignored) {
         }
-        // Nếu chưa có bản ghi nào, khởi tạo cấu hình mặc định và lưu vào DB
-        PrinterConfig defaults = new PrinterConfig("Default Printer", "WINDOWS", "80mm", 1, true, true);
-        save(defaults);
-        return defaults;
+        return defaults();
+    }
+
+    private void ensureDefaultRow() {
+        save(defaults());
+    }
+
+    private PrinterConfig defaults() {
+        return new PrinterConfig("Default Printer", "WINDOWS", "80mm", 1, true, true);
     }
 }
 

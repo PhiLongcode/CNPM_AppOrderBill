@@ -6,6 +6,7 @@ import com.giadinh.apporderbill.identity.model.PermissionAssignment;
 import com.giadinh.apporderbill.identity.model.RoleGroup;
 import com.giadinh.apporderbill.identity.model.User;
 import com.giadinh.apporderbill.identity.repository.*;
+import com.giadinh.apporderbill.identity.security.PasswordHasher;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -60,6 +61,8 @@ public class IdentityDataInitializer implements CommandLineRunner {
         Function funcManageTables = createFunctionIfNotExists(306, "Manage Tables", moduleSales.getId());
         Function funcManageCustomers = createFunctionIfNotExists(307, "Manage Customers", moduleSales.getId());
         Function funcViewReports = createFunctionIfNotExists(308, "View Reports", moduleSales.getId());
+        Function funcManageLoyaltyConfig = createFunctionIfNotExists(309, "Manage Loyalty Config", moduleSales.getId());
+        Function funcManagePrinterConfig = createFunctionIfNotExists(310, "Manage Printer Config", modulePrinter.getId());
 
         // 3. Create RoleGroups
         RoleGroup adminRoleGroup = createRoleGroupIfNotExists(1, "ADMIN", "Administrator with full access");
@@ -81,6 +84,8 @@ public class IdentityDataInitializer implements CommandLineRunner {
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcManageTables.getId(), true, true);
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcManageCustomers.getId(), true, true);
         assignPermissionIfNotExists(adminRoleGroup.getId(), funcViewReports.getId(), true, true);
+        assignPermissionIfNotExists(adminRoleGroup.getId(), funcManageLoyaltyConfig.getId(), true, true);
+        assignPermissionIfNotExists(adminRoleGroup.getId(), funcManagePrinterConfig.getId(), true, true);
 
         // CASHIER permissions
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcLogin.getId(), true, false);
@@ -94,9 +99,11 @@ public class IdentityDataInitializer implements CommandLineRunner {
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageTables.getId(), true, true);
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageCustomers.getId(), true, true);
         assignPermissionIfNotExists(cashierRoleGroup.getId(), funcViewReports.getId(), true, false);
+        assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManageLoyaltyConfig.getId(), false, false);
+        assignPermissionIfNotExists(cashierRoleGroup.getId(), funcManagePrinterConfig.getId(), false, false);
 
         // 5. Create Users
-        createUserIfNotExists("admin", "admin_pass", adminRoleGroup.getId()); // In practice, use strong password hashing
+        createUserIfNotExists("admin", "admin_pass", adminRoleGroup.getId());
         createUserIfNotExists("cashier1", "cashier_pass", cashierRoleGroup.getId());
 
         System.out.println("Identity data initialization completed.");
@@ -155,11 +162,12 @@ public class IdentityDataInitializer implements CommandLineRunner {
         }
     }
 
-    private User createUserIfNotExists(String username, String passwordHash, int roleGroupId) {
+    private User createUserIfNotExists(String username, String rawPassword, int roleGroupId) {
+        String passwordHash = PasswordHasher.hash(rawPassword);
         Optional<User> existing = userRepository.findByUsername(username);
         if (existing.isPresent()) {
             User current = existing.get();
-            // Keep seeded accounts consistent to avoid login mismatch in local environments.
+            // Keep seeded accounts consistent and ensure passwords are stored as hash.
             current.setPasswordHash(passwordHash);
             current.setRoleGroupId(roleGroupId);
             userRepository.save(current);
