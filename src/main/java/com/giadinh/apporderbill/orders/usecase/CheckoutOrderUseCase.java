@@ -4,6 +4,7 @@ import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.billing.model.Payment;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
+import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.orders.model.Order;
 import com.giadinh.apporderbill.orders.model.OrderStatus;
@@ -49,6 +50,19 @@ public class CheckoutOrderUseCase {
                 long discountByPercent = Math.round(totalAmount * (input.getDiscountPercent() / 100.0));
                 finalAmount = Math.max(0L, finalAmount - discountByPercent);
             }
+
+            // Trừ giảm giá từ điểm đổi (pointsUsed > 0)
+            LoyaltyConfig loyaltyConfig = customerUseCases != null
+                    ? customerUseCases.getLoyaltyConfig()
+                    : LoyaltyConfig.defaults();
+            if (input.getPointsUsed() > 0 && customerUseCases != null
+                    && input.getCustomerId() != null) {
+                long pointsDiscount = customerUseCases.redeemPoints(
+                        input.getCustomerId(), input.getPointsUsed(),
+                        String.valueOf(input.getOrderId()));
+                finalAmount = Math.max(0L, finalAmount - pointsDiscount);
+                discountAmount += pointsDiscount;
+            }
             if (input.getPaidAmount() < finalAmount) {
                 throw new DomainException(ErrorCode.CHECKOUT_PAID_AMOUNT_INSUFFICIENT, finalAmount);
             }
@@ -61,12 +75,15 @@ public class CheckoutOrderUseCase {
                     input.getPaymentMethod() == null ? "CASH" : input.getPaymentMethod(),
                     input.getDiscountAmount(),
                     input.getDiscountPercent(),
-                    input.getCashier() == null ? "SYSTEM" : input.getCashier());
+                    input.getCashier() == null ? "SYSTEM" : input.getCashier(),
+                    input.getCustomerId());
             payment = paymentRepository.save(payment);
 
-            if (customerUseCases != null) {
-                int pointsEarned = (int) (finalAmount / 10_000L);
-                customerUseCases.addPointsByPhone(input.getCustomerPhone(), pointsEarned);
+            if (customerUseCases != null && input.getCustomerId() != null) {
+                int pointsEarned = loyaltyConfig.calcEarnedPoints(finalAmount);
+                customerUseCases.addPoints(
+                        input.getCustomerId(), pointsEarned,
+                        String.valueOf(input.getOrderId()));
             }
 
             order.setStatus(OrderStatus.COMPLETED);

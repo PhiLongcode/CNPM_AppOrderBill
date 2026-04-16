@@ -133,7 +133,7 @@ class UnitScenarioCoverageTest {
         tableRepo.save(new Table("T1", "Bàn 5", TableStatus.OCCUPIED, "4001"));
 
         CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
-        var output = useCase.execute(new CheckoutOrderInput(4001L, 100000L, "CASH", null, null, "tester", null));
+        var output = useCase.execute(new CheckoutOrderInput(4001L, 100000L, "CASH", null, null, "tester", null, 0));
         assertNotNull(output.getPaymentId());
         assertEquals(OrderStatus.COMPLETED, orderRepo.findById("4001").orElseThrow().getStatus());
         assertEquals(1, paymentRepo.saved.size());
@@ -152,7 +152,7 @@ class UnitScenarioCoverageTest {
         CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
 
         DomainException ex = assertThrows(DomainException.class, () ->
-                useCase.execute(new CheckoutOrderInput(5001L, 50000L, "CASH", null, null, "tester", null)));
+                useCase.execute(new CheckoutOrderInput(5001L, 50000L, "CASH", null, null, "tester", null, 0)));
         assertEquals(ErrorCode.CHECKOUT_PAID_AMOUNT_INSUFFICIENT, ex.getErrorCode());
         assertEquals(0, paymentRepo.saved.size());
     }
@@ -169,7 +169,7 @@ class UnitScenarioCoverageTest {
         tableRepo.save(new Table("T11", "Bàn 11", TableStatus.OCCUPIED, "5101"));
 
         CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
-        useCase.execute(new CheckoutOrderInput(5101L, 180000L, "CASH", 10000L, 10.0, "tester", null));
+        useCase.execute(new CheckoutOrderInput(5101L, 180000L, "CASH", 10000L, 10.0, "tester", null, 0));
 
         assertEquals(1, paymentRepo.saved.size());
         Payment p = paymentRepo.saved.get(0);
@@ -188,7 +188,7 @@ class UnitScenarioCoverageTest {
 
         CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
         DomainException ex = assertThrows(DomainException.class, () ->
-                useCase.execute(new CheckoutOrderInput(5201L, 100000L, "CASH", null, null, "tester", null)));
+                useCase.execute(new CheckoutOrderInput(5201L, 100000L, "CASH", null, null, "tester", null, 0)));
         assertEquals(ErrorCode.CHECKOUT_ORDER_NOT_PAYABLE_STATE, ex.getErrorCode());
     }
 

@@ -13,6 +13,7 @@ public class Payment {
     private Double discountPercent;
     private String cashier;
     private LocalDateTime paidAt;
+    private Long customerId;
 
     public Payment(String orderId,
             long totalAmount,
@@ -21,7 +22,8 @@ public class Payment {
             String paymentMethod,
             Long discountAmount,
             Double discountPercent,
-            String cashier) {
+            String cashier,
+            Long customerId) {
         this.orderId = orderId;
         this.totalAmount = totalAmount;
         this.finalAmount = finalAmount;
@@ -30,8 +32,12 @@ public class Payment {
         this.discountAmount = discountAmount;
         this.discountPercent = discountPercent;
         this.cashier = cashier;
+        this.customerId = customerId;
         this.paidAt = LocalDateTime.now();
     }
+
+    public Long getCustomerId() { return customerId; }
+    public void setCustomerId(Long customerId) { this.customerId = customerId; }
 
     public Long getPaymentId() {
         return paymentId;

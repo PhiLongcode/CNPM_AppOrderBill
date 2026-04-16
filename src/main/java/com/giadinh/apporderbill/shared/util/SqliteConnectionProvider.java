@@ -95,6 +95,14 @@ public class SqliteConnectionProvider {
                         paid_at TEXT NOT NULL
                     )
                     """);
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN customer_id INTEGER");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE orders ADD COLUMN customer_id INTEGER");
+            } catch (Exception ignoredColumnExists) {
+            }
             s.execute("""
                     CREATE TABLE IF NOT EXISTS printer_configs (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -154,6 +162,35 @@ public class SqliteConnectionProvider {
                         username TEXT NOT NULL UNIQUE,
                         passwordHash TEXT NOT NULL,
                         roleGroupId INTEGER NOT NULL
+                    )
+                    """);
+
+            // Settings table for configurable parameters (loyalty config etc.)
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS settings (
+                        key TEXT PRIMARY KEY,
+                        value TEXT NOT NULL
+                    )
+                    """);
+            // Seed default loyalty config if not yet set
+            s.execute("""
+                    INSERT OR IGNORE INTO settings (key, value) VALUES
+                        ('loyalty.earnUnitAmount', '10000'),
+                        ('loyalty.pointsPerUnit', '1'),
+                        ('loyalty.redeemPointsRequired', '100'),
+                        ('loyalty.redeemValue', '5000')
+                    """);
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS point_transactions (
+                        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                        customer_id INTEGER NOT NULL,
+                        delta       INTEGER NOT NULL,
+                        balance_after INTEGER NOT NULL,
+                        type        TEXT NOT NULL,
+                        note        TEXT,
+                        order_id    TEXT,
+                        created_at  TEXT NOT NULL,
+                        FOREIGN KEY (customer_id) REFERENCES customers(id)
                     )
                     """);
         } catch (Exception ignored) {

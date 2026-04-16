@@ -27,8 +27,8 @@ public class SqlitePaymentRepository implements PaymentRepository {
         try (Connection c = connectionProvider.getConnection()) {
             if (isInsert) {
                 String sql = """
-                    INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at, customer_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     bindParams(ps, payment);
@@ -43,12 +43,12 @@ public class SqlitePaymentRepository implements PaymentRepository {
                 }
             } else {
                 String sql = """
-                    UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?
+                    UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?, customer_id = ?
                     WHERE id = ?
                 """;
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     bindParams(ps, payment);
-                    ps.setLong(10, payment.getPaymentId());
+                    ps.setLong(11, payment.getPaymentId());
                     ps.executeUpdate();
                 }
             }
@@ -76,6 +76,11 @@ public class SqlitePaymentRepository implements PaymentRepository {
         }
         ps.setString(8, payment.getCashier());
         ps.setString(9, payment.getPaidAt() != null ? payment.getPaidAt().format(DT) : LocalDateTime.now().format(DT));
+        if (payment.getCustomerId() != null) {
+            ps.setLong(10, payment.getCustomerId());
+        } else {
+            ps.setNull(10, java.sql.Types.INTEGER);
+        }
     }
 
     @Override
@@ -153,7 +158,15 @@ public class SqlitePaymentRepository implements PaymentRepository {
         String paidAtStr = rs.getString("paid_at");
         LocalDateTime paidAt = paidAtStr != null ? LocalDateTime.parse(paidAtStr, DT) : LocalDateTime.now();
 
-        Payment payment = new Payment(orderId, totalAmount, finalAmount, paidAmount, paymentMethod, discountAmount, discountPercent, cashier);
+        Long customerId = null;
+        try { // handle old schema that might not have the column
+            long idVal = rs.getLong("customer_id");
+            if (!rs.wasNull()) {
+                customerId = idVal;
+            }
+        } catch (Exception ignored) {}
+
+        Payment payment = new Payment(orderId, totalAmount, finalAmount, paidAmount, paymentMethod, discountAmount, discountPercent, cashier, customerId);
         payment.setPaymentId(id);
         payment.setPaidAt(paidAt);
         return payment;

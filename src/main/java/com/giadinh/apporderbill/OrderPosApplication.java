@@ -87,8 +87,14 @@ public class OrderPosApplication extends Application {
                                         connectionProvider);
                         com.giadinh.apporderbill.customer.repository.CustomerRepository customerRepository = new com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository(
                                         connectionProvider);
+                        com.giadinh.apporderbill.customer.repository.PointTransactionRepository pointTransactionRepository = new com.giadinh.apporderbill.customer.repository.SqlitePointTransactionRepository(
+                                        connectionProvider);
+                        com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository loyaltyConfigRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository(
+                                        connectionProvider);
                         com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases = new com.giadinh.apporderbill.customer.usecase.CustomerUseCases(
                                         customerRepository);
+                        customerUseCases.setPointTransactionRepository(pointTransactionRepository);
+                        customerUseCases.setLoyaltyConfig(loyaltyConfigRepository.load());
 
                         Connection identityConnection = connectionProvider.getConnection();
                         com.giadinh.apporderbill.identity.repository.ModuleRepository moduleRepository = new com.giadinh.apporderbill.identity.infrastructure.repository.sqlite.ModuleRepositoryImpl(
@@ -338,6 +344,9 @@ public class OrderPosApplication extends Application {
 
                                         // Set printer service for draft receipt
                                         presenter.setPrinterService(printerService);
+
+                                        // Inject customer use cases vào controller cho CheckoutHandler
+                                        controller.setCustomerUseCases(customerUseCases);
 
                                         // Inject table use cases vào controller
                                         controller.setAddTableUseCase(addTableUseCase);

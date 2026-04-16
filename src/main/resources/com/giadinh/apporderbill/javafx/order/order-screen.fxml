@@ -70,6 +70,10 @@
                                        style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
                             <Label fx:id="orderStatusLabel" text="(Chưa chọn bàn)" 
                                    style="-fx-text-fill: gray;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="Khách:" style="-fx-font-size: 12px;"/>
+                            <TextField fx:id="orderCustomerPhoneField" promptText="SĐT khách hàng" prefWidth="120" />
+                            <Label fx:id="orderCustomerNameLabel" text="(Khách vãng lai)" textFill="GRAY"/>
                         </children>
                     </HBox>
                     

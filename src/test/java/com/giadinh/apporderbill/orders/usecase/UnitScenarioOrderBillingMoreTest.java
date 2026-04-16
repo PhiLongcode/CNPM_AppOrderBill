@@ -78,7 +78,7 @@ class UnitScenarioOrderBillingMoreTest {
     void printReceipt_withValidPayment_callsPrinter() {
         InMemoryPaymentRepository paymentRepo = new InMemoryPaymentRepository();
         SpyPrinterService printer = new SpyPrinterService(true);
-        Payment p = new Payment("ORDER-1", 120000, 100000, 100000, "CASH", 20000L, null, "cashier");
+        Payment p = new Payment("ORDER-1", 120000, 100000, 100000, "CASH", 20000L, null, "cashier", null);
         paymentRepo.save(p);
         PrintReceiptUseCase useCase = new PrintReceiptUseCase(paymentRepo, printer);
 
@@ -92,7 +92,7 @@ class UnitScenarioOrderBillingMoreTest {
     void printReceipt_whenPrinterFails_throwsDomainException() {
         InMemoryPaymentRepository paymentRepo = new InMemoryPaymentRepository();
         SpyPrinterService printer = new SpyPrinterService(false);
-        Payment p = new Payment("ORDER-2", 50000, 50000, 50000, "CASH", null, null, "cashier");
+        Payment p = new Payment("ORDER-2", 50000, 50000, 50000, "CASH", null, null, "cashier", null);
         paymentRepo.save(p);
         PrintReceiptUseCase useCase = new PrintReceiptUseCase(paymentRepo, printer);
 

@@ -1,5 +1,6 @@
 package com.giadinh.apporderbill.javafx.order.handlers;
 
+import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.javafx.order.CheckoutDialogController;
 import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
@@ -27,6 +28,7 @@ public class CheckoutHandler {
     private Consumer<String> errorHandler = m -> {};
     private Runnable onCheckoutSuccessHandler;
     private OrderScreenPresenter presenter;
+    private CustomerUseCases customerUseCases;
 
     private long totalAmount;
     private long finalAmount;
@@ -44,6 +46,7 @@ public class CheckoutHandler {
     public void setErrorHandler(Consumer<String> errorHandler) { this.errorHandler = errorHandler; }
     public void setOnCheckoutSuccessHandler(Runnable r) { this.onCheckoutSuccessHandler = r; }
     public void setPresenter(OrderScreenPresenter presenter) { this.presenter = presenter; }
+    public void setCustomerUseCases(CustomerUseCases customerUseCases) { this.customerUseCases = customerUseCases; }
     public void setMenuItemRepository(Object menuItemRepository) {}
     public void setOrderRepository(Object orderRepository) {}
 
@@ -166,6 +169,19 @@ public class CheckoutHandler {
                     presenter.updateItemDiscount(orderItemId, discountPercent));
             controller.setOrderItemsSupplier(presenter::getCurrentOrderItemsForCheckout);
             controller.setOrderItems(presenter.getCurrentOrderItemsForCheckout());
+            // Inject customer use cases for loyalty
+            controller.setCustomerUseCases(customerUseCases);
+
+            // Pre-load customer if exists in current order
+            if (customerUseCases != null && presenter.getCurrentOrderId() != null) {
+                presenter.getCurrentOrder().ifPresent(order -> {
+                    if (order.getCustomerId() != null) {
+                        com.giadinh.apporderbill.customer.model.Customer cust = 
+                            customerUseCases.getCustomerById(order.getCustomerId());
+                        controller.setInitialCustomer(cust);
+                    }
+                });
+            }
 
             controller.getCancelButton().setOnAction(e -> dialog.close());
             controller.getConfirmButton().setOnAction(e -> {
@@ -174,11 +190,14 @@ public class CheckoutHandler {
                         result.paidAmount(),
                         result.paymentMethod(),
                         result.discountAmount(),
-                        null);
+                        null,
+                        result.customerId(),
+                        result.pointsUsed());
                 if (success) {
                     paidAmount = String.valueOf(result.paidAmount());
                     paymentMethod = result.paymentMethod();
                     discountAmount = String.valueOf(result.discountAmount());
+                    customerPhone = result.customerPhone() != null ? result.customerPhone() : "";
                     dialog.close();
                     if (onCheckoutSuccessHandler != null) {
                         onCheckoutSuccessHandler.run();

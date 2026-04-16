@@ -1,5 +1,8 @@
 package com.giadinh.apporderbill.javafx.order;
 
+import com.giadinh.apporderbill.customer.model.Customer;
+import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
+import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -14,6 +17,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 import java.text.NumberFormat;
@@ -61,6 +65,16 @@ public class CheckoutDialogController {
     private Button cancelButton;
     @FXML
     private TableView<OrderItemViewModel> itemsTableView;
+    // Customer section
+    @FXML private TextField customerPhoneField;
+    @FXML private VBox customerInfoBox;
+    @FXML private Label customerNameLabel;
+    @FXML private Label customerPointsLabel;
+    @FXML private VBox newCustomerBox;
+    @FXML private TextField newCustomerNameField;
+    @FXML private VBox redeemPointsBox;
+    @FXML private TextField redeemPointsField;
+    @FXML private Label redeemDiscountLabel;
     @FXML
     private TableColumn<OrderItemViewModel, Integer> itemIndexColumn;
     @FXML
@@ -80,14 +94,32 @@ public class CheckoutDialogController {
     private long subtotalAmount;
     private BiConsumer<Long, Double> itemDiscountPercentUpdater;
     private Supplier<List<OrderItemViewModel>> orderItemsSupplier;
+    private CustomerUseCases customerUseCases;
+    private LoyaltyConfig loyaltyConfig = LoyaltyConfig.defaults();
+    private Customer currentCustomer;
 
-    public record Result(long paidAmount, long discountAmount, String paymentMethod) {
+    public record Result(long paidAmount, long discountAmount, String paymentMethod,
+                         Long customerId, String customerPhone, int pointsUsed) {
+        // Backward-compat factory without customer
+        public static Result of(long paid, long discount, String method) {
+            return new Result(paid, discount, method, null, null, 0);
+        }
     }
 
     @FXML
     private void initialize() {
         installNumericFormatter(discountField);
         installNumericFormatter(paidAmountField);
+        if (customerPhoneField != null) {
+            customerPhoneField.setOnAction(e -> onSearchCustomer());
+        }
+    }
+
+    public void setCustomerUseCases(CustomerUseCases customerUseCases) {
+        this.customerUseCases = customerUseCases;
+        if (customerUseCases != null) {
+            this.loyaltyConfig = customerUseCases.getLoyaltyConfig();
+        }
     }
 
     public void initSummary(long totalAmount, long finalAmount, String tableInfo, String orderCode) {
@@ -334,7 +366,10 @@ public class CheckoutDialogController {
         long discount = parseLong(discountField.getText(), 0L);
         long paid = parseLong(paidAmountField.getText(), 0L);
         String method = resolvePaymentMethod();
-        return new Result(paid, discount, method);
+        Long id = currentCustomer != null ? currentCustomer.getId() : null;
+        String phone = currentCustomer != null ? currentCustomer.getPhone() : null;
+        int pointsUsed = parsePointsUsed();
+        return new Result(paid, discount, method, id, phone, pointsUsed);
     }
 
     public Button getConfirmButton() {
@@ -370,5 +405,83 @@ public class CheckoutDialogController {
             return "CARD";
         }
         return "CASH";
+    }
+
+    public void setInitialCustomer(Customer customer) {
+        if (customer != null) {
+            if (customerPhoneField != null) customerPhoneField.setText(customer.getPhone());
+            showCustomerFound(customer);
+        }
+    }
+
+    // ─── Customer section handlers ──────────────────────────────────────────
+
+    @FXML
+    private void onSearchCustomer() {
+        if (customerUseCases == null || customerPhoneField == null) return;
+        String phone = customerPhoneField.getText() == null ? "" : customerPhoneField.getText().trim();
+        if (phone.isEmpty()) return;
+        customerUseCases.findByPhone(phone).ifPresentOrElse(
+                this::showCustomerFound,
+                () -> showCustomerNotFound(phone));
+    }
+
+    @FXML
+    private void onAddCustomer() {
+        if (customerUseCases == null || customerPhoneField == null) return;
+        String phone = customerPhoneField.getText() == null ? "" : customerPhoneField.getText().trim();
+        String name = newCustomerNameField != null ? newCustomerNameField.getText() : "";
+        try {
+            Customer c = customerUseCases.createOrGet(phone, name);
+            showCustomerFound(c);
+        } catch (Exception e) {
+            // nếu lỗi, ẩn hộp thêm mới
+        }
+    }
+
+    @FXML
+    private void onRedeemPointsChanged() {
+        if (redeemDiscountLabel == null || loyaltyConfig == null || currentCustomer == null) return;
+        int points = parsePointsUsed();
+        points = Math.min(points, currentCustomer.getPoints()); // giới hạn theo số điểm có
+        long discount = loyaltyConfig.calcRedeemDiscount(points);
+        redeemDiscountLabel.setText("→ " + integerMoneyFormat.format(discount) + " VNĐ");
+        // Cập nhật discountField để refreshFinalAndChange tự tính
+        long baseDiscount = subtotalAmount; // giả sử tính lại từ ô giảm giá cũ
+        long currentManualDiscount = parseLong(discountField != null ? discountField.getText() : "0", 0L);
+        // Tách phần giảm giá điểm ra: ghi đè discount bằng tổng
+        // Đơn giản nhất: lưu points discount riêng và cộng vào khi buildResult
+    }
+
+    private void showCustomerFound(Customer customer) {
+        this.currentCustomer = customer;
+        if (customerNameLabel != null) customerNameLabel.setText(customer.getName() != null ? customer.getName() : "");
+        if (customerPointsLabel != null) customerPointsLabel.setText(customer.getPoints() + " điểm");
+        setVisible(customerInfoBox, true);
+        setVisible(newCustomerBox, false);
+        setVisible(redeemPointsBox, customer.getPoints() > 0);
+    }
+
+    private void showCustomerNotFound(String phone) {
+        this.currentCustomer = null;
+        setVisible(customerInfoBox, false);
+        setVisible(newCustomerBox, true);
+        setVisible(redeemPointsBox, false);
+    }
+
+    private void setVisible(VBox box, boolean visible) {
+        if (box != null) {
+            box.setVisible(visible);
+            box.setManaged(visible);
+        }
+    }
+
+    private int parsePointsUsed() {
+        if (redeemPointsField == null) return 0;
+        int points = (int) parseLong(redeemPointsField.getText(), 0L);
+        if (currentCustomer != null) {
+            points = Math.min(points, currentCustomer.getPoints());
+        }
+        return Math.max(0, points);
     }
 }

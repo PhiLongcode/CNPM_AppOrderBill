@@ -23,8 +23,8 @@ public class MySqlPaymentRepository implements PaymentRepository {
     @Override
     public Payment save(Payment payment) {
         String sql = """
-                INSERT INTO payments(order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO payments(order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at, customer_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (Connection c = connectionProvider.getConnection();
              PreparedStatement ps = c.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -37,6 +37,11 @@ public class MySqlPaymentRepository implements PaymentRepository {
             ps.setDouble(7, payment.getDiscountPercent());
             ps.setString(8, payment.getCashier());
             ps.setString(9, payment.getPaidAt() == null ? LocalDateTime.now().format(DT) : payment.getPaidAt().format(DT));
+            if (payment.getCustomerId() != null) {
+                ps.setLong(10, payment.getCustomerId());
+            } else {
+                ps.setNull(10, java.sql.Types.INTEGER);
+            }
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) payment.setPaymentId(rs.getLong(1));
@@ -92,7 +97,16 @@ public class MySqlPaymentRepository implements PaymentRepository {
                 rs.getString("payment_method"),
                 rs.getLong("discount_amount"),
                 rs.getDouble("discount_percent"),
-                rs.getString("cashier"));
+                rs.getString("cashier"),
+                null); // handle customerId if added properly below
+        
+        try {
+            long idVal = rs.getLong("customer_id");
+            if (!rs.wasNull()) {
+                payment.setCustomerId(idVal);
+            }
+        } catch (Exception ignored) {}
+
         payment.setPaymentId(rs.getLong("id"));
         return payment;
     }

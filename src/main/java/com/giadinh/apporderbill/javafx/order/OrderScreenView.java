@@ -17,6 +17,7 @@ public interface OrderScreenView {
     String getPaidAmount();
     String getPaymentMethod();
     String getCustomerPhone();
+    void setCustomerInfo(String phone, String name);
     void clearItemInputFields();
     void showError(String message);
     void showSuccess(String message);

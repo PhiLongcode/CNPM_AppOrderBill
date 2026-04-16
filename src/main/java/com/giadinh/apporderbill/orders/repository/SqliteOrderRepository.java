@@ -31,7 +31,7 @@ public class SqliteOrderRepository implements OrderRepository {
         if (orderId == null) {
             return Optional.empty();
         }
-        String sqlOrder = "SELECT id, order_code, table_id, order_date, status, total_amount FROM orders WHERE id = ?";
+        String sqlOrder = "SELECT id, order_code, table_id, order_date, status, total_amount, customer_id FROM orders WHERE id = ?";
         try (Connection c = connectionProvider.getConnection();
                 PreparedStatement ps = c.prepareStatement(sqlOrder)) {
             ps.setString(1, orderId);
@@ -81,14 +81,15 @@ public class SqliteOrderRepository implements OrderRepository {
             return;
         }
         String upsert = """
-                INSERT INTO orders (id, table_id, order_date, status, total_amount, order_code)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO orders (id, table_id, order_date, status, total_amount, order_code, customer_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     table_id = excluded.table_id,
                     order_date = excluded.order_date,
                     status = excluded.status,
                     total_amount = excluded.total_amount,
-                    order_code = excluded.order_code
+                    order_code = excluded.order_code,
+                    customer_id = excluded.customer_id
                 """;
         try (Connection c = connectionProvider.getConnection()) {
             c.setAutoCommit(false);
@@ -101,6 +102,11 @@ public class SqliteOrderRepository implements OrderRepository {
                     ps.setString(4, order.getStatus().name());
                     ps.setDouble(5, order.getTotalAmount());
                     ps.setString(6, order.getOrderCode());
+                    if (order.getCustomerId() != null) {
+                        ps.setLong(7, order.getCustomerId());
+                    } else {
+                        ps.setNull(7, java.sql.Types.INTEGER);
+                    }
                     ps.executeUpdate();
                 }
                 try (PreparedStatement del = c.prepareStatement("DELETE FROM order_items WHERE order_id = ?")) {
@@ -201,6 +207,10 @@ public class SqliteOrderRepository implements OrderRepository {
         double total = rs.getDouble("total_amount");
         Order order = new Order(id, tableId, orderDate, status, total);
         order.setOrderCode(orderCode);
+        long custId = rs.getLong("customer_id");
+        if (!rs.wasNull()) {
+            order.setCustomerId(custId);
+        }
         return order;
     }
 

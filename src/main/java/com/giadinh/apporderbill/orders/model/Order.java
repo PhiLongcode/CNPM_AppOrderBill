@@ -17,6 +17,7 @@ public class Order {
     private OrderStatus status;
     private List<OrderItem> items;
     private double totalAmount;
+    private Long customerId;
 
     // Constructor cho Order mới
     public Order(String tableId) {
@@ -38,6 +39,15 @@ public class Order {
         this.status = status;
         this.totalAmount = totalAmount;
         this.items = new ArrayList<>(); // Items sẽ được load riêng bởi Repository
+        this.customerId = null;
+    }
+
+    public Long getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
     }
 
     public String getOrderId() {

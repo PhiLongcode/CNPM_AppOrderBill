@@ -82,6 +82,8 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     private TableColumn<OrderItemViewModel, Double> discountColumn;
     @FXML
+    private TableColumn<OrderItemViewModel, Double> discountAmountColumn;
+    @FXML
     private TableColumn<OrderItemViewModel, String> notesColumn;
     @FXML
     private TableColumn<OrderItemViewModel, Boolean> printedColumn;
@@ -116,6 +118,10 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     private Label orderStatusLabel;
     @FXML
+    private TextField orderCustomerPhoneField;
+    @FXML
+    private Label orderCustomerNameLabel;
+    @FXML
     private ToggleButton allCategoryButton;
     @FXML
     private ToggleButton allTablesFilterBtn;
@@ -137,6 +143,13 @@ public class OrderScreenController implements OrderScreenView {
     private GetActiveMenuItemsUseCase getActiveMenuItemsUseCase;
     private AddMenuItemToOrderUseCase addMenuItemToOrderUseCase;
     private com.giadinh.apporderbill.catalog.repository.MenuItemRepository menuItemRepository;
+    private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
+    private com.giadinh.apporderbill.customer.model.Customer currentCustomerOfOrder;
+    private com.giadinh.apporderbill.orders.repository.OrderRepository orderRepository;
+    private com.giadinh.apporderbill.javafx.order.handlers.OrderItemHandler orderItemHandler;
+    private com.giadinh.apporderbill.javafx.order.handlers.TableHandler tableHandler;
+    private com.giadinh.apporderbill.javafx.order.handlers.MenuItemHandler menuItemHandler;
+    private com.giadinh.apporderbill.javafx.order.handlers.CheckoutHandler checkoutHandler;
 
     // Table Use Cases
     private com.giadinh.apporderbill.table.usecase.AddTableUseCase addTableUseCase;
@@ -147,14 +160,6 @@ public class OrderScreenController implements OrderScreenView {
     private com.giadinh.apporderbill.table.usecase.SetTableReservationUseCase setTableReservationUseCase;
     private com.giadinh.apporderbill.orders.usecase.TransferOrderBetweenTablesUseCase transferOrderBetweenTablesUseCase;
     private com.giadinh.apporderbill.orders.usecase.ReleaseEmptyActiveOrderUseCase releaseEmptyActiveOrderUseCase;
-    private com.giadinh.apporderbill.orders.repository.OrderRepository orderRepository;
-
-    // Handlers
-    private MenuItemHandler menuItemHandler;
-    private TableHandler tableHandler;
-    private OrderItemHandler orderItemHandler;
-    private CheckoutHandler checkoutHandler;
-
     private ToggleGroup categoryGroup;
     private ToggleGroup tableFilterGroup;
     private Long currentOrderId;
@@ -222,20 +227,18 @@ public class OrderScreenController implements OrderScreenView {
         }
     }
 
-    @FXML
-    private TableColumn<OrderItemViewModel, Double> discountAmountColumn;
-
     private void initializeHandlers() {
         try {
             // OrderItem Handler
             if (orderItemsTable != null && selectColumn != null && itemNumberColumn != null &&
                     nameColumn != null && quantityColumn != null && unitColumn != null && unitPriceColumn != null &&
-                    totalColumn != null && discountColumn != null && discountAmountColumn != null && notesColumn != null && printedColumn != null && actionColumn != null) {
+                    totalColumn != null && discountColumn != null && notesColumn != null && printedColumn != null
+                    && actionColumn != null) {
 
                 orderItemHandler = new OrderItemHandler(
                         orderItemsTable, selectColumn, itemNumberColumn, nameColumn,
-                        quantityColumn, unitColumn, unitPriceColumn, totalColumn, discountColumn, discountAmountColumn, notesColumn,
-                        printedColumn, actionColumn);
+                        quantityColumn, unitColumn, unitPriceColumn, totalColumn, discountColumn,
+                        discountAmountColumn, notesColumn, printedColumn, actionColumn);
                 orderItemHandler.setErrorHandler(this::showError);
                 orderItemHandler.setOnRowSelectedCallback(this::onOrderItemRowSelected);
             } else {
@@ -333,6 +336,7 @@ public class OrderScreenController implements OrderScreenView {
             tableHandler.setPresenter(presenter);
         }
         setupDiscountListener();
+        setupCustomerListener();
 
         // Refresh table status after presenter is set
         refreshTablesInUse();
@@ -385,6 +389,16 @@ public class OrderScreenController implements OrderScreenView {
         }
         if (tableHandler != null) {
             tableHandler.setOrderRepository(orderRepository);
+        }
+    }
+
+    public void setCustomerUseCases(com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases) {
+        this.customerUseCases = customerUseCases;
+        if (checkoutHandler != null) {
+            checkoutHandler.setCustomerUseCases(customerUseCases);
+        }
+        if (presenter != null) {
+            presenter.setCustomerUseCases(customerUseCases);
         }
     }
 
@@ -569,7 +583,8 @@ public class OrderScreenController implements OrderScreenView {
                 quickQuantityField.setText("1");
             }
 
-            // Nếu đã có dòng cùng món và chưa in phiếu bếp thì cộng dồn số lượng vào dòng đó.
+            // Nếu đã có dòng cùng món và chưa in phiếu bếp thì cộng dồn số lượng vào dòng
+            // đó.
             // Món đã in phiếu bếp sẽ tạo dòng mới để tách rõ phần add-on.
             OrderItemViewModel unprintedSameItem = null;
             if (orderItemHandler != null) {
@@ -660,7 +675,7 @@ public class OrderScreenController implements OrderScreenView {
             // Cập nhật trạng thái enable/disable của nút dựa trên món được chọn
             boolean canCancel = !item.isCanceled();
             boolean canDelete = !item.isPrintedToKitchen() && !item.isCanceled();
-            
+
             if (cancelItemButton != null) {
                 cancelItemButton.setDisable(!canCancel);
             }
@@ -684,7 +699,7 @@ public class OrderScreenController implements OrderScreenView {
             showError(msg("ui.order.select_item_to_cancel"));
             return;
         }
-        
+
         if (presenter == null) {
             showError(msg("ui.order.system_not_ready"));
             return;
@@ -717,7 +732,7 @@ public class OrderScreenController implements OrderScreenView {
             showError(msg("ui.order.select_item_to_delete"));
             return;
         }
-        
+
         if (presenter == null) {
             showError(msg("ui.order.system_not_ready"));
             return;
@@ -1046,4 +1061,60 @@ public class OrderScreenController implements OrderScreenView {
         Optional<Long> result = dialog.showAndWait();
         result.ifPresent(onSelect);
     }
+
+    private void setupCustomerListener() {
+        if (orderCustomerPhoneField != null) {
+            orderCustomerPhoneField.textProperty().addListener((obs, oldV, newV) -> {
+                if (newV != null && newV.trim().length() >= 9) {
+                    resolveCustomer(newV.trim());
+                } else if (newV == null || newV.trim().isEmpty()) {
+                    resolveCustomer(null);
+                }
+            });
+        }
+    }
+
+    private void resolveCustomer(String phone) {
+        if (customerUseCases == null) return;
+        if (phone == null || phone.isEmpty()) {
+            currentCustomerOfOrder = null;
+            if (orderCustomerNameLabel != null) orderCustomerNameLabel.setText("(Khách vãng lai)");
+            if (presenter != null) presenter.updateOrderCustomer(null);
+            return;
+        }
+
+        // Find existing customer
+        com.giadinh.apporderbill.customer.model.Customer c = customerUseCases.getAll(phone)
+                .stream()
+                .filter(cust -> phone.equals(cust.getPhone()))
+                .findFirst()
+                .orElse(null);
+
+        currentCustomerOfOrder = c;
+        if (orderCustomerNameLabel != null) {
+            if (c != null) {
+                orderCustomerNameLabel.setText(c.getName() + " (" + c.getPoints() + "đ)");
+                orderCustomerNameLabel.setTextFill(javafx.scene.paint.Color.GREEN);
+            } else {
+                orderCustomerNameLabel.setText("(Sẽ tạo mới)");
+                orderCustomerNameLabel.setTextFill(javafx.scene.paint.Color.ORANGE);
+            }
+        }
+
+        if (presenter != null) {
+            presenter.updateOrderCustomer(c != null ? c.getId() : null);
+        }
+    }
+
+    @Override
+    public void setCustomerInfo(String phone, String name) {
+        if (orderCustomerPhoneField != null) {
+            orderCustomerPhoneField.setText(phone != null ? phone : "");
+        }
+        if (orderCustomerNameLabel != null) {
+            orderCustomerNameLabel.setText(name != null ? name : "(Khách vãng lai)");
+            orderCustomerNameLabel.setTextFill(phone != null ? javafx.scene.paint.Color.GREEN : javafx.scene.paint.Color.GRAY);
+        }
+    }
 }
+

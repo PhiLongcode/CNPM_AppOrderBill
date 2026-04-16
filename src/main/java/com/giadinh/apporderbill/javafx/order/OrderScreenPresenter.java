@@ -30,6 +30,8 @@ import java.time.format.DateTimeFormatter;
  */
 public class OrderScreenPresenter {
     private final OrderScreenView view;
+    private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
+
 
     // Order Management Use Cases
     private final OpenOrCreateOrderUseCase openOrCreateOrderUseCase;
@@ -101,6 +103,23 @@ public class OrderScreenPresenter {
         this.orderRepository = orderRepository;
     }
 
+    public void setCustomerUseCases(com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases) {
+        this.customerUseCases = customerUseCases;
+    }
+
+    public void updateOrderCustomer(Long customerId) {
+        if (currentOrderId == null) return;
+        try {
+            orderRepository.findById(String.valueOf(currentOrderId)).ifPresent(order -> {
+                order.setCustomerId(customerId);
+                orderRepository.save(order);
+                // No need to show success, this happens in background as user types phone
+            });
+        } catch (Exception e) {
+            System.err.println("Failed to update order customer: " + e.getMessage());
+        }
+    }
+
     /**
      * Mở dialog nhập kho nhanh cho một món (từ màn Order).
      * Chỉ tăng tồn kho (không thay đổi các thông tin khác).
@@ -146,6 +165,19 @@ public class OrderScreenPresenter {
                 GetOrderDetailsInput input = new GetOrderDetailsInput(currentOrderId);
                 var orderDetails = getOrderDetailsUseCase.execute(input);
                 updateView(orderDetails);
+
+                // Load customer info if exists
+                if (ord.getCustomerId() != null && customerUseCases != null) {
+                    com.giadinh.apporderbill.customer.model.Customer customer = 
+                        customerUseCases.getCustomerById(ord.getCustomerId());
+                    if (customer != null) {
+                        view.setCustomerInfo(customer.getPhone(), customer.getName());
+                    } else {
+                        view.setCustomerInfo(null, null);
+                    }
+                } else {
+                    view.setCustomerInfo(null, null);
+                }
                 return;
             }
             
@@ -157,6 +189,7 @@ public class OrderScreenPresenter {
             currentTableNumber = output.getTableNumber();
 
             updateView(output);
+            view.setCustomerInfo(null, null); // Clear customer info for new order
             view.showSuccess(msg("ui.order.opened_for_table", tableNumber));
         } catch (DomainException e) {
             view.showError(e.getMessage());
@@ -382,6 +415,11 @@ public class OrderScreenPresenter {
      * Thanh toán order.
      */
     public boolean checkout(long paidAmount, String paymentMethod, long discountAmount, Double discountPercent) {
+        return checkout(paidAmount, paymentMethod, discountAmount, discountPercent, null, 0);
+    }
+
+    public boolean checkout(long paidAmount, String paymentMethod, long discountAmount,
+                            Double discountPercent, Long customerId, int pointsUsed) {
         if (currentOrderId == null) {
             view.showError(msg("ui.order.select_table_and_have_order"));
             return false;
@@ -402,13 +440,14 @@ public class OrderScreenPresenter {
 
             // LƯU THANH TOÁN TRƯỚC
             CheckoutOrderInput input = new CheckoutOrderInput(
-                    currentOrderId,
-                    paidAmount,
-                    paymentMethod != null ? paymentMethod : "CASH",
-                    discountAmount > 0 ? discountAmount : null,
-                    discountPercent,
-                    "THU_NGAN",
-                    view.getCustomerPhone());
+                    (Long) currentOrderId,
+                    (long) paidAmount,
+                    (String) (paymentMethod != null ? paymentMethod : "CASH"),
+                    (Long) (discountAmount > 0 ? discountAmount : null),
+                    (Double) discountPercent,
+                    (String) "THU_NGAN",
+                    (Long) customerId,
+                    (int) pointsUsed);
 
             CheckoutOrderOutput output = checkoutOrderUseCase.execute(input);
 
@@ -575,15 +614,15 @@ public class OrderScreenPresenter {
     /**
      * Lấy Order hiện tại với đầy đủ thông tin.
      */
-    public Order getCurrentOrder() {
+    public java.util.Optional<Order> getCurrentOrder() {
         if (currentOrderId == null) {
-            return null;
+            return java.util.Optional.empty();
         }
         try {
-            return orderRepository.findById(String.valueOf(currentOrderId)).orElse(null);
+            return orderRepository.findById(String.valueOf(currentOrderId));
         } catch (Exception e) {
             System.err.println("Lỗi khi lấy order hiện tại: " + e.getMessage());
-            return null;
+            return java.util.Optional.empty();
         }
     }
 
