@@ -105,6 +105,9 @@ public class CustomerManagementController {
         txNoteColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNote()));
         txOrderColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getOrderId()));
         initLoyaltyHints();
+        if (searchField != null) {
+            searchField.textProperty().addListener((obs, oldValue, newValue) -> onSearch());
+        }
     }
 
     public void setUseCases(CustomerUseCases useCases) {
@@ -117,7 +120,17 @@ public class CustomerManagementController {
 
     @FXML private void onSearch() {
         if (useCases == null) return;
-        rows.setAll(useCases.getAll(searchField.getText()));
+        String query = searchField == null ? "" : searchField.getText();
+        String digitsOnly = query == null ? "" : query.replaceAll("\\D", "");
+        if (digitsOnly.length() >= 4) {
+            rows.setAll(useCases.searchByPhonePrefixBTree(query));
+            return;
+        }
+        if (digitsOnly.isEmpty()) {
+            rows.setAll(useCases.getAll(query));
+            return;
+        }
+        rows.clear();
     }
 
     @FXML private void onRefresh() {

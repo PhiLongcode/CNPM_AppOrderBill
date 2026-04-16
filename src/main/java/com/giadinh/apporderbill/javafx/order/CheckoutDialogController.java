@@ -9,6 +9,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -67,6 +69,7 @@ public class CheckoutDialogController {
     private TableView<OrderItemViewModel> itemsTableView;
     // Customer section
     @FXML private TextField customerPhoneField;
+    @FXML private ListView<Customer> customerSuggestListView;
     @FXML private VBox customerInfoBox;
     @FXML private Label customerNameLabel;
     @FXML private Label customerPointsLabel;
@@ -97,6 +100,7 @@ public class CheckoutDialogController {
     private CustomerUseCases customerUseCases;
     private LoyaltyConfig loyaltyConfig = LoyaltyConfig.defaults();
     private Customer currentCustomer;
+    private boolean suppressCustomerSuggestEvents;
 
     public record Result(long paidAmount, long discountAmount, String paymentMethod,
                          Long customerId, String customerPhone, int pointsUsed) {
@@ -112,6 +116,32 @@ public class CheckoutDialogController {
         installNumericFormatter(paidAmountField);
         if (customerPhoneField != null) {
             customerPhoneField.setOnAction(e -> onSearchCustomer());
+            customerPhoneField.textProperty().addListener((obs, oldV, newV) -> {
+                if (suppressCustomerSuggestEvents) {
+                    return;
+                }
+                String query = newV == null ? "" : newV.trim();
+                String digits = query.replaceAll("\\D", "");
+                if (digits.length() >= 4) {
+                    showCustomerSuggestions(query);
+                } else {
+                    hideCustomerSuggestions();
+                }
+            });
+        }
+        if (customerSuggestListView != null) {
+            customerSuggestListView.setCellFactory(list -> new ListCell<>() {
+                @Override
+                protected void updateItem(Customer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getName() + " - " + item.getPhone());
+                }
+            });
+            customerSuggestListView.setOnMouseClicked(event -> {
+                if (event.getClickCount() >= 1) {
+                    applySelectedCustomerFromSuggestion();
+                }
+            });
         }
     }
 
@@ -421,6 +451,7 @@ public class CheckoutDialogController {
         if (customerUseCases == null || customerPhoneField == null) return;
         String phone = customerPhoneField.getText() == null ? "" : customerPhoneField.getText().trim();
         if (phone.isEmpty()) return;
+        hideCustomerSuggestions();
         customerUseCases.findByPhone(phone).ifPresentOrElse(
                 this::showCustomerFound,
                 () -> showCustomerNotFound(phone));
@@ -446,11 +477,7 @@ public class CheckoutDialogController {
         points = Math.min(points, currentCustomer.getPoints()); // giới hạn theo số điểm có
         long discount = loyaltyConfig.calcRedeemDiscount(points);
         redeemDiscountLabel.setText("→ " + integerMoneyFormat.format(discount) + " VNĐ");
-        // Cập nhật discountField để refreshFinalAndChange tự tính
-        long baseDiscount = subtotalAmount; // giả sử tính lại từ ô giảm giá cũ
-        long currentManualDiscount = parseLong(discountField != null ? discountField.getText() : "0", 0L);
-        // Tách phần giảm giá điểm ra: ghi đè discount bằng tổng
-        // Đơn giản nhất: lưu points discount riêng và cộng vào khi buildResult
+        // TODO: integrate redeemed discount into final amount calculation.
     }
 
     private void showCustomerFound(Customer customer) {
@@ -467,6 +494,41 @@ public class CheckoutDialogController {
         setVisible(customerInfoBox, false);
         setVisible(newCustomerBox, true);
         setVisible(redeemPointsBox, false);
+    }
+
+    private void showCustomerSuggestions(String query) {
+        if (customerUseCases == null || customerSuggestListView == null) {
+            return;
+        }
+        List<Customer> matches = customerUseCases.searchByPhonePrefixBTree(query);
+        customerSuggestListView.getItems().setAll(matches);
+        boolean visible = !matches.isEmpty();
+        customerSuggestListView.setVisible(visible);
+        customerSuggestListView.setManaged(visible);
+    }
+
+    private void hideCustomerSuggestions() {
+        if (customerSuggestListView == null) {
+            return;
+        }
+        customerSuggestListView.getItems().clear();
+        customerSuggestListView.setVisible(false);
+        customerSuggestListView.setManaged(false);
+    }
+
+    private void applySelectedCustomerFromSuggestion() {
+        if (customerSuggestListView == null || customerPhoneField == null) {
+            return;
+        }
+        Customer selected = customerSuggestListView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            return;
+        }
+        suppressCustomerSuggestEvents = true;
+        customerPhoneField.setText(selected.getPhone());
+        suppressCustomerSuggestEvents = false;
+        hideCustomerSuggestions();
+        showCustomerFound(selected);
     }
 
     private void setVisible(VBox box, boolean visible) {

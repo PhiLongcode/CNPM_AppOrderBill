@@ -122,6 +122,8 @@ public class OrderScreenController implements OrderScreenView {
     @FXML
     private Label orderCustomerNameLabel;
     @FXML
+    private ListView<com.giadinh.apporderbill.customer.model.Customer> orderCustomerSuggestListView;
+    @FXML
     private ToggleButton allCategoryButton;
     @FXML
     private ToggleButton allTablesFilterBtn;
@@ -165,6 +167,7 @@ public class OrderScreenController implements OrderScreenView {
     private Long currentOrderId;
     private Set<String> tablesInUse = new HashSet<>();
     private boolean discountListenerInitialized;
+    private boolean suppressCustomerSuggestEvents;
 
     @FXML
     public void initialize() {
@@ -1065,10 +1068,34 @@ public class OrderScreenController implements OrderScreenView {
     private void setupCustomerListener() {
         if (orderCustomerPhoneField != null) {
             orderCustomerPhoneField.textProperty().addListener((obs, oldV, newV) -> {
-                if (newV != null && newV.trim().length() >= 9) {
-                    resolveCustomer(newV.trim());
-                } else if (newV == null || newV.trim().isEmpty()) {
+                if (suppressCustomerSuggestEvents) {
+                    return;
+                }
+                String phone = newV == null ? "" : newV.trim();
+                String digits = phone.replaceAll("\\D", "");
+                if (digits.length() >= 4) {
+                    showCustomerSuggestions(phone);
+                } else {
+                    hideCustomerSuggestions();
+                }
+                if (digits.length() >= 9) {
+                    resolveCustomer(phone);
+                } else if (digits.isEmpty()) {
                     resolveCustomer(null);
+                }
+            });
+        }
+        if (orderCustomerSuggestListView != null) {
+            orderCustomerSuggestListView.setCellFactory(list -> new ListCell<>() {
+                @Override
+                protected void updateItem(com.giadinh.apporderbill.customer.model.Customer item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : item.getName() + " - " + item.getPhone());
+                }
+            });
+            orderCustomerSuggestListView.setOnMouseClicked(event -> {
+                if (event.getClickCount() >= 1) {
+                    applySelectedCustomerFromSuggestion();
                 }
             });
         }
@@ -1084,11 +1111,7 @@ public class OrderScreenController implements OrderScreenView {
         }
 
         // Find existing customer
-        com.giadinh.apporderbill.customer.model.Customer c = customerUseCases.getAll(phone)
-                .stream()
-                .filter(cust -> phone.equals(cust.getPhone()))
-                .findFirst()
-                .orElse(null);
+        com.giadinh.apporderbill.customer.model.Customer c = customerUseCases.findByPhone(phone).orElse(null);
 
         currentCustomerOfOrder = c;
         if (orderCustomerNameLabel != null) {
@@ -1104,6 +1127,42 @@ public class OrderScreenController implements OrderScreenView {
         if (presenter != null) {
             presenter.updateOrderCustomer(c != null ? c.getId() : null);
         }
+    }
+
+    private void showCustomerSuggestions(String phoneQuery) {
+        if (customerUseCases == null || orderCustomerSuggestListView == null) {
+            return;
+        }
+        List<com.giadinh.apporderbill.customer.model.Customer> matches = customerUseCases.searchByPhonePrefixBTree(phoneQuery);
+        orderCustomerSuggestListView.getItems().setAll(matches);
+        boolean visible = !matches.isEmpty();
+        orderCustomerSuggestListView.setVisible(visible);
+        orderCustomerSuggestListView.setManaged(visible);
+    }
+
+    private void hideCustomerSuggestions() {
+        if (orderCustomerSuggestListView == null) {
+            return;
+        }
+        orderCustomerSuggestListView.getItems().clear();
+        orderCustomerSuggestListView.setVisible(false);
+        orderCustomerSuggestListView.setManaged(false);
+    }
+
+    private void applySelectedCustomerFromSuggestion() {
+        if (orderCustomerSuggestListView == null || orderCustomerPhoneField == null) {
+            return;
+        }
+        com.giadinh.apporderbill.customer.model.Customer selected =
+                orderCustomerSuggestListView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            return;
+        }
+        suppressCustomerSuggestEvents = true;
+        orderCustomerPhoneField.setText(selected.getPhone());
+        suppressCustomerSuggestEvents = false;
+        hideCustomerSuggestions();
+        resolveCustomer(selected.getPhone());
     }
 
     @Override

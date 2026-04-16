@@ -63,19 +63,22 @@
             <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15;" VBox.vgrow="ALWAYS">
                 <!-- Order Header -->
                 <VBox spacing="5">
-                    <HBox spacing="10" alignment="CENTER_LEFT">
-                        <children>
-                            <Label text="Bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-                            <TextField fx:id="tableNumberField" editable="false" prefWidth="100" 
-                                       style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-                            <Label fx:id="orderStatusLabel" text="(Chưa chọn bàn)" 
-                                   style="-fx-text-fill: gray;"/>
-                            <Region HBox.hgrow="ALWAYS"/>
-                            <Label text="Khách:" style="-fx-font-size: 12px;"/>
-                            <TextField fx:id="orderCustomerPhoneField" promptText="SĐT khách hàng" prefWidth="120" />
-                            <Label fx:id="orderCustomerNameLabel" text="(Khách vãng lai)" textFill="GRAY"/>
-                        </children>
-                    </HBox>
+                    <VBox spacing="4">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <children>
+                                <Label text="Bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                <TextField fx:id="tableNumberField" editable="false" prefWidth="100" 
+                                           style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                <Label fx:id="orderStatusLabel" text="(Chưa chọn bàn)" 
+                                       style="-fx-text-fill: gray;"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Label text="Khách:" style="-fx-font-size: 12px;"/>
+                                <TextField fx:id="orderCustomerPhoneField" promptText="SĐT khách hàng" prefWidth="140" />
+                                <Label fx:id="orderCustomerNameLabel" text="(Khách vãng lai)" textFill="GRAY"/>
+                            </children>
+                        </HBox>
+                        <ListView fx:id="orderCustomerSuggestListView" prefHeight="88" maxHeight="88" visible="false" managed="false"/>
+                    </VBox>
                     
                     <!-- Custom Item Entry -->
                     <HBox spacing="5" alignment="CENTER_LEFT">

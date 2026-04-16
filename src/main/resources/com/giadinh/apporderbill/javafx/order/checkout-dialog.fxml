@@ -106,6 +106,8 @@
                                     <Button fx:id="searchCustomerBtn" text="🔍 Tìm" onAction="#onSearchCustomer"
                                             style="-fx-background-color: #1e3a5f; -fx-text-fill: white; -fx-cursor: hand;"/>
                                 </HBox>
+                                <ListView fx:id="customerSuggestListView" prefHeight="100" maxHeight="100"
+                                          visible="false" managed="false"/>
                                 <VBox fx:id="customerInfoBox" spacing="4" managed="false" visible="false"
                                       style="-fx-background-color: #f0f7ff; -fx-padding: 8; -fx-background-radius: 6;">
                                     <HBox spacing="8">
