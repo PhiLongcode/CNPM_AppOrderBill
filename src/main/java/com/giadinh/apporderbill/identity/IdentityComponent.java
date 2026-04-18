@@ -7,6 +7,8 @@ import com.giadinh.apporderbill.identity.model.Function;
 import com.giadinh.apporderbill.identity.model.Module;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginInput;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
+import com.giadinh.apporderbill.identity.usecase.dto.LogoutInput;
+import com.giadinh.apporderbill.identity.usecase.dto.LogoutOutput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentInput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentOutput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageRoleGroupInput;
@@ -26,6 +28,7 @@ public interface IdentityComponent {
 
     // -- Authentication & Authorization Use Cases --
     LoginOutput login(LoginInput input);
+    LogoutOutput logout(LogoutInput input);
     boolean checkAccess(String username, String functionName, boolean requiresOperatePermission);
     
     // -- User Management Use Cases --

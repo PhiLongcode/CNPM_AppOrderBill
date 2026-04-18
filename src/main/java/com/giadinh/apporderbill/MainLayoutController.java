@@ -7,14 +7,27 @@ import com.giadinh.apporderbill.reporting.usecase.GetMonthlyRevenueUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetRevenueByDateRangeUseCase;
 import com.giadinh.apporderbill.reporting.usecase.GetWeeklyRevenueUseCase;
 import com.giadinh.apporderbill.shared.util.DataModeConfig;
+import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
+import com.giadinh.apporderbill.identity.usecase.dto.LogoutInput;
 import com.giadinh.apporderbill.javafx.dashboard.DashboardController;
+import com.giadinh.apporderbill.javafx.login.LoginController;
+import com.giadinh.apporderbill.shared.error.DomainException;
+import com.giadinh.apporderbill.shared.error.DomainMessages;
+import com.giadinh.apporderbill.shared.error.ErrorCode;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.IOException;
 
@@ -25,6 +38,12 @@ public class MainLayoutController {
 
     @FXML
     private StackPane contentPane;
+    @FXML
+    private Label currentUserLabel;
+    @FXML
+    private Button logoutButton;
+
+    private String loggedInUsername = "";
 
     private Parent orderScreen;
     private Parent dashboardScreen;
@@ -68,8 +87,105 @@ public class MainLayoutController {
 
     @FXML
     public void initialize() {
+        if (logoutButton != null) {
+            javafx.scene.shape.SVGPath logoutIcon = new javafx.scene.shape.SVGPath();
+            logoutIcon.setContent(
+                    "M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.59L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z");
+            logoutIcon.setFill(javafx.scene.paint.Color.web("#616161"));
+            logoutIcon.setScaleX(0.82);
+            logoutIcon.setScaleY(0.82);
+            logoutButton.setGraphic(logoutIcon);
+        }
         // Load Order Screen as default
         showOrderScreen();
+    }
+
+    @FXML
+    protected void onLogoutClick() {
+        if (loggedInUsername.isBlank()) {
+            showError(DomainMessages.format(ErrorCode.LOGOUT_USERNAME_REQUIRED));
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Đăng xuất");
+        confirm.setHeaderText("Đăng xuất khỏi hệ thống?");
+        confirm.setContentText("Cửa sổ làm việc sẽ đóng; chỉ còn màn hình đăng nhập cho đến khi bạn đăng nhập lại.");
+        var result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) {
+            return;
+        }
+        try {
+            if (identityComponent != null) {
+                identityComponent.logout(new LogoutInput(loggedInUsername));
+            }
+        } catch (DomainException e) {
+            showError(DomainMessages.format(e));
+            return;
+        }
+        showReloginDialog();
+    }
+
+    private void showReloginDialog() {
+        Stage mainStage = resolveMainStage();
+        if (mainStage != null) {
+            mainStage.hide();
+        }
+        try {
+            FXMLLoader loginLoader = createFxmlLoader("javafx/login/login.fxml");
+            Parent root = loginLoader.load();
+            LoginController loginController = loginLoader.getController();
+            if (identityComponent != null) {
+                loginController.setIdentityComponentForRelogin(identityComponent);
+            }
+            loginController.prepareForRelogin();
+            Stage loginStage = new Stage();
+            loginStage.setScene(new Scene(root, 420, 260));
+            loginStage.setTitle("Đăng nhập");
+            loginStage.initModality(Modality.APPLICATION_MODAL);
+            loginStage.setResizable(false);
+            loginStage.centerOnScreen();
+            loginStage.showAndWait();
+            LoginOutput out = loginController.getLoginOutput();
+            if (out == null) {
+                Platform.exit();
+                return;
+            }
+            applySessionFromLogin(out);
+            showOrderScreen();
+            if (mainStage != null) {
+                mainStage.show();
+                mainStage.toFront();
+            }
+        } catch (IOException e) {
+            if (mainStage != null) {
+                mainStage.show();
+                mainStage.toFront();
+            }
+            showError("Lỗi khi tải màn hình đăng nhập: " + e.getMessage());
+        }
+    }
+
+    private Stage resolveMainStage() {
+        Window w = null;
+        if (logoutButton != null && logoutButton.getScene() != null) {
+            w = logoutButton.getScene().getWindow();
+        } else if (contentPane != null && contentPane.getScene() != null) {
+            w = contentPane.getScene().getWindow();
+        }
+        return w instanceof Stage ? (Stage) w : null;
+    }
+
+    private void applySessionFromLogin(LoginOutput out) {
+        if (out == null || identityComponent == null) {
+            return;
+        }
+        String u = out.getUsername();
+        setCurrentUser(
+                u,
+                identityComponent.checkAccess(u, "Manage Menu Items", true),
+                identityComponent.checkAccess(u, "Manage Users", true),
+                identityComponent.checkAccess(u, "Manage Permissions", true),
+                identityComponent.checkAccess(u, "Manage Tables", true));
     }
 
     @FXML
@@ -257,6 +373,10 @@ public class MainLayoutController {
 
     public void setCurrentUser(String username, boolean canManageMenu, boolean canManageCustomer, boolean canManageAdmin,
             boolean canManageTables) {
+        this.loggedInUsername = username == null ? "" : username.trim();
+        if (currentUserLabel != null) {
+            currentUserLabel.setText(loggedInUsername.isEmpty() ? "" : loggedInUsername);
+        }
         if (menuManagementMenuItem != null) {
             menuManagementMenuItem.setDisable(!canManageMenu);
         }

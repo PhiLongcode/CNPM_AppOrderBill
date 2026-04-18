@@ -1,5 +1,7 @@
 package com.giadinh.apporderbill.javafx.login;
 
+import com.giadinh.apporderbill.identity.IdentityComponent;
+import com.giadinh.apporderbill.identity.usecase.dto.LoginInput;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
 import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
@@ -15,7 +17,25 @@ public class LoginController {
     @FXML private Label messageLabel;
 
     private final IdentityAuthService authService = new IdentityAuthService();
+    private IdentityComponent identityComponentForRelogin;
     private LoginOutput loginOutput;
+
+    /**
+     * When set (after initial startup), login uses the shared {@link IdentityComponent} instead of a second SQLite stack.
+     */
+    public void setIdentityComponentForRelogin(IdentityComponent identityComponent) {
+        this.identityComponentForRelogin = identityComponent;
+    }
+
+    /** Clear validation message and password before showing the dialog again. */
+    public void prepareForRelogin() {
+        if (messageLabel != null) {
+            messageLabel.setText("");
+        }
+        if (passwordField != null) {
+            passwordField.clear();
+        }
+    }
 
     @FXML
     public void initialize() {
@@ -26,7 +46,12 @@ public class LoginController {
     @FXML
     private void onLoginClick() {
         try {
-            loginOutput = authService.login(usernameField.getText(), passwordField.getText());
+            if (identityComponentForRelogin != null) {
+                loginOutput = identityComponentForRelogin.login(
+                        new LoginInput(usernameField.getText(), passwordField.getText()));
+            } else {
+                loginOutput = authService.login(usernameField.getText(), passwordField.getText());
+            }
             close();
         } catch (DomainException e) {
             messageLabel.setText(DomainMessages.format(e));
@@ -44,7 +69,13 @@ public class LoginController {
     }
 
     public boolean canOperate(String functionName) {
-        return loginOutput != null && authService.canOperate(loginOutput.getUsername(), functionName);
+        if (loginOutput == null) {
+            return false;
+        }
+        if (identityComponentForRelogin != null) {
+            return identityComponentForRelogin.checkAccess(loginOutput.getUsername(), functionName, true);
+        }
+        return authService.canOperate(loginOutput.getUsername(), functionName);
     }
 
     private void close() {

@@ -11,6 +11,7 @@ import com.giadinh.apporderbill.identity.repository.RoleGroupRepository;
 import com.giadinh.apporderbill.identity.repository.PermissionAssignmentRepository;
 import com.giadinh.apporderbill.identity.repository.UserRepository;
 import com.giadinh.apporderbill.identity.usecase.LoginUseCase;
+import com.giadinh.apporderbill.identity.usecase.LogoutUseCase;
 import com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase;
 import com.giadinh.apporderbill.identity.usecase.ManageUserUseCase;
 import com.giadinh.apporderbill.identity.usecase.ManageRoleGroupUseCase;
@@ -18,6 +19,8 @@ import com.giadinh.apporderbill.identity.usecase.ManagePermissionAssignmentUseCa
 
 import com.giadinh.apporderbill.identity.usecase.dto.LoginInput;
 import com.giadinh.apporderbill.identity.usecase.dto.LoginOutput;
+import com.giadinh.apporderbill.identity.usecase.dto.LogoutInput;
+import com.giadinh.apporderbill.identity.usecase.dto.LogoutOutput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentInput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManagePermissionAssignmentOutput;
 import com.giadinh.apporderbill.identity.usecase.dto.ManageRoleGroupInput;
@@ -42,6 +45,7 @@ public class IdentityComponentImpl implements IdentityComponent {
 
     // Use Cases
     private final LoginUseCase loginUseCase;
+    private final LogoutUseCase logoutUseCase;
     private final CheckAccessUseCase checkAccessUseCase;
     private final ManageUserUseCase manageUserUseCase;
     private final ManageRoleGroupUseCase manageRoleGroupUseCase;
@@ -53,6 +57,7 @@ public class IdentityComponentImpl implements IdentityComponent {
                                  PermissionAssignmentRepository permissionAssignmentRepository,
                                  UserRepository userRepository,
                                  LoginUseCase loginUseCase,
+                                 LogoutUseCase logoutUseCase,
                                  CheckAccessUseCase checkAccessUseCase,
                                  ManageUserUseCase manageUserUseCase,
                                  ManageRoleGroupUseCase manageRoleGroupUseCase,
@@ -64,6 +69,7 @@ public class IdentityComponentImpl implements IdentityComponent {
         this.userRepository = userRepository;
 
         this.loginUseCase = loginUseCase;
+        this.logoutUseCase = logoutUseCase;
         this.checkAccessUseCase = checkAccessUseCase;
         this.manageUserUseCase = manageUserUseCase;
         this.manageRoleGroupUseCase = manageRoleGroupUseCase;
@@ -73,6 +79,11 @@ public class IdentityComponentImpl implements IdentityComponent {
     @Override
     public LoginOutput login(LoginInput input) {
         return loginUseCase.execute(input);
+    }
+
+    @Override
+    public LogoutOutput logout(LogoutInput input) {
+        return logoutUseCase.execute(input);
     }
 
     @Override

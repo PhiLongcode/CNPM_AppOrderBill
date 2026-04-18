@@ -7,42 +7,54 @@
             fx:controller="com.giadinh.apporderbill.MainLayoutController"
             style="-fx-background-color: #f5f5f5;">
     
-    <!-- Top: Menu Bar -->
+    <!-- Top: menu + user / logout (góc phải) -->
     <top>
-        <MenuBar>
-            <menus>
-                <Menu text="Hệ thống">
-                    <items>
-                        <MenuItem text="Đơn hàng" onAction="#showOrderScreen"/>
-                        <MenuItem text="Thống kê" onAction="#showDashboardScreen"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem text="Chế độ dữ liệu" onAction="#showDataModeDialog"/>
-                        <MenuItem text="Kiểm tra dung lượng" onAction="#showStorageUsageDialog"/>
-                        <SeparatorMenuItem/>
-                        <MenuItem text="Thoát" onAction="#exitApplication"/>
-                    </items>
-                </Menu>
-                <Menu text="Quản lý">
-                    <items>
-                        <MenuItem fx:id="menuManagementMenuItem" text="Quản lý Menu" onAction="#showMenuManagementScreen"/>
-                        <MenuItem fx:id="customerManagementMenuItem" text="Quản lý khách hàng" onAction="#showCustomerManagementScreen"/>
-                        <MenuItem fx:id="tableManagementMenuItem" text="Quản lý bàn" onAction="#showTableManagementScreen"/>
-                        <MenuItem fx:id="adminManagementMenuItem" text="Quản trị phân quyền" onAction="#showAdminManagementScreen"/>
-                    </items>
-                </Menu>
-                <Menu text="Cấu hình">
-                    <items>
-                        <MenuItem fx:id="settingsMenuItem" text="Cài đặt (tích điểm, VAT, máy in)" onAction="#showAppSettingsScreen"/>
-                    </items>
-                </Menu>
-                <Menu text="Trợ giúp">
-                    <items>
-                        <MenuItem text="Hướng dẫn sử dụng" onAction="#showUserGuideScreen"/>
-                        <MenuItem text="Về ứng dụng" onAction="#showAboutDialog"/>
-                    </items>
-                </Menu>
-            </menus>
-        </MenuBar>
+        <BorderPane style="-fx-background-color: #ececec;">
+            <center>
+                <MenuBar style="-fx-background-color: #ececec;">
+                    <menus>
+                        <Menu text="Hệ thống">
+                            <items>
+                                <MenuItem text="Đơn hàng" onAction="#showOrderScreen"/>
+                                <MenuItem text="Thống kê" onAction="#showDashboardScreen"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Chế độ dữ liệu" onAction="#showDataModeDialog"/>
+                                <MenuItem text="Kiểm tra dung lượng" onAction="#showStorageUsageDialog"/>
+                                <SeparatorMenuItem/>
+                                <MenuItem text="Thoát" onAction="#exitApplication"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Quản lý">
+                            <items>
+                                <MenuItem fx:id="menuManagementMenuItem" text="Quản lý Menu" onAction="#showMenuManagementScreen"/>
+                                <MenuItem fx:id="customerManagementMenuItem" text="Quản lý khách hàng" onAction="#showCustomerManagementScreen"/>
+                                <MenuItem fx:id="tableManagementMenuItem" text="Quản lý bàn" onAction="#showTableManagementScreen"/>
+                                <MenuItem fx:id="adminManagementMenuItem" text="Quản trị phân quyền" onAction="#showAdminManagementScreen"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Cấu hình">
+                            <items>
+                                <MenuItem fx:id="settingsMenuItem" text="Cài đặt (tích điểm, VAT, máy in)" onAction="#showAppSettingsScreen"/>
+                            </items>
+                        </Menu>
+                        <Menu text="Trợ giúp">
+                            <items>
+                                <MenuItem text="Hướng dẫn sử dụng" onAction="#showUserGuideScreen"/>
+                                <MenuItem text="Về ứng dụng" onAction="#showAboutDialog"/>
+                            </items>
+                        </Menu>
+                    </menus>
+                </MenuBar>
+            </center>
+            <right>
+                <HBox alignment="CENTER_RIGHT" spacing="8" style="-fx-padding: 2 12 2 8; -fx-background-color: #ececec;">
+                    <Label fx:id="currentUserLabel" style="-fx-text-fill: #424242; -fx-font-size: 12px;"/>
+                    <Button fx:id="logoutButton" text="Đăng xuất" onAction="#onLogoutClick"
+                            contentDisplay="LEFT" focusTraversable="false"
+                            style="-fx-background-color: transparent; -fx-cursor: hand; -fx-font-size: 12px;"/>
+                </HBox>
+            </right>
+        </BorderPane>
     </top>
     
     <!-- Center: Content Area (will be replaced dynamically) -->
@@ -52,4 +64,3 @@
         </StackPane>
     </center>
 </BorderPane>
-

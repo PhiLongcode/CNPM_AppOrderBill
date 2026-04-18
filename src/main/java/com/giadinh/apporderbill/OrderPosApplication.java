@@ -120,6 +120,7 @@ public class OrderPosApplication extends Application {
                                         identityConnection);
                         com.giadinh.apporderbill.identity.usecase.LoginUseCase loginUseCase = new com.giadinh.apporderbill.identity.usecase.LoginUseCase(
                                         userRepository, roleGroupRepository, permissionAssignmentRepository);
+                        com.giadinh.apporderbill.identity.usecase.LogoutUseCase logoutUseCase = new com.giadinh.apporderbill.identity.usecase.LogoutUseCase();
                         com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase checkAccessUseCase = new com.giadinh.apporderbill.identity.usecase.CheckAccessUseCase(
                                         userRepository, roleGroupRepository, permissionAssignmentRepository, functionRepository);
                         com.giadinh.apporderbill.identity.usecase.ManageUserUseCase manageUserUseCase = new com.giadinh.apporderbill.identity.usecase.ManageUserUseCase(
@@ -135,6 +136,7 @@ public class OrderPosApplication extends Application {
                                         permissionAssignmentRepository,
                                         userRepository,
                                         loginUseCase,
+                                        logoutUseCase,
                                         checkAccessUseCase,
                                         manageUserUseCase,
                                         manageRoleGroupUseCase,

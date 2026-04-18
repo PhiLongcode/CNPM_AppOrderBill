@@ -64,6 +64,11 @@ public class IdentityConfig {
     }
 
     @Bean
+    public LogoutUseCase logoutUseCase() {
+        return new LogoutUseCase();
+    }
+
+    @Bean
     public CheckAccessUseCase checkAccessUseCase(UserRepository userRepository,
                                                RoleGroupRepository roleGroupRepository,
                                                PermissionAssignmentRepository permissionAssignmentRepository,
@@ -98,6 +103,7 @@ public class IdentityConfig {
                                                PermissionAssignmentRepository permissionAssignmentRepository,
                                                UserRepository userRepository,
                                                LoginUseCase loginUseCase,
+                                               LogoutUseCase logoutUseCase,
                                                CheckAccessUseCase checkAccessUseCase,
                                                ManageUserUseCase manageUserUseCase,
                                                ManageRoleGroupUseCase manageRoleGroupUseCase,
@@ -107,7 +113,7 @@ public class IdentityConfig {
         // Nhưng để tuân thủ DI tốt hơn, ta nên inject các UseCase vào ComponentImpl
         // Vì các UseCase đã là @Bean ở trên, ta có thể inject trực tiếp vào IdentityComponentImpl constructor
         return new IdentityComponentImpl(moduleRepository, functionRepository, roleGroupRepository,
-                permissionAssignmentRepository, userRepository, loginUseCase, checkAccessUseCase, manageUserUseCase,
-                manageRoleGroupUseCase, managePermissionAssignmentUseCase);
+                permissionAssignmentRepository, userRepository, loginUseCase, logoutUseCase, checkAccessUseCase,
+                manageUserUseCase, manageRoleGroupUseCase, managePermissionAssignmentUseCase);
     }
 }
