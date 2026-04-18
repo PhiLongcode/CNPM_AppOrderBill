@@ -113,7 +113,8 @@ class UnitScenarioCatalogKitchenTest {
 
         assertTrue(out.isPrinted());
         assertEquals(1, printer.kitchenPrintCount);
-        assertTrue(printer.lastKitchenContent.contains("PHIEU BEP"));
+        assertEquals(100L, printer.lastKitchenOrderId);
+        assertNull(printer.lastKitchenItemIds);
     }
 
     @Test
@@ -154,8 +155,8 @@ class UnitScenarioCatalogKitchenTest {
 
         assertTrue(out.isPrinted());
         assertEquals(1, printer.kitchenPrintCount);
-        assertTrue(printer.lastKitchenContent.contains("Món B"));
-        assertFalse(printer.lastKitchenContent.contains("Món A"));
+        assertEquals(103L, printer.lastKitchenOrderId);
+        assertEquals(List.of(2L), printer.lastKitchenItemIds);
     }
 
     private static class InMemoryMenuRepository implements MenuItemRepository {
@@ -204,8 +205,26 @@ class UnitScenarioCatalogKitchenTest {
         private final boolean success;
         int kitchenPrintCount = 0;
         String lastKitchenContent = "";
+        Long lastKitchenOrderId;
+        List<Long> lastKitchenItemIds;
         SpyPrinterService(boolean success) { this.success = success; }
         @Override public boolean printKitchenTicket(String content) { kitchenPrintCount++; lastKitchenContent = content; return success; }
+        @Override
+        public boolean printKitchenTicket(Long orderId, boolean isAddOn, boolean isReprint) throws PrinterService.PrinterException {
+            kitchenPrintCount++;
+            lastKitchenOrderId = orderId;
+            lastKitchenItemIds = null;
+            lastKitchenContent = "KITCHEN_LONG";
+            return success;
+        }
+        @Override
+        public boolean printKitchenTicketSelected(Long orderId, List<Long> orderItemIds) throws PrinterService.PrinterException {
+            kitchenPrintCount++;
+            lastKitchenOrderId = orderId;
+            lastKitchenItemIds = orderItemIds == null ? null : new ArrayList<>(orderItemIds);
+            lastKitchenContent = "KITCHEN_SELECTED";
+            return success;
+        }
         @Override public boolean printReceipt(String content) { return success; }
         @Override public boolean printTest(String content) { return success; }
     }

@@ -10,6 +10,7 @@ import com.giadinh.apporderbill.shared.util.TemplateProcessor;
 import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -29,6 +30,14 @@ public class RichReceiptFormatter {
         processor.set("Tong_Tien_Hang", money.format(payment.getTotalAmount()));
         processor.set("Tong_Cong", money.format(payment.getFinalAmount()));
         processor.set("Khach_Thanh_Toan", money.format(payment.getPaidAmount()));
+        processor.set("Phuong_Thuc", payment.getPaymentMethod() == null ? "" : payment.getPaymentMethod());
+        processor.set("Thu_Ngan", payment.getCashier() == null ? "" : payment.getCashier());
+        processor.set("Ma_Khach_Hang", payment.getCustomerId() == null ? "" : String.valueOf(payment.getCustomerId()));
+        processor.set("Tien_Truoc_VAT", money.format(payment.getNetAmountBeforeVat()));
+        processor.set("VAT_Phan_Tram", String.format(Locale.US, "%.1f", payment.getVatPercent()));
+        processor.set("Tien_VAT", money.format(payment.getVatAmount()));
+        processor.set("Sau_VAT_Truoc_Diem", money.format(payment.getAmountAfterVatBeforePoints()));
+        processor.set("Giam_Doi_Diem", money.format(payment.getPointsDiscountAmount()));
 
         long change = payment.getPaidAmount() - payment.getFinalAmount();
 
@@ -51,68 +60,117 @@ public class RichReceiptFormatter {
             }
         }
 
-        sb.append(PrintUtils.centerText("--- HÓA ĐƠN ---", lineWidth)).append("\n");
+        sb.append(PrintUtils.centerText("--- H\u00d3A \u0110\u01a0N ---", lineWidth)).append("\n");
         sb.append(PrintUtils.createLine(lineWidth, "═")).append("\n");
-        sb.append("HĐ: #").append(payment.getPaymentId()).append("\n");
-        sb.append("Đơn: ").append(payment.getOrderId()).append("\n");
-        if (order != null) sb.append("Bàn: ").append(order.getTableNumber()).append("\n");
-        if (payment.getPaidAt() != null) sb.append("Ngày: ").append(payment.getPaidAt().format(dateFormat)).append("\n");
-        if (copyLabel != null && !copyLabel.isBlank()) sb.append("Liên: ").append(copyLabel).append("\n");
+        appendWrapped(sb, "H\u0110: #" + payment.getPaymentId(), lineWidth);
+        appendWrapped(sb, "\u0110\u01a1n: " + payment.getOrderId(), lineWidth);
+        if (order != null && order.getOrderCode() != null && !order.getOrderCode().isBlank()) {
+            appendWrapped(sb, "M\u00e3: " + order.getOrderCode(), lineWidth);
+        }
+        if (order != null) {
+            appendWrapped(sb, "B\u00e0n: " + order.getTableNumber(), lineWidth);
+        }
+        if (payment.getPaidAt() != null) {
+            appendWrapped(sb, "Ng\u00e0y: " + payment.getPaidAt().format(dateFormat), lineWidth);
+        }
+        if (copyLabel != null && !copyLabel.isBlank()) {
+            appendWrapped(sb, "Li\u00ean: " + copyLabel, lineWidth);
+        }
         sb.append(PrintUtils.createLine(lineWidth, "─")).append("\n");
 
         if (order != null) {
-            // group by name+note+price
             Map<String, Group> groups = new LinkedHashMap<>();
             for (OrderItem it : order.getItems()) {
-                String name = it.getMenuItemName() == null ? "" : it.getMenuItemName();
-                String note = it.getNote() == null ? "" : it.getNote().trim();
-                String key = name + "||" + note + "||" + it.getPrice();
-                groups.computeIfAbsent(key, k -> new Group(name, note, it.getPrice()))
-                        .add(it.getQuantity());
+                String key = groupKey(it);
+                groups.compute(key, (k, v) -> {
+                    if (v == null) {
+                        return new Group(it);
+                    }
+                    v.addItem(it);
+                    return v;
+                });
             }
 
             int priceWidth = lineWidth >= 40 ? 12 : 10;
             int totalWidth = lineWidth >= 40 ? 12 : 10;
-            int nameWidth = Math.max(10, lineWidth - priceWidth - totalWidth - 2);
+            int paddingWidth = Math.max(1, lineWidth - priceWidth - totalWidth - 2);
 
-            sb.append(String.format("%-" + nameWidth + "s %" + priceWidth + "s %" + totalWidth + "s\n",
-                    "Món", "Đ.Giá", "T.Tiền"));
-            sb.append(PrintUtils.createLine(lineWidth, "·")).append("\n");
+            sb.append(String.format("%-" + paddingWidth + "s %" + priceWidth + "s %" + totalWidth + "s\n",
+                    "M\u00f3n \u0103n", "\u0110.Gi\u00e1", "T.Ti\u1ec1n"));
+            sb.append(PrintUtils.createLine(lineWidth, "-")).append("\n");
 
             for (Group g : groups.values()) {
-                String display = g.name + " x" + g.qty;
-                long lineTotal = Math.round(g.unitPrice * g.qty);
-
-                var wrapped = PrintUtils.wordWrap(display, nameWidth);
-                for (int i = 0; i < wrapped.size(); i++) {
-                    String ln = wrapped.get(i);
-                    if (i == wrapped.size() - 1) {
-                        sb.append(String.format("%-" + nameWidth + "s %" + priceWidth + "s %" + totalWidth + "s\n",
-                                ln,
-                                PrintUtils.formatRight(money.format(Math.round(g.unitPrice)), priceWidth),
-                                PrintUtils.formatRight(money.format(lineTotal), totalWidth)));
-                    } else {
-                        sb.append(ln).append("\n");
+                StringBuilder display = new StringBuilder(g.name).append(" x").append(g.qty);
+                if (g.discountPercent != null && g.discountPercent > 0) {
+                    display.append(" - Gi\u1ea3m ")
+                            .append(String.format(Locale.US, "%.0f", g.discountPercent))
+                            .append("%");
+                }
+                List<String> nameLines = PrintUtils.wordWrap(display.toString(), lineWidth);
+                for (String nl : nameLines) {
+                    sb.append(String.format("%-" + lineWidth + "s\n", nl));
+                }
+                String priceCell = PrintUtils.formatRight(money.format(Math.round(g.unitPrice)), priceWidth);
+                String totalCell = PrintUtils.formatRight(money.format(g.lineTotalSum), totalWidth);
+                sb.append(String.format("%-" + paddingWidth + "s %" + priceWidth + "s %" + totalWidth + "s\n",
+                        "", priceCell, totalCell));
+                if (!g.note.isBlank()) {
+                    for (String noteLine : PrintUtils.wordWrap("  * " + g.note, lineWidth)) {
+                        sb.append(noteLine).append("\n");
                     }
                 }
-                if (!g.note.isBlank()) sb.append("  * ").append(g.note).append("\n");
             }
         }
 
-        sb.append(PrintUtils.createLine(lineWidth, "─")).append("\n");
-        sb.append(PrintUtils.formatRight("Tạm tính: " + money.format(payment.getTotalAmount()), lineWidth)).append("\n");
+        sb.append(PrintUtils.createLine(lineWidth, "-")).append("\n");
+        appendLabelValue(sb, "T\u1ea1m t\u00ednh:", money.format(payment.getTotalAmount()), lineWidth);
         if (payment.getDiscountAmount() != null && payment.getDiscountAmount() > 0) {
-            sb.append(PrintUtils.formatRight("Giảm giá: " + money.format(payment.getDiscountAmount()), lineWidth)).append("\n");
+            appendLabelValue(sb, "Gi\u1ea3m gi\u00e1:", money.format(payment.getDiscountAmount()), lineWidth);
         }
-        sb.append(PrintUtils.createLine(lineWidth, "─")).append("\n");
-        sb.append(PrintUtils.formatRight("TỔNG CỘNG: " + money.format(payment.getFinalAmount()), lineWidth)).append("\n");
-        sb.append(PrintUtils.formatRight("Khách trả: " + money.format(payment.getPaidAmount()), lineWidth)).append("\n");
-        sb.append(PrintUtils.formatRight("Tiền thừa: " + money.format(change), lineWidth)).append("\n");
+        if (payment.getDiscountPercent() != null && payment.getDiscountPercent() > 0) {
+            appendLabelValue(sb,
+                    "CK " + String.format(Locale.US, "%.1f", payment.getDiscountPercent()) + "%",
+                    "",
+                    lineWidth);
+        }
+        appendLabelValue(sb, "Ti\u1ec1n tr\u01b0\u1edbc VAT:", money.format(payment.getNetAmountBeforeVat()), lineWidth);
+        if (payment.getVatPercent() > 0 || payment.getVatAmount() > 0) {
+            appendLabelValue(sb,
+                    "VAT (" + String.format(Locale.US, "%.1f", payment.getVatPercent()) + "%):",
+                    money.format(payment.getVatAmount()),
+                    lineWidth);
+        }
+        if (payment.getPointsDiscountAmount() > 0) {
+            appendLabelValue(sb,
+                    "Sau VAT (tr\u01b0\u1edbc \u0111i\u1ec3m):",
+                    money.format(payment.getAmountAfterVatBeforePoints()),
+                    lineWidth);
+            appendLabelValue(sb,
+                    "Gi\u1ea3m \u0111\u1ed5i \u0111i\u1ec3m:",
+                    money.format(payment.getPointsDiscountAmount()),
+                    lineWidth);
+        }
+        sb.append(PrintUtils.createLine(lineWidth, "=")).append("\n");
+        appendLabelValue(sb, "T\u1ed4NG C\u1ed8NG:", money.format(payment.getFinalAmount()), lineWidth);
+        sb.append(PrintUtils.createLine(lineWidth, "=")).append("\n");
+        appendLabelValue(sb, "Kh\u00e1ch tr\u1ea3:", money.format(payment.getPaidAmount()), lineWidth);
+        appendLabelValue(sb, "Ti\u1ec1n th\u1eea:", money.format(change), lineWidth);
+        if (payment.getPaymentMethod() != null && !payment.getPaymentMethod().isBlank()) {
+            appendLabelValue(sb, "PTTT:", payment.getPaymentMethod(), lineWidth);
+        }
+        if (payment.getCashier() != null && !payment.getCashier().isBlank()) {
+            appendLabelValue(sb, "Thu ng\u00e2n:", payment.getCashier(), lineWidth);
+        }
+        if (payment.getCustomerId() != null) {
+            appendLabelValue(sb, "KH:", "#" + payment.getCustomerId(), lineWidth);
+        }
         sb.append(PrintUtils.createLine(lineWidth, "═")).append("\n");
 
         if (template != null && template.getFooter() != null && !template.getFooter().isBlank()) {
             for (String line : processor.process(template.getFooter()).split("\\R")) {
-                sb.append(PrintUtils.centerText(line, lineWidth)).append("\n");
+                for (String w : PrintUtils.wordWrap(line, lineWidth)) {
+                    sb.append(PrintUtils.centerText(w, lineWidth)).append("\n");
+                }
             }
         }
         return sb.toString();
@@ -125,7 +183,7 @@ public class RichReceiptFormatter {
         if (template != null && template.getStoreName() != null && !template.getStoreName().isBlank()) {
             sb.append(PrintUtils.centerText(template.getStoreName(), lineWidth)).append("\n");
         }
-        sb.append(PrintUtils.centerText("*** PHIẾU TẠM ***", lineWidth)).append("\n");
+        sb.append(PrintUtils.centerText("*** PHI\u1ebeU T\u1ea0M ***", lineWidth)).append("\n");
         sb.append(PrintUtils.createLine(lineWidth, "═")).append("\n");
         if (order != null) {
             sb.append("Đơn: ").append(order.getOrderId()).append("\n");
@@ -133,10 +191,51 @@ public class RichReceiptFormatter {
         }
         sb.append(PrintUtils.createLine(lineWidth, "─")).append("\n");
         sb.append(PrintUtils.formatRight("Tạm tính: " + money.format(totalAmount), lineWidth)).append("\n");
-        if (discountAmount > 0) sb.append(PrintUtils.formatRight("Giảm giá: " + money.format(discountAmount), lineWidth)).append("\n");
-        sb.append(PrintUtils.formatRight("TỔNG CỘNG: " + money.format(finalAmount), lineWidth)).append("\n");
+        if (discountAmount > 0) {
+            sb.append(PrintUtils.formatRight("Giảm giá: " + money.format(discountAmount), lineWidth)).append("\n");
+        }
+        sb.append(PrintUtils.formatRight("T\u1ed4NG C\u1ed8NG: " + money.format(finalAmount), lineWidth)).append("\n");
         sb.append(PrintUtils.createLine(lineWidth, "═")).append("\n");
         return sb.toString();
+    }
+
+    private static String itemDisplayName(OrderItem it) {
+        String name = it.getMenuItemName() == null ? "" : it.getMenuItemName();
+        if (it.getLoyaltyRedeemPoints() > 0) {
+            return name + " (\u0111\u1ed5i \u0111i\u1ec3m)";
+        }
+        return name;
+    }
+
+    private static String groupKey(OrderItem it) {
+        String name = itemDisplayName(it);
+        String note = it.getNote() == null ? "" : it.getNote().trim();
+        double dp = it.getDiscountPercent() == null ? 0.0 : it.getDiscountPercent();
+        double da = it.getDiscountAmount() == null ? 0.0 : it.getDiscountAmount();
+        return name + "||" + note + "||" + it.getPrice() + "||" + dp + "||" + da;
+    }
+
+    private static void appendWrapped(StringBuilder sb, String text, int lineWidth) {
+        for (String ln : PrintUtils.wordWrap(text, lineWidth)) {
+            sb.append(ln).append("\n");
+        }
+    }
+
+    /**
+     * Nhãn + giá trị căn phải: wordWrap nhãn để không tràn kh\u1ed5 gi\u1ea5y (tr\u00e1nh c\u1eaft ch\u1eef).
+     */
+    private static void appendLabelValue(StringBuilder sb, String label, String value, int lineWidth) {
+        int valueW = Math.max(8, Math.min(14, lineWidth * 2 / 7));
+        int labelW = Math.max(1, lineWidth - valueW - 1);
+        List<String> labLines = PrintUtils.wordWrap(label, labelW);
+        String v = PrintUtils.formatRight(value == null ? "" : value, valueW);
+        for (int i = 0; i < labLines.size(); i++) {
+            if (i < labLines.size() - 1) {
+                sb.append(labLines.get(i)).append("\n");
+            } else {
+                sb.append(String.format("%-" + labelW + "s%s\n", labLines.get(i), v));
+            }
+        }
     }
 
     private static final class Group {
@@ -144,14 +243,22 @@ public class RichReceiptFormatter {
         final String note;
         final double unitPrice;
         int qty;
+        long lineTotalSum;
+        Double discountPercent;
 
-        Group(String name, String note, double unitPrice) {
-            this.name = name == null ? "" : name;
-            this.note = note == null ? "" : note;
-            this.unitPrice = unitPrice;
+        Group(OrderItem it) {
+            this.name = itemDisplayName(it);
+            this.note = it.getNote() == null ? "" : it.getNote().trim();
+            this.unitPrice = it.getPrice();
+            this.qty = it.getQuantity();
+            this.lineTotalSum = Math.round(it.getLineTotal());
+            Double dp = it.getDiscountPercent();
+            this.discountPercent = (dp != null && dp > 0) ? dp : null;
         }
 
-        void add(int q) { qty += q; }
+        void addItem(OrderItem it) {
+            this.qty += it.getQuantity();
+            this.lineTotalSum += Math.round(it.getLineTotal());
+        }
     }
 }
-

@@ -36,28 +36,11 @@ public class PrintKitchenTicketUseCase {
             throw new DomainException(ErrorCode.KITCHEN_ORDER_NO_ITEMS_FOR_TICKET);
         }
 
-        StringBuilder content = new StringBuilder();
-        content.append("=== PHIEU BEP ===\n");
-        content.append("Order: ").append(order.getOrderId()).append("\n");
-        content.append("Ban: ").append(order.getTableId()).append("\n");
-        if (input.isReprint()) {
-            content.append("Loai: IN LAI\n");
-        } else if (input.isAddOn()) {
-            content.append("Loai: THEM MON\n");
-        } else {
-            content.append("Loai: PHIEU MOI\n");
-        }
-        content.append("-----------------\n");
-        order.getItems().forEach(item -> {
-            content.append("- ").append(item.getMenuItemName())
-                    .append(" x").append(item.getQuantity()).append("\n");
-            if (item.getNote() != null && !item.getNote().isBlank()) {
-                content.append("  * ").append(item.getNote()).append("\n");
+        try {
+            if (!printerService.printKitchenTicket(input.getOrderId(), input.isAddOn(), input.isReprint())) {
+                throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
             }
-        });
-        content.append("=================\n");
-
-        if (!printerService.printKitchenTicket(content.toString())) {
+        } catch (PrinterService.PrinterException e) {
             throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
         }
 

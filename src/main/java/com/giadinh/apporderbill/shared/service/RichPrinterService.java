@@ -3,6 +3,7 @@ package com.giadinh.apporderbill.shared.service;
 import com.giadinh.apporderbill.billing.model.Payment;
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.orders.model.Order;
+import com.giadinh.apporderbill.orders.model.OrderItem;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.printer.model.PrintTemplate;
 import com.giadinh.apporderbill.printer.model.PrintTemplateType;
@@ -34,6 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -64,7 +68,7 @@ public class RichPrinterService implements PrinterService {
 
     @Override
     public boolean printKitchenTicket(String content) {
-        return printWithPreview("KitchenTicket", content, "PB");
+        return printWithPreview("KitchenTicket", content, "PB", true);
     }
 
     @Override
@@ -86,24 +90,55 @@ public class RichPrinterService implements PrinterService {
         PrinterConfig cfg = safeGetConfig();
         int lineWidth = lineWidthFromConfig(cfg, PrintTemplateType.KITCHEN);
         PrintTemplate tpl = printTemplateRepository.getByType(PrintTemplateType.KITCHEN.key());
-        String typeLabel = isReprint ? "IN LẠI" : (isAddOn ? "THÊM MÓN" : "PHIẾU MỚI");
+        String typeLabel = isReprint ? "In lại" : (isAddOn ? "Thêm món" : "Phiếp bếp");
 
         String content = kitchenFormatter.format(order, tpl, lineWidth, typeLabel);
-        return printWithPreview("KitchenTicket", content, "PB");
+        return printWithPreview("KitchenTicket", content, "PB", true);
     }
 
     @Override
-    public boolean printReceipt(Long paymentId, String orderId) throws PrinterException {
+    public boolean printKitchenTicketSelected(Long orderId, List<Long> orderItemIds) throws PrinterException {
+        if (orderId == null || orderItemIds == null || orderItemIds.isEmpty()) return false;
+        Order order = orderRepository.findById(String.valueOf(orderId)).orElse(null);
+        if (order == null) return false;
+
+        LinkedHashSet<Integer> selectedIndexes = new LinkedHashSet<>();
+        int totalItems = order.getItems().size();
+        for (Long id : orderItemIds) {
+            if (id == null) continue;
+            int idx = id.intValue() - 1;
+            if (idx >= 0 && idx < totalItems) {
+                selectedIndexes.add(idx);
+            }
+        }
+        if (selectedIndexes.isEmpty()) return false;
+
+        List<OrderItem> selected = new ArrayList<>();
+        for (Integer idx : selectedIndexes) {
+            selected.add(order.getItems().get(idx));
+        }
+
+        PrinterConfig cfg = safeGetConfig();
+        int lineWidth = lineWidthFromConfig(cfg, PrintTemplateType.KITCHEN);
+        PrintTemplate tpl = printTemplateRepository.getByType(PrintTemplateType.KITCHEN.key());
+        String content = kitchenFormatter.formatItems(order, selected, tpl, lineWidth, "M\u00f3n ch\u1ecdn");
+        return printWithPreview("KitchenTicket", content, "PB", true);
+    }
+
+    @Override
+    public boolean printReceipt(Long paymentId, String orderId, String copyLabel) throws PrinterException {
         if (paymentId == null) return false;
         Payment payment = paymentRepository.findById(paymentId).orElse(null);
         if (payment == null) return false;
 
-        Order order = orderId == null ? null : orderRepository.findById(orderId).orElse(null);
+        String oid = (orderId != null && !orderId.isBlank()) ? orderId : payment.getOrderId();
+        Order order = oid == null ? null : orderRepository.findById(oid).orElse(null);
         PrinterConfig cfg = safeGetConfig();
         int lineWidth = lineWidthFromConfig(cfg, PrintTemplateType.RECEIPT);
         PrintTemplate tpl = printTemplateRepository.getByType(PrintTemplateType.RECEIPT.key());
 
-        String content = receiptFormatter.formatReceipt(payment, order, tpl, lineWidth, "Liên 1");
+        String label = (copyLabel == null || copyLabel.isBlank()) ? "Li\u00ean 1" : copyLabel;
+        String content = receiptFormatter.formatReceipt(payment, order, tpl, lineWidth, label);
         return printWithPreview("Receipt", content, "HD");
     }
 
@@ -164,12 +199,16 @@ public class RichPrinterService implements PrinterService {
     }
 
     private boolean printWithPreview(String title, String content, String docPrefix) {
+        return printWithPreview(title, content, docPrefix, false);
+    }
+
+    private boolean printWithPreview(String title, String content, String docPrefix, boolean boldMonospace) {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         Runnable r = () -> {
             try {
                 String documentId = docPrefix + "_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                 PrinterConfig cfg = safeGetConfig();
-                Boolean ok = showPreviewDialog(title, content, documentId, cfg);
+                Boolean ok = showPreviewDialog(title, content, documentId, cfg, boldMonospace);
                 future.complete(ok != null && ok);
             } catch (Exception e) {
                 future.complete(false);
@@ -188,7 +227,7 @@ public class RichPrinterService implements PrinterService {
         }
     }
 
-    private Boolean showPreviewDialog(String title, String content, String documentId, PrinterConfig cfg) {
+    private Boolean showPreviewDialog(String title, String content, String documentId, PrinterConfig cfg, boolean boldMonospace) {
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle(msg("ui.printer.preview_title", title));
         dialog.setHeaderText(null);
@@ -196,7 +235,9 @@ public class RichPrinterService implements PrinterService {
         TextArea area = new TextArea(content == null ? "" : content);
         area.setEditable(false);
         area.setWrapText(false);
-        area.setFont(Font.font("Courier New", FontWeight.NORMAL, FontPosture.REGULAR, 11));
+        FontWeight weight = boldMonospace ? FontWeight.BOLD : FontWeight.NORMAL;
+        double size = boldMonospace ? 12 : 11;
+        area.setFont(Font.font("Courier New", weight, FontPosture.REGULAR, size));
         area.setPrefRowCount(28);
 
         VBox box = new VBox(area);
@@ -221,7 +262,7 @@ public class RichPrinterService implements PrinterService {
             return true;
         }
         if ("PRINT".equals(result.get())) {
-            return printJavaFx(content == null ? "" : content, cfg);
+            return printJavaFx(content == null ? "" : content, cfg, boldMonospace);
         }
         return false;
     }
@@ -235,7 +276,7 @@ public class RichPrinterService implements PrinterService {
         }
     }
 
-    private boolean printJavaFx(String content, PrinterConfig config) {
+    private boolean printJavaFx(String content, PrinterConfig config, boolean boldMonospace) {
         try {
             Printer printer = resolvePrinter(config);
             int copies = config == null ? 1 : Math.max(1, config.getCopies());
@@ -249,7 +290,7 @@ public class RichPrinterService implements PrinterService {
             if (!ok) return false;
 
             for (int i = 0; i < copies; i++) {
-                Node node = buildPrintableNode(content);
+                Node node = buildPrintableNode(content, boldMonospace);
                 if (!job.printPage(node)) {
                     job.cancelJob();
                     return false;
@@ -272,10 +313,11 @@ public class RichPrinterService implements PrinterService {
         return Printer.getDefaultPrinter();
     }
 
-    private Node buildPrintableNode(String content) {
-        // TextFlow monospace: đủ dùng cho MVP, sẽ nâng cấp phân trang ở bước test/tinh chỉnh.
-        Text t = new Text(content);
-        t.setFont(Font.font("Courier New", FontWeight.NORMAL, 10));
+    private Node buildPrintableNode(String content, boolean boldMonospace) {
+        Text t = new Text(content == null ? "" : content);
+        FontWeight weight = boldMonospace ? FontWeight.BOLD : FontWeight.NORMAL;
+        double size = boldMonospace ? 11 : 10;
+        t.setFont(Font.font("Courier New", weight, FontPosture.REGULAR, size));
         TextFlow flow = new TextFlow(t);
         return new VBox(flow);
     }

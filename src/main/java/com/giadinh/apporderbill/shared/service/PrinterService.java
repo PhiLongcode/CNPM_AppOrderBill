@@ -2,6 +2,8 @@ package com.giadinh.apporderbill.shared.service;
 
 import com.giadinh.apporderbill.printer.model.PrintTemplateType;
 
+import java.util.List;
+
 public interface PrinterService {
     class PrinterException extends Exception {
         public PrinterException(String message) { super(message); }
@@ -39,8 +41,19 @@ public interface PrinterService {
         return printKitchenTicket("KITCHEN_TICKET orderId=" + orderId + " addOn=" + isAddOn + " reprint=" + isReprint);
     }
 
+    /**
+     * Phiếu bếp một phần (món chọn). Mặc định gửi stub chu\u1ed7i cho API/REST.
+     */
+    default boolean printKitchenTicketSelected(Long orderId, List<Long> orderItemIds) throws PrinterException {
+        return printKitchenTicket("KITCHEN_TICKET_SELECTED orderId=" + orderId + " items=" + orderItemIds);
+    }
+
     default boolean printReceipt(Long paymentId, String orderId) throws PrinterException {
-        return printReceipt("RECEIPT paymentId=" + paymentId + " orderId=" + orderId);
+        return printReceipt(paymentId, orderId, "Li\u00ean 1");
+    }
+
+    default boolean printReceipt(Long paymentId, String orderId, String copyLabel) throws PrinterException {
+        return printReceipt("RECEIPT paymentId=" + paymentId + " orderId=" + orderId + " copy=" + copyLabel);
     }
 
     default boolean testPrint(PrintTemplateType type) throws PrinterException {

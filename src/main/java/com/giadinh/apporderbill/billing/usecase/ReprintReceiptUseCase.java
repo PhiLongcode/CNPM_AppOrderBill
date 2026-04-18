@@ -17,14 +17,13 @@ public class ReprintReceiptUseCase {
     public void execute(Long paymentId) {
         var payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new DomainException(ErrorCode.BILL_NOT_FOUND));
-        String content = "=== IN LAI HOA DON ===\n"
-                + "Payment: #" + payment.getPaymentId() + "\n"
-                + "Order: " + payment.getOrderId() + "\n"
-                + "Thanh tien: " + payment.getFinalAmount() + " VND\n"
-                + "Khach tra: " + payment.getPaidAmount() + " VND\n"
-                + "Tien thua: " + (payment.getPaidAmount() - payment.getFinalAmount()) + " VND\n"
-                + "======================\n";
-        printerService.printReceipt(content);
+        try {
+            if (!printerService.printReceipt(payment.getPaymentId(), payment.getOrderId(), "IN L\u1ea0I")) {
+                throw new DomainException(ErrorCode.PRINTER_RECEIPT_SEND_FAILED);
+            }
+        } catch (PrinterService.PrinterException e) {
+            throw new DomainException(ErrorCode.PRINTER_RECEIPT_SEND_FAILED);
+        }
     }
 }
 

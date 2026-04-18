@@ -8,7 +8,9 @@ import com.giadinh.apporderbill.orders.model.Order;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.shared.service.PrinterService;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class PrintSelectedItemsUseCase {
     private final OrderRepository orderRepository;
@@ -46,29 +48,16 @@ public class PrintSelectedItemsUseCase {
             }
         }
 
-        StringBuilder content = new StringBuilder();
-        content.append("=== PHIEU BEP (MON CHON) ===\n");
-        content.append("Order: ").append(order.getOrderId()).append("\n");
-        content.append("Ban: ").append(order.getTableId()).append("\n");
-        content.append("----------------------------\n");
-
-        int count = 0;
-        for (Integer idx : selectedIndexes) {
-            var item = order.getItems().get(idx);
-            count++;
-            content.append("- ").append(item.getMenuItemName())
-                    .append(" x").append(item.getQuantity()).append("\n");
-            if (item.getNote() != null && !item.getNote().isBlank()) {
-                content.append("  * ").append(item.getNote()).append("\n");
-            }
-        }
-
-        if (count == 0) {
+        List<Long> ids = new ArrayList<>(input.getOrderItemIds());
+        if (selectedIndexes.isEmpty()) {
             throw new DomainException(ErrorCode.KITCHEN_NO_ITEMS_TO_PRINT);
         }
 
-        content.append("============================\n");
-        if (!printerService.printKitchenTicket(content.toString())) {
+        try {
+            if (!printerService.printKitchenTicketSelected(input.getOrderId(), ids)) {
+                throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
+            }
+        } catch (PrinterService.PrinterException e) {
             throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
         }
 

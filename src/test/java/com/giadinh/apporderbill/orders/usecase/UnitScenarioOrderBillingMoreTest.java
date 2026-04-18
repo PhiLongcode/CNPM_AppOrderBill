@@ -85,7 +85,9 @@ class UnitScenarioOrderBillingMoreTest {
         useCase.execute(new PrintReceiptInput(p.getPaymentId(), 1L));
 
         assertEquals(1, printer.receiptPrintCount);
-        assertTrue(printer.lastReceiptContent.contains("HOA DON THANH TOAN"));
+        assertEquals(1L, printer.lastReceiptPaymentId);
+        assertEquals("ORDER-1", printer.lastReceiptOrderId);
+        assertEquals("Li\u00ean 1", printer.lastReceiptCopyLabel);
     }
 
     @Test
@@ -171,9 +173,21 @@ class UnitScenarioOrderBillingMoreTest {
         private final boolean shouldSucceed;
         int receiptPrintCount = 0;
         String lastReceiptContent = "";
+        Long lastReceiptPaymentId;
+        String lastReceiptOrderId;
+        String lastReceiptCopyLabel;
         SpyPrinterService(boolean shouldSucceed) { this.shouldSucceed = shouldSucceed; }
         @Override public boolean printKitchenTicket(String content) { return shouldSucceed; }
         @Override public boolean printReceipt(String content) { receiptPrintCount++; lastReceiptContent = content; return shouldSucceed; }
+        @Override
+        public boolean printReceipt(Long paymentId, String orderId, String copyLabel) throws PrinterService.PrinterException {
+            receiptPrintCount++;
+            lastReceiptPaymentId = paymentId;
+            lastReceiptOrderId = orderId;
+            lastReceiptCopyLabel = copyLabel;
+            lastReceiptContent = "RICH:" + paymentId + ":" + orderId + ":" + copyLabel;
+            return shouldSucceed;
+        }
         @Override public boolean printTest(String content) { return shouldSucceed; }
     }
 }
