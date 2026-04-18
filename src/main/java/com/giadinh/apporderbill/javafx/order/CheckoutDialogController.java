@@ -2,15 +2,20 @@ package com.giadinh.apporderbill.javafx.order;
 
 import com.giadinh.apporderbill.customer.model.Customer;
 import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
+import com.giadinh.apporderbill.customer.model.LoyaltyGift;
+import com.giadinh.apporderbill.customer.model.LoyaltyRedeemMenuItem;
+import com.giadinh.apporderbill.customer.model.LoyaltyRedeemMode;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -25,8 +30,10 @@ import javafx.util.StringConverter;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -47,6 +54,10 @@ public class CheckoutDialogController {
     private Label totalAmountLabel;
     @FXML
     private Label finalAmountLabel;
+    @FXML
+    private Label vatRateLabel;
+    @FXML
+    private Label vatAmountLabel;
     @FXML
     private Label changeAmountLabel;
     @FXML
@@ -76,6 +87,15 @@ public class CheckoutDialogController {
     @FXML private VBox newCustomerBox;
     @FXML private TextField newCustomerNameField;
     @FXML private VBox redeemPointsBox;
+    @FXML private Label loyaltyModeLabel;
+    @FXML private ComboBox<LoyaltyRedeemMode> loyaltyModeCombo;
+    @FXML private VBox loyaltyBillBox;
+    @FXML private VBox loyaltyDishBox;
+    @FXML private Label loyaltyDishLabel;
+    @FXML private ComboBox<LoyaltyRedeemMenuItem> loyaltyDishCatalogCombo;
+    @FXML private VBox loyaltyGiftBox;
+    @FXML private Label loyaltyGiftLabel;
+    @FXML private ComboBox<LoyaltyGift> loyaltyGiftCombo;
     @FXML private TextField redeemPointsField;
     @FXML private Label redeemDiscountLabel;
     @FXML
@@ -99,14 +119,20 @@ public class CheckoutDialogController {
     private Supplier<List<OrderItemViewModel>> orderItemsSupplier;
     private CustomerUseCases customerUseCases;
     private LoyaltyConfig loyaltyConfig = LoyaltyConfig.defaults();
+    private double vatPercent;
     private Customer currentCustomer;
     private boolean suppressCustomerSuggestEvents;
+    private int lastValidRedeemPoints;
+    private boolean suppressRedeemEvent;
 
     public record Result(long paidAmount, long discountAmount, String paymentMethod,
-                         Long customerId, String customerPhone, int pointsUsed) {
-        // Backward-compat factory without customer
+                         Long customerId, String customerPhone, int pointsUsed,
+                         LoyaltyRedeemMode loyaltyRedeemMode,
+                         Long loyaltyRedeemCatalogId,
+                         Long loyaltyGiftId) {
         public static Result of(long paid, long discount, String method) {
-            return new Result(paid, discount, method, null, null, 0);
+            return new Result(paid, discount, method, null, null, 0,
+                    LoyaltyRedeemMode.NONE, null, null);
         }
     }
 
@@ -114,6 +140,7 @@ public class CheckoutDialogController {
     private void initialize() {
         installNumericFormatter(discountField);
         installNumericFormatter(paidAmountField);
+        installNumericFormatter(redeemPointsField);
         if (customerPhoneField != null) {
             customerPhoneField.setOnAction(e -> onSearchCustomer());
             customerPhoneField.textProperty().addListener((obs, oldV, newV) -> {
@@ -143,13 +170,19 @@ public class CheckoutDialogController {
                 }
             });
         }
+        installLoyaltyModeCombo();
+        setupPaymentMethodListener();
     }
 
     public void setCustomerUseCases(CustomerUseCases customerUseCases) {
         this.customerUseCases = customerUseCases;
         if (customerUseCases != null) {
             this.loyaltyConfig = customerUseCases.getLoyaltyConfig();
+            this.vatPercent = Math.max(0.0, customerUseCases.getVatPercent());
         }
+        refreshVatInfo();
+        refreshLoyaltyCatalogs();
+        applyLoyaltyModeUi();
     }
 
     public void initSummary(long totalAmount, long finalAmount, String tableInfo, String orderCode) {
@@ -174,6 +207,7 @@ public class CheckoutDialogController {
         discountField.setText(impliedDiscount > 0 ? String.valueOf(impliedDiscount) : "0");
         bindAmountListeners();
         refreshFinalAndChange();
+        refreshPaidAmountAvailability();
     }
 
     private void installNumericFormatter(TextField field) {
@@ -207,12 +241,170 @@ public class CheckoutDialogController {
     }
 
     private void refreshFinalAndChange() {
-        long discount = parseLong(discountField != null ? discountField.getText() : "0", 0L);
-        long due = Math.max(0, subtotalAmount - discount);
+        long net = computeNetBeforeVat();
+        long vatAmount = computeVatAmount(net);
+        long due = computeTotalDue();
         finalAmountLabel.setText(integerMoneyFormat.format(due));
-        long paid = parseLong(paidAmountField != null ? paidAmountField.getText() : "0", 0L);
+        if (vatAmountLabel != null) {
+            vatAmountLabel.setText(integerMoneyFormat.format(Math.max(0, vatAmount)));
+        }
+        long paid = isNonCashPayment()
+                ? due
+                : parseLong(paidAmountField != null ? paidAmountField.getText() : "0", 0L);
         long change = paid - due;
         changeAmountLabel.setText(integerMoneyFormat.format(Math.max(0, change)));
+    }
+
+    private long computeNetBeforeVat() {
+        long discount = parseLong(discountField != null ? discountField.getText() : "0", 0L);
+        return Math.max(0, subtotalAmount - discount);
+    }
+
+    private long computeVatAmount(long netBeforeVat) {
+        return Math.round(netBeforeVat * (vatPercent / 100.0));
+    }
+
+    private long computeBillRedeemMoneyOff() {
+        if (loyaltyModeCombo == null || currentCustomer == null || loyaltyConfig == null) {
+            return 0L;
+        }
+        if (loyaltyModeCombo.getSelectionModel().getSelectedItem() != LoyaltyRedeemMode.BILL_DISCOUNT) {
+            return 0L;
+        }
+        int pts = (int) parseLong(redeemPointsField != null ? redeemPointsField.getText() : "0", 0L);
+        return loyaltyConfig.calcRedeemDiscount(pts);
+    }
+
+    private long computeTotalDue() {
+        long net = computeNetBeforeVat();
+        long vat = computeVatAmount(net);
+        return Math.max(0, net + Math.max(0, vat) - computeBillRedeemMoneyOff());
+    }
+
+    private LoyaltyRedeemMode getSelectedLoyaltyMode() {
+        if (loyaltyModeCombo == null) {
+            return LoyaltyRedeemMode.NONE;
+        }
+        LoyaltyRedeemMode m = loyaltyModeCombo.getSelectionModel().getSelectedItem();
+        return m != null ? m : LoyaltyRedeemMode.NONE;
+    }
+
+    private void installLoyaltyModeCombo() {
+        if (loyaltyModeCombo == null) {
+            return;
+        }
+        loyaltyModeCombo.getItems().setAll(
+                LoyaltyRedeemMode.NONE,
+                LoyaltyRedeemMode.BILL_DISCOUNT,
+                LoyaltyRedeemMode.DISH,
+                LoyaltyRedeemMode.GIFT_NON_MONETARY);
+        loyaltyModeCombo.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(LoyaltyRedeemMode m) {
+                if (m == null) {
+                    return "";
+                }
+                return switch (m) {
+                    case NONE -> DomainMessages.formatKey("ui.order.loyalty_mode_none");
+                    case BILL_DISCOUNT -> DomainMessages.formatKey("ui.order.loyalty_mode_bill");
+                    case DISH -> DomainMessages.formatKey("ui.order.loyalty_mode_dish");
+                    case GIFT_NON_MONETARY -> DomainMessages.formatKey("ui.order.loyalty_mode_gift");
+                };
+            }
+
+            @Override
+            public LoyaltyRedeemMode fromString(String s) {
+                return null;
+            }
+        });
+        loyaltyModeCombo.getSelectionModel().select(LoyaltyRedeemMode.NONE);
+    }
+
+    private void refreshLoyaltyCatalogs() {
+        if (customerUseCases == null) {
+            return;
+        }
+        if (loyaltyDishCatalogCombo != null) {
+            loyaltyDishCatalogCombo.setItems(FXCollections.observableArrayList(
+                    customerUseCases.listActiveLoyaltyRedeemDishes()));
+            loyaltyDishCatalogCombo.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(LoyaltyRedeemMenuItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : formatDishCatalogRow(item));
+                }
+            });
+            loyaltyDishCatalogCombo.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(LoyaltyRedeemMenuItem item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : formatDishCatalogRow(item));
+                }
+            });
+        }
+        if (loyaltyGiftCombo != null) {
+            loyaltyGiftCombo.setItems(FXCollections.observableArrayList(customerUseCases.listActiveLoyaltyGifts()));
+            loyaltyGiftCombo.setCellFactory(lv -> new ListCell<>() {
+                @Override
+                protected void updateItem(LoyaltyGift item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : formatGiftRow(item));
+                }
+            });
+            loyaltyGiftCombo.setButtonCell(new ListCell<>() {
+                @Override
+                protected void updateItem(LoyaltyGift item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setText(empty || item == null ? null : formatGiftRow(item));
+                }
+            });
+        }
+    }
+
+    private String formatDishCatalogRow(LoyaltyRedeemMenuItem row) {
+        return "#" + row.getId() + " · menu " + row.getMenuItemId()
+                + " — " + row.getPointsCost() + " " + DomainMessages.formatKey("ui.order.points_suffix");
+    }
+
+    private String formatGiftRow(LoyaltyGift g) {
+        String n = g.getName() != null ? g.getName() : ("#" + g.getId());
+        return n + " — " + g.getPointsCost() + " " + DomainMessages.formatKey("ui.order.points_suffix");
+    }
+
+    @FXML
+    private void onLoyaltyModeChanged() {
+        applyLoyaltyModeUi();
+        refreshFinalAndChange();
+    }
+
+    @FXML
+    private void onLoyaltyCatalogChanged() {
+        refreshFinalAndChange();
+    }
+
+    private void applyLoyaltyModeUi() {
+        if (loyaltyModeCombo == null) {
+            return;
+        }
+        LoyaltyRedeemMode m = getSelectedLoyaltyMode();
+        setVisible(loyaltyBillBox, m == LoyaltyRedeemMode.BILL_DISCOUNT);
+        setVisible(loyaltyDishBox, m == LoyaltyRedeemMode.DISH);
+        setVisible(loyaltyGiftBox, m == LoyaltyRedeemMode.GIFT_NON_MONETARY);
+        if (m != LoyaltyRedeemMode.BILL_DISCOUNT && redeemPointsField != null) {
+            suppressRedeemEvent = true;
+            redeemPointsField.clear();
+            lastValidRedeemPoints = 0;
+            suppressRedeemEvent = false;
+        }
+        if (redeemDiscountLabel != null && m != LoyaltyRedeemMode.BILL_DISCOUNT) {
+            redeemDiscountLabel.setText("→ 0 VNĐ");
+        }
+        if (m == LoyaltyRedeemMode.BILL_DISCOUNT && currentCustomer != null) {
+            updateRedeemAvailability(currentCustomer);
+        } else if (redeemPointsField != null && m != LoyaltyRedeemMode.BILL_DISCOUNT) {
+            redeemPointsField.setDisable(true);
+            redeemPointsField.setEditable(false);
+        }
     }
 
     public void setOrderItems(List<OrderItemViewModel> items) {
@@ -220,13 +412,14 @@ public class CheckoutDialogController {
             return;
         }
         configureItemColumns();
-        itemsTableView.setItems(FXCollections.observableArrayList(items != null ? items : List.of()));
+        List<OrderItemViewModel> aggregatedItems = aggregateItemsForCheckout(items);
+        itemsTableView.setItems(FXCollections.observableArrayList(aggregatedItems));
         itemsTableView.setSortPolicy(tv -> false);
-        int n = items != null ? items.size() : 0;
+        int n = aggregatedItems.size();
         if (itemCountLabel != null) {
             itemCountLabel.setText(String.valueOf(n));
         }
-        subtotalAmount = (items == null ? List.<OrderItemViewModel>of() : items).stream()
+        subtotalAmount = aggregatedItems.stream()
                 .mapToLong(OrderItemViewModel::getTotalPrice)
                 .sum();
         totalAmountLabel.setText(integerMoneyFormat.format(subtotalAmount));
@@ -394,12 +587,45 @@ public class CheckoutDialogController {
 
     public Result buildResult() {
         long discount = parseLong(discountField.getText(), 0L);
-        long paid = parseLong(paidAmountField.getText(), 0L);
+        long due = computeTotalDue();
+        long paid = isNonCashPayment() ? due : parseLong(paidAmountField.getText(), 0L);
         String method = resolvePaymentMethod();
         Long id = currentCustomer != null ? currentCustomer.getId() : null;
         String phone = currentCustomer != null ? currentCustomer.getPhone() : null;
+        LoyaltyRedeemMode mode = getSelectedLoyaltyMode();
         int pointsUsed = parsePointsUsed();
-        return new Result(paid, discount, method, id, phone, pointsUsed);
+        Long catalogId = null;
+        Long giftId = null;
+        if (mode == LoyaltyRedeemMode.DISH) {
+            if (currentCustomer == null) {
+                throw new IllegalArgumentException(DomainMessages.formatKey("error.LOYALTY_REDEEM_REQUIRES_CUSTOMER"));
+            }
+            LoyaltyRedeemMenuItem row = loyaltyDishCatalogCombo != null
+                    ? loyaltyDishCatalogCombo.getSelectionModel().getSelectedItem()
+                    : null;
+            if (row == null) {
+                throw new IllegalArgumentException(DomainMessages.formatKey("ui.order.loyalty_pick_dish"));
+            }
+            if (currentCustomer.getPoints() < row.getPointsCost()) {
+                throw new IllegalArgumentException(
+                        DomainMessages.formatKey("ui.order.redeem_points_insufficient_balance", currentCustomer.getPoints()));
+            }
+            catalogId = row.getId();
+        } else if (mode == LoyaltyRedeemMode.GIFT_NON_MONETARY) {
+            if (currentCustomer == null) {
+                throw new IllegalArgumentException(DomainMessages.formatKey("error.LOYALTY_REDEEM_REQUIRES_CUSTOMER"));
+            }
+            LoyaltyGift gift = loyaltyGiftCombo != null ? loyaltyGiftCombo.getSelectionModel().getSelectedItem() : null;
+            if (gift == null) {
+                throw new IllegalArgumentException(DomainMessages.formatKey("ui.order.loyalty_pick_gift"));
+            }
+            if (currentCustomer.getPoints() < gift.getPointsCost()) {
+                throw new IllegalArgumentException(
+                        DomainMessages.formatKey("ui.order.redeem_points_insufficient_balance", currentCustomer.getPoints()));
+            }
+            giftId = gift.getId();
+        }
+        return new Result(paid, discount, method, id, phone, pointsUsed, mode, catalogId, giftId);
     }
 
     public Button getConfirmButton() {
@@ -473,11 +699,24 @@ public class CheckoutDialogController {
     @FXML
     private void onRedeemPointsChanged() {
         if (redeemDiscountLabel == null || loyaltyConfig == null || currentCustomer == null) return;
-        int points = parsePointsUsed();
-        points = Math.min(points, currentCustomer.getPoints()); // giới hạn theo số điểm có
+        if (suppressRedeemEvent) {
+            return;
+        }
+        int availablePoints = Math.max(0, currentCustomer.getPoints());
+        int points = (int) parseLong(redeemPointsField != null ? redeemPointsField.getText() : "0", 0L);
+        if (points > availablePoints) {
+            showError(DomainMessages.formatKey("ui.order.redeem_points_insufficient_balance", availablePoints));
+            suppressRedeemEvent = true;
+            redeemPointsField.setText(String.valueOf(lastValidRedeemPoints));
+            suppressRedeemEvent = false;
+            points = lastValidRedeemPoints;
+        } else {
+            points = Math.max(0, points);
+            lastValidRedeemPoints = points;
+        }
         long discount = loyaltyConfig.calcRedeemDiscount(points);
         redeemDiscountLabel.setText("→ " + integerMoneyFormat.format(discount) + " VNĐ");
-        // TODO: integrate redeemed discount into final amount calculation.
+        refreshFinalAndChange();
     }
 
     private void showCustomerFound(Customer customer) {
@@ -486,7 +725,8 @@ public class CheckoutDialogController {
         if (customerPointsLabel != null) customerPointsLabel.setText(customer.getPoints() + " điểm");
         setVisible(customerInfoBox, true);
         setVisible(newCustomerBox, false);
-        setVisible(redeemPointsBox, customer.getPoints() > 0);
+        setVisible(redeemPointsBox, true);
+        applyLoyaltyModeUi();
     }
 
     private void showCustomerNotFound(String phone) {
@@ -494,6 +734,7 @@ public class CheckoutDialogController {
         setVisible(customerInfoBox, false);
         setVisible(newCustomerBox, true);
         setVisible(redeemPointsBox, false);
+        resetRedeemField();
     }
 
     private void showCustomerSuggestions(String query) {
@@ -539,11 +780,174 @@ public class CheckoutDialogController {
     }
 
     private int parsePointsUsed() {
+        if (getSelectedLoyaltyMode() != LoyaltyRedeemMode.BILL_DISCOUNT) {
+            return 0;
+        }
         if (redeemPointsField == null) return 0;
         int points = (int) parseLong(redeemPointsField.getText(), 0L);
         if (currentCustomer != null) {
-            points = Math.min(points, currentCustomer.getPoints());
+            if (points > currentCustomer.getPoints()) {
+                throw new IllegalArgumentException(
+                        DomainMessages.formatKey("ui.order.redeem_points_insufficient_balance", currentCustomer.getPoints()));
+            }
         }
         return Math.max(0, points);
+    }
+
+    private void setupPaymentMethodListener() {
+        if (paymentMethodGroup == null) {
+            return;
+        }
+        paymentMethodGroup.selectedToggleProperty().addListener((obs, oldV, newV) -> {
+            refreshPaidAmountAvailability();
+            refreshFinalAndChange();
+        });
+    }
+
+    private void refreshPaidAmountAvailability() {
+        if (paidAmountField == null) {
+            return;
+        }
+        boolean nonCash = isNonCashPayment();
+        paidAmountField.setDisable(nonCash);
+        paidAmountField.setEditable(!nonCash);
+        if (nonCash) {
+            paidAmountField.clear();
+            paidAmountField.setPromptText(DomainMessages.formatKey("ui.order.checkout_paid_amount_not_required"));
+        } else {
+            paidAmountField.setPromptText(DomainMessages.formatKey("ui.order.checkout_paid_amount_required"));
+        }
+    }
+
+    private boolean isNonCashPayment() {
+        String method = resolvePaymentMethod();
+        return "BANK_TRANSFER".equals(method) || "CARD".equals(method);
+    }
+
+    private void updateRedeemAvailability(Customer customer) {
+        if (redeemPointsField == null || redeemDiscountLabel == null || customer == null) {
+            return;
+        }
+        if (loyaltyModeCombo != null && getSelectedLoyaltyMode() != LoyaltyRedeemMode.BILL_DISCOUNT) {
+            return;
+        }
+        int requiredPoints = loyaltyConfig != null ? Math.max(0, loyaltyConfig.getRedeemPointsRequired()) : 0;
+        int availablePoints = Math.max(0, customer.getPoints());
+        if (availablePoints < requiredPoints) {
+            redeemPointsField.clear();
+            redeemPointsField.setDisable(true);
+            redeemPointsField.setEditable(false);
+            redeemPointsField.setPromptText(DomainMessages.formatKey(
+                    "ui.order.redeem_points_min_required",
+                    requiredPoints));
+            redeemDiscountLabel.setText("→ 0 VNĐ");
+            showError(DomainMessages.formatKey("ui.order.redeem_points_not_enough_to_start", requiredPoints));
+            lastValidRedeemPoints = 0;
+            return;
+        }
+        redeemPointsField.setDisable(false);
+        redeemPointsField.setEditable(true);
+        redeemPointsField.setPromptText("0");
+        lastValidRedeemPoints = 0;
+    }
+
+    private void resetRedeemField() {
+        if (loyaltyModeCombo != null) {
+            loyaltyModeCombo.getSelectionModel().select(LoyaltyRedeemMode.NONE);
+        }
+        if (redeemPointsField != null) {
+            redeemPointsField.clear();
+            redeemPointsField.setDisable(false);
+            redeemPointsField.setEditable(true);
+            redeemPointsField.setPromptText("0");
+        }
+        if (redeemDiscountLabel != null) {
+            redeemDiscountLabel.setText("→ 0 VNĐ");
+        }
+        lastValidRedeemPoints = 0;
+        applyLoyaltyModeUi();
+    }
+
+    private void refreshVatInfo() {
+        if (vatRateLabel != null) {
+            vatRateLabel.setText(String.format(Locale.US, "%.1f%%", Math.max(0.0, vatPercent)));
+        }
+        if (vatAmountLabel != null) {
+            vatAmountLabel.setText(integerMoneyFormat.format(0));
+        }
+    }
+
+    private void showError(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(DomainMessages.formatKey("ui.common.error_title"));
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private List<OrderItemViewModel> aggregateItemsForCheckout(List<OrderItemViewModel> items) {
+        if (items == null || items.isEmpty()) {
+            return List.of();
+        }
+        Map<String, AggregatedCheckoutItem> grouped = new LinkedHashMap<>();
+        for (OrderItemViewModel item : items) {
+            if (item == null || item.isCanceled()) {
+                continue;
+            }
+            String key = buildAggregationKey(item);
+            AggregatedCheckoutItem bucket = grouped.computeIfAbsent(key, k ->
+                    new AggregatedCheckoutItem(item.getName(), item.getUnitName(), item.getUnitPrice()));
+            bucket.add(item);
+        }
+        return grouped.values().stream()
+                .map(AggregatedCheckoutItem::toViewModel)
+                .toList();
+    }
+
+    private String buildAggregationKey(OrderItemViewModel item) {
+        String name = item.getName() == null ? "" : item.getName().trim();
+        String unit = item.getUnitName() == null ? "" : item.getUnitName().trim();
+        return name + "|" + unit + "|" + item.getUnitPrice();
+    }
+
+    private static final class AggregatedCheckoutItem {
+        private final String name;
+        private final String unitName;
+        private final long unitPrice;
+        private int quantity;
+        private long totalPrice;
+        private long grossAmount;
+
+        private AggregatedCheckoutItem(String name, String unitName, long unitPrice) {
+            this.name = name;
+            this.unitName = unitName;
+            this.unitPrice = unitPrice;
+        }
+
+        private void add(OrderItemViewModel item) {
+            int itemQty = Math.max(0, item.getQuantity());
+            quantity += itemQty;
+            totalPrice += Math.max(0, item.getTotalPrice());
+            grossAmount += Math.max(0, (long) itemQty * item.getUnitPrice());
+        }
+
+        private OrderItemViewModel toViewModel() {
+            long discountAmount = Math.max(0L, grossAmount - totalPrice);
+            double discountPercent = grossAmount <= 0
+                    ? 0.0
+                    : (discountAmount * 100.0) / grossAmount;
+            return new OrderItemViewModel(
+                    null,
+                    name,
+                    quantity,
+                    unitPrice,
+                    totalPrice,
+                    null,
+                    unitName,
+                    true,
+                    false,
+                    discountPercent,
+                    (double) discountAmount);
+        }
     }
 }

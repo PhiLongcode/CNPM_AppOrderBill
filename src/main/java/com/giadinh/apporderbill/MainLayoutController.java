@@ -31,7 +31,9 @@ public class MainLayoutController {
     private Parent menuManagementScreen;
     private com.giadinh.apporderbill.javafx.menu.MenuManagementController menuManagementController;
     private com.giadinh.apporderbill.javafx.menu.MenuManagementPresenter menuManagementPresenter;
-    private Parent printerConfigScreen;
+    private Parent appSettingsScreen;
+    private com.giadinh.apporderbill.javafx.settings.AppSettingsController appSettingsController;
+    private boolean appSettingsPrinterInitialized;
     private Parent userGuideScreen;
     private Parent customerManagementScreen;
     private Parent adminManagementScreen;
@@ -48,6 +50,8 @@ public class MainLayoutController {
     private MenuItem tableManagementMenuItem;
     @FXML
     private MenuItem adminManagementMenuItem;
+    @FXML
+    private MenuItem settingsMenuItem;
     private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
     private com.giadinh.apporderbill.identity.IdentityComponent identityComponent;
 
@@ -72,7 +76,7 @@ public class MainLayoutController {
     protected void showOrderScreen() {
         try {
             if (orderScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/order/order-screen.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/order/order-screen.fxml");
                 orderScreen = loader.load();
                 orderScreenController = loader.getController();
             } else {
@@ -91,7 +95,7 @@ public class MainLayoutController {
     protected void showDashboardScreen() {
         try {
             if (dashboardScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/dashboard/dashboard.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/dashboard/dashboard.fxml");
                 dashboardScreen = loader.load();
                 dashboardController = loader.getController();
 
@@ -153,7 +157,7 @@ public class MainLayoutController {
     protected void showMenuManagementScreen() {
         try {
             if (menuManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/menu/menu-management.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/menu/menu-management.fxml");
                 menuManagementScreen = loader.load();
                 menuManagementController = loader.getController();
 
@@ -189,7 +193,7 @@ public class MainLayoutController {
     protected void showCustomerManagementScreen() {
         try {
             if (customerManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/customer/customer-management.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/customer/customer-management.fxml");
                 customerManagementScreen = loader.load();
                 com.giadinh.apporderbill.javafx.customer.CustomerManagementController controller = loader.getController();
                 if (customerUseCases != null) {
@@ -206,7 +210,7 @@ public class MainLayoutController {
     protected void showTableManagementScreen() {
         try {
             if (tableManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/table/table-management.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/table/table-management.fxml");
                 tableManagementScreen = loader.load();
                 tableManagementController = loader.getController();
                 if (addTableUseCase != null && deleteTableUseCase != null && clearTableUseCase != null
@@ -225,6 +229,9 @@ public class MainLayoutController {
 
     public void setCustomerUseCases(com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases) {
         this.customerUseCases = customerUseCases;
+        if (appSettingsController != null) {
+            appSettingsController.setCustomerUseCases(customerUseCases);
+        }
     }
 
     public void setIdentityComponent(com.giadinh.apporderbill.identity.IdentityComponent identityComponent) {
@@ -235,7 +242,7 @@ public class MainLayoutController {
     protected void showAdminManagementScreen() {
         try {
             if (adminManagementScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/admin/admin-management.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/admin/admin-management.fxml");
                 adminManagementScreen = loader.load();
                 com.giadinh.apporderbill.javafx.admin.AdminManagementController controller = loader.getController();
                 if (identityComponent != null) {
@@ -261,6 +268,9 @@ public class MainLayoutController {
         }
         if (adminManagementMenuItem != null) {
             adminManagementMenuItem.setDisable(!canManageAdmin);
+        }
+        if (settingsMenuItem != null) {
+            settingsMenuItem.setDisable(!canManageMenu && !canManageCustomer);
         }
     }
 
@@ -319,27 +329,38 @@ public class MainLayoutController {
     }
 
     @FXML
-    protected void showPrinterConfigScreen() {
+    protected void showAppSettingsScreen() {
         try {
-            if (printerConfigScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/printer/printer-config.fxml"));
-                printerConfigScreen = loader.load();
-                com.giadinh.apporderbill.javafx.printer.PrinterConfigController printerController = loader
-                        .getController();
-
-                // Inject use cases if available
-                if (updatePrinterConfigUseCase != null && printerController != null) {
-                    printerController.init(
-                            updatePrinterConfigUseCase,
-                            updatePrintTemplateUseCase,
-                            getPrinterConfigUseCase,
-                            getPrintTemplateUseCase,
-                            printerService);
-                }
+            if (appSettingsScreen == null) {
+                FXMLLoader loader = createFxmlLoader("javafx/settings/app-settings.fxml");
+                appSettingsScreen = loader.load();
+                appSettingsController = loader.getController();
             }
-            contentPane.getChildren().setAll(printerConfigScreen);
+            applyAppSettingsInjections();
+            contentPane.getChildren().setAll(appSettingsScreen);
         } catch (IOException e) {
-            showError("Lỗi khi tải màn hình cấu hình máy in: " + e.getMessage());
+            showError("Lỗi khi tải màn hình cấu hình: " + e.getMessage());
+        }
+    }
+
+    private void applyAppSettingsInjections() {
+        if (appSettingsController == null) {
+            return;
+        }
+        if (customerUseCases != null) {
+            appSettingsController.setCustomerUseCases(customerUseCases);
+        }
+        if (getAllMenuItemsUseCase != null) {
+            appSettingsController.setGetAllMenuItemsUseCase(getAllMenuItemsUseCase);
+        }
+        if (!appSettingsPrinterInitialized && updatePrinterConfigUseCase != null) {
+            appSettingsController.initPrinterTab(
+                    updatePrinterConfigUseCase,
+                    updatePrintTemplateUseCase,
+                    getPrinterConfigUseCase,
+                    getPrintTemplateUseCase,
+                    printerService);
+            appSettingsPrinterInitialized = true;
         }
     }
 
@@ -368,6 +389,15 @@ public class MainLayoutController {
         this.getPrinterConfigUseCase = getPrinterConfigUseCase;
         this.getPrintTemplateUseCase = getPrintTemplateUseCase;
         this.printerService = printerService;
+        if (appSettingsController != null && !appSettingsPrinterInitialized && updatePrinterConfigUseCase != null) {
+            appSettingsController.initPrinterTab(
+                    updatePrinterConfigUseCase,
+                    updatePrintTemplateUseCase,
+                    getPrinterConfigUseCase,
+                    getPrintTemplateUseCase,
+                    printerService);
+            appSettingsPrinterInitialized = true;
+        }
     }
 
     public void setCheckStorageUsageUseCase(
@@ -443,7 +473,7 @@ public class MainLayoutController {
     protected void showUserGuideScreen() {
         try {
             if (userGuideScreen == null) {
-                FXMLLoader loader = new FXMLLoader(requireFxml("javafx/guide/user-guide.fxml"));
+                FXMLLoader loader = createFxmlLoader("javafx/guide/user-guide.fxml");
                 userGuideScreen = loader.load();
             }
             contentPane.getChildren().setAll(userGuideScreen);
@@ -497,6 +527,15 @@ public class MainLayoutController {
 
     public OrderScreenController getOrderScreenController() {
         return orderScreenController;
+    }
+
+    private FXMLLoader createFxmlLoader(String relativePath) throws IOException {
+        FXMLLoader loader = new FXMLLoader(requireFxml(relativePath));
+        ClassLoader cl = getClass().getClassLoader();
+        if (cl != null) {
+            loader.setClassLoader(cl);
+        }
+        return loader;
     }
 
     private java.net.URL requireFxml(String relativePath) throws IOException {

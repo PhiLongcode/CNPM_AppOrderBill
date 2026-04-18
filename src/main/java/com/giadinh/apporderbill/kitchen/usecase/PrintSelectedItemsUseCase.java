@@ -71,6 +71,14 @@ public class PrintSelectedItemsUseCase {
         if (!printerService.printKitchenTicket(content.toString())) {
             throw new DomainException(ErrorCode.PRINTER_KITCHEN_SEND_FAILED);
         }
+
+        // Đồng bộ trạng thái đã in cho đúng với các món vừa in chọn.
+        // Nhờ đó ở màn Order, khi thêm lại cùng món đã in sẽ tách dòng mới thay vì cộng dồn.
+        for (Integer idx : selectedIndexes) {
+            order.getItems().get(idx).setPrintedToKitchen(true);
+        }
+        orderRepository.save(order);
+
         return new PrintKitchenTicketOutput(true, null);
     }
 }

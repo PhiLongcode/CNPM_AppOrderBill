@@ -40,8 +40,11 @@ public class OrderPosApplication extends Application {
         @Override
         public void start(Stage stage) {
                 try {
+                        ClassLoader appCl = OrderPosApplication.class.getClassLoader();
+                        Thread.currentThread().setContextClassLoader(appCl);
                         FXMLLoader loginLoader = new FXMLLoader(
                                         OrderPosApplication.class.getResource("javafx/login/login.fxml"));
+                        loginLoader.setClassLoader(appCl);
                         Scene loginScene = new Scene(loginLoader.load(), 420, 240);
                         Stage loginStage = new Stage();
                         loginStage.setTitle("Đăng nhập");
@@ -63,6 +66,7 @@ public class OrderPosApplication extends Application {
                         // Load Main Layout
                         FXMLLoader mainLoader = new FXMLLoader(
                                         OrderPosApplication.class.getResource("main-layout.fxml"));
+                        mainLoader.setClassLoader(appCl);
                         Scene scene = new Scene(mainLoader.load(), 1600, 900);
                         stage.setMinWidth(1200);
                         stage.setMinHeight(700);
@@ -91,10 +95,16 @@ public class OrderPosApplication extends Application {
                                         connectionProvider);
                         com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository loyaltyConfigRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository(
                                         connectionProvider);
+                        com.giadinh.apporderbill.customer.repository.SqliteLoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyRedeemMenuItemRepository(
+                                        connectionProvider);
+                        com.giadinh.apporderbill.customer.repository.SqliteLoyaltyGiftRepository loyaltyGiftRepository = new com.giadinh.apporderbill.customer.repository.SqliteLoyaltyGiftRepository(
+                                        connectionProvider);
                         com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases = new com.giadinh.apporderbill.customer.usecase.CustomerUseCases(
                                         customerRepository);
                         customerUseCases.setPointTransactionRepository(pointTransactionRepository);
                         customerUseCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
+                        customerUseCases.setLoyaltyRedeemMenuItemRepository(loyaltyRedeemMenuItemRepository);
+                        customerUseCases.setLoyaltyGiftRepository(loyaltyGiftRepository);
                         customerUseCases.setLoyaltyConfig(loyaltyConfigRepository.load());
 
                         Connection identityConnection = connectionProvider.getConnection();
@@ -162,7 +172,8 @@ public class OrderPosApplication extends Application {
                         GetOrderDetailsUseCase getOrderDetailsUseCase = new GetOrderDetailsUseCase(orderRepository,
                                         menuItemRepository);
                         CalculateOrderTotalUseCase calculateOrderTotalUseCase = new CalculateOrderTotalUseCase(
-                                        orderRepository);
+                                        orderRepository,
+                                        customerUseCases::getVatPercent);
                         CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(orderRepository,
                                         menuItemRepository, tableRepository);
 
@@ -192,7 +203,11 @@ public class OrderPosApplication extends Application {
                                         orderRepository,
                                         paymentRepository,
                                         tableRepository,
-                                        customerUseCases);
+                                        customerUseCases,
+                                        calculateOrderTotalUseCase,
+                                        menuItemRepository,
+                                        loyaltyRedeemMenuItemRepository,
+                                        loyaltyGiftRepository);
                         PrintReceiptUseCase printReceiptUseCase = new PrintReceiptUseCase(paymentRepository,
                                         printerService);
 
@@ -237,7 +252,7 @@ public class OrderPosApplication extends Application {
                         com.giadinh.apporderbill.billing.usecase.GetPaymentsByDateRangeUseCase getPaymentsByDateRangeUseCase = new com.giadinh.apporderbill.billing.usecase.GetPaymentsByDateRangeUseCase(
                                         paymentRepository, orderRepository);
                         com.giadinh.apporderbill.billing.usecase.GetPaymentDetailUseCase getPaymentDetailUseCase = new com.giadinh.apporderbill.billing.usecase.GetPaymentDetailUseCase(
-                                        paymentRepository, orderRepository, menuItemRepository);
+                                        paymentRepository, orderRepository, menuItemRepository, customerUseCases);
                         com.giadinh.apporderbill.billing.usecase.DeletePaymentsByDateRangeUseCase deletePaymentsByDateRangeUseCase = new com.giadinh.apporderbill.billing.usecase.DeletePaymentsByDateRangeUseCase(
                                         paymentRepository);
                         com.giadinh.apporderbill.billing.usecase.ReprintReceiptUseCase reprintReceiptUseCase = new com.giadinh.apporderbill.billing.usecase.ReprintReceiptUseCase(
@@ -308,7 +323,6 @@ public class OrderPosApplication extends Application {
                                         controller.init(
                                                         openOrCreateOrderUseCase,
                                                         addCustomItemToOrderUseCase,
-                                                        addMenuItemToOrderUseCase,
                                                         getOrderDetailsUseCase,
                                                         calculateOrderTotalUseCase,
                                                         cancelOrderUseCase,

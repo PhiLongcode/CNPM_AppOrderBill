@@ -317,6 +317,10 @@ public class MenuItemDialogController {
                 throw new IllegalStateException("menu-item-dialog.fxml not found");
             }
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
+            ClassLoader cl = MenuItemDialogController.class.getClassLoader();
+            if (cl != null) {
+                loader.setClassLoader(cl);
+            }
             DialogPane dialogPane = loader.load();
             MenuItemDialogController controller = loader.getController();
 

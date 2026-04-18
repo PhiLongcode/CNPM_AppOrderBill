@@ -131,6 +131,21 @@ public class Order {
         }
     }
 
+    /**
+     * Cập nhật số lượng đúng một dòng trong order (theo thứ tự hiển thị).
+     * Dùng khi có nhiều dòng cùng món (ví dụ một dòng đã in bếp, một dòng add-on).
+     */
+    public void updateOrderItemQuantityAt(int index, int quantity) {
+        if (this.status != OrderStatus.PENDING && this.status != OrderStatus.IN_PROGRESS) {
+            throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
+        }
+        if (index < 0 || index >= items.size()) {
+            throw new DomainException(ErrorCode.ORDER_ITEM_NOT_FOUND);
+        }
+        items.get(index).updateQuantity(quantity);
+        calculateTotalAmount();
+    }
+
     // Phương thức xóa OrderItem khỏi Order
     public void removeOrderItem(String menuItemId) {
         if (this.status == OrderStatus.PENDING || this.status == OrderStatus.IN_PROGRESS) {
@@ -143,6 +158,18 @@ public class Order {
         } else {
             throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
         }
+    }
+
+    /** Xóa đúng một dòng tại vị trí index (nhiều dòng cùng món an toàn). */
+    public void removeOrderItemAt(int index) {
+        if (this.status != OrderStatus.PENDING && this.status != OrderStatus.IN_PROGRESS) {
+            throw new DomainException(ErrorCode.ORDER_NOT_MODIFIABLE);
+        }
+        if (index < 0 || index >= items.size()) {
+            throw new DomainException(ErrorCode.ORDER_ITEM_NOT_FOUND);
+        }
+        items.remove(index);
+        calculateTotalAmount();
     }
     
     // Phương thức tính toán lại tổng tiền của đơn hàng

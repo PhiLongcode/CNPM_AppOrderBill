@@ -33,7 +33,7 @@ public class UpdateOrderItemQuantityUseCase {
             int delta = oldQuantity - newQuantity;
             applyStockIncrease(item.getMenuItemId(), delta);
         }
-        order.updateOrderItemQuantity(item.getMenuItemId(), input.getNewQuantity());
+        order.updateOrderItemQuantityAt(idx, input.getNewQuantity());
         orderRepository.save(order);
         return new UpdateOrderItemQuantityOutput(OrderUseCaseSupport.toOutputs(order), OrderUseCaseSupport.total(order));
     }

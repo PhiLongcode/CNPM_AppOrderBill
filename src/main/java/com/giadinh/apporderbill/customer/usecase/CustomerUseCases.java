@@ -4,9 +4,13 @@ import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.ErrorCode;
 import com.giadinh.apporderbill.customer.model.Customer;
 import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
+import com.giadinh.apporderbill.customer.model.LoyaltyGift;
+import com.giadinh.apporderbill.customer.model.LoyaltyRedeemMenuItem;
 import com.giadinh.apporderbill.customer.model.PointTransaction;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
 import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyRedeemMenuItemRepository;
 import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
 
 import java.time.LocalDateTime;
@@ -20,6 +24,8 @@ public class CustomerUseCases {
     private final CustomerRepository repository;
     private PointTransactionRepository pointTransactionRepository;
     private LoyaltyConfigRepository loyaltyConfigRepository;
+    private LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository;
+    private LoyaltyGiftRepository loyaltyGiftRepository;
     private LoyaltyConfig loyaltyConfig;
     private final BTreePhonePrefixIndex phonePrefixIndex = new BTreePhonePrefixIndex();
     private boolean phoneIndexDirty = true;
@@ -41,6 +47,14 @@ public class CustomerUseCases {
         this.loyaltyConfigRepository = loyaltyConfigRepository;
     }
 
+    public void setLoyaltyRedeemMenuItemRepository(LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository) {
+        this.loyaltyRedeemMenuItemRepository = loyaltyRedeemMenuItemRepository;
+    }
+
+    public void setLoyaltyGiftRepository(LoyaltyGiftRepository loyaltyGiftRepository) {
+        this.loyaltyGiftRepository = loyaltyGiftRepository;
+    }
+
     public LoyaltyConfig getLoyaltyConfig() { return loyaltyConfig; }
 
     public LoyaltyConfig reloadLoyaltyConfig() {
@@ -56,6 +70,20 @@ public class CustomerUseCases {
         LoyaltyConfig updated = new UpdateLoyaltyConfigUseCase(loyaltyConfigRepository).execute(config);
         this.loyaltyConfig = updated;
         return updated;
+    }
+
+    public double getVatPercent() {
+        if (loyaltyConfigRepository == null) {
+            return 0.0;
+        }
+        return Math.max(0.0, loyaltyConfigRepository.loadVatPercent());
+    }
+
+    public void updateVatPercent(double vatPercent) {
+        if (loyaltyConfigRepository == null) {
+            return;
+        }
+        loyaltyConfigRepository.saveVatPercent(Math.max(0.0, vatPercent));
     }
 
     // ─── CRUD ────────────────────────────────────────────────────────────────
@@ -217,6 +245,112 @@ public class CustomerUseCases {
                 String.format("Đổi %d điểm → giảm %,d VNĐ", pointsToRedeem, discount),
                 orderId);
         return discount;
+    }
+
+    /**
+     * Tr�� điểm khi đ��i món (không quy đ��i tiền trên bill). Ghi {@link PointTransaction.Type#REDEEM_DISH}.
+     */
+    /**
+     * Redeem points for a dish line (no bill discount). Logs {@link PointTransaction.Type#REDEEM_DISH}.
+     */
+    public void redeemPointsForDish(Long customerId, int pointsCost, String dishLabel, String orderId) {
+        if (pointsCost <= 0) {
+            return;
+        }
+        String note = String.format("Doi %d diem -> mon: %s", pointsCost, dishLabel == null ? "" : dishLabel);
+        deductPointsForRedeem(customerId, pointsCost, note, orderId, PointTransaction.Type.REDEEM_DISH);
+    }
+
+    /**
+     * Redeem points for a non-monetary gift. Logs {@link PointTransaction.Type#REDEEM_GIFT}.
+     */
+    public void redeemPointsForGift(Long customerId, int pointsCost, String giftName, String orderId) {
+        if (pointsCost <= 0) {
+            return;
+        }
+        String note = String.format("Doi %d diem -> qua: %s", pointsCost, giftName == null ? "" : giftName);
+        deductPointsForRedeem(customerId, pointsCost, note, orderId, PointTransaction.Type.REDEEM_GIFT);
+    }
+
+    public List<LoyaltyRedeemMenuItem> listActiveLoyaltyRedeemDishes() {
+        if (loyaltyRedeemMenuItemRepository == null) {
+            return List.of();
+        }
+        return loyaltyRedeemMenuItemRepository.findAllActive();
+    }
+
+    public List<LoyaltyGift> listActiveLoyaltyGifts() {
+        if (loyaltyGiftRepository == null) {
+            return List.of();
+        }
+        return loyaltyGiftRepository.findAllActive();
+    }
+
+    public boolean isLoyaltyCatalogPersistenceAvailable() {
+        return loyaltyRedeemMenuItemRepository != null && loyaltyGiftRepository != null;
+    }
+
+    public List<LoyaltyRedeemMenuItem> listAllLoyaltyRedeemMenuCatalog() {
+        if (loyaltyRedeemMenuItemRepository == null) {
+            return List.of();
+        }
+        return loyaltyRedeemMenuItemRepository.findAll();
+    }
+
+    public List<LoyaltyGift> listAllLoyaltyGiftsCatalog() {
+        if (loyaltyGiftRepository == null) {
+            return List.of();
+        }
+        return loyaltyGiftRepository.findAll();
+    }
+
+    public void saveLoyaltyRedeemMenuCatalogRow(LoyaltyRedeemMenuItem row) {
+        if (loyaltyRedeemMenuItemRepository == null) {
+            throw new DomainException(ErrorCode.INTERNAL_ERROR);
+        }
+        if (row == null || row.getMenuItemId() <= 0 || row.getPointsCost() <= 0) {
+            throw new DomainException(ErrorCode.COMMON_VALIDATION_FAILED);
+        }
+        loyaltyRedeemMenuItemRepository.save(row);
+    }
+
+    public void deleteLoyaltyRedeemMenuCatalogRow(long id) {
+        if (loyaltyRedeemMenuItemRepository == null) {
+            throw new DomainException(ErrorCode.INTERNAL_ERROR);
+        }
+        loyaltyRedeemMenuItemRepository.delete(id);
+    }
+
+    public void saveLoyaltyGiftCatalogRow(LoyaltyGift gift) {
+        if (loyaltyGiftRepository == null) {
+            throw new DomainException(ErrorCode.INTERNAL_ERROR);
+        }
+        if (gift == null || gift.getName() == null || gift.getName().isBlank() || gift.getPointsCost() <= 0) {
+            throw new DomainException(ErrorCode.COMMON_VALIDATION_FAILED);
+        }
+        loyaltyGiftRepository.save(gift);
+    }
+
+    public void deleteLoyaltyGiftCatalogRow(long id) {
+        if (loyaltyGiftRepository == null) {
+            throw new DomainException(ErrorCode.INTERNAL_ERROR);
+        }
+        loyaltyGiftRepository.delete(id);
+    }
+
+    private void deductPointsForRedeem(Long customerId, int pointsCost, String note, String orderId,
+            PointTransaction.Type type) {
+        if (customerId == null) {
+            throw new DomainException(ErrorCode.LOYALTY_REDEEM_REQUIRES_CUSTOMER);
+        }
+        Customer customer = repository.findById(customerId)
+                .orElseThrow(() -> new DomainException(ErrorCode.CUSTOMER_NOT_FOUND));
+        if (customer.getPoints() < pointsCost) {
+            throw new DomainException(ErrorCode.CUSTOMER_INSUFFICIENT_POINTS);
+        }
+        customer.setPoints(customer.getPoints() - pointsCost);
+        Customer saved = repository.save(customer);
+        logTransaction(saved.getId(), -pointsCost, saved.getPoints(), type, note, orderId);
     }
 
     /** Lịch sử điểm của khách */

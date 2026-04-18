@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane fitToWidth="true" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.settings.LoyaltyConfigTabController"
+            style="-fx-background: white;">
+    <VBox spacing="16" style="-fx-padding: 20;">
+        <Label text="Cấu hình điểm tích lũy" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        <GridPane hgap="12" vgap="12">
+            <columnConstraints>
+                <ColumnConstraints minWidth="160" prefWidth="200"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                <ColumnConstraints minWidth="28"/>
+            </columnConstraints>
+            <Label text="Mức tiền tích (VNĐ)" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="earnUnitAmountField" promptText="VD: 10000" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <Label fx:id="earnUnitInfoLabel" text="ⓘ" GridPane.rowIndex="0" GridPane.columnIndex="2"
+                   style="-fx-text-fill: #1976d2; -fx-font-weight: bold;"/>
+
+            <Label text="Điểm nhận / mức" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="pointsPerUnitField" promptText="VD: 1" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label fx:id="pointsPerUnitInfoLabel" text="ⓘ" GridPane.rowIndex="1" GridPane.columnIndex="2"
+                   style="-fx-text-fill: #1976d2; -fx-font-weight: bold;"/>
+
+            <Label text="Điểm tối thiểu để đổi" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="redeemPointsRequiredField" promptText="VD: 100" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+            <Label fx:id="redeemPointsInfoLabel" text="ⓘ" GridPane.rowIndex="2" GridPane.columnIndex="2"
+                   style="-fx-text-fill: #1976d2; -fx-font-weight: bold;"/>
+
+            <Label text="Giá trị đổi (VNĐ)" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+            <TextField fx:id="redeemValueField" promptText="VD: 5000" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+            <Label fx:id="redeemValueInfoLabel" text="ⓘ" GridPane.rowIndex="3" GridPane.columnIndex="2"
+                   style="-fx-text-fill: #1976d2; -fx-font-weight: bold;"/>
+        </GridPane>
+        <HBox spacing="10">
+            <Button text="Lưu cấu hình tích điểm" onAction="#onSave"
+                    style="-fx-background-color: #43A047; -fx-text-fill: white;"/>
+        </HBox>
+
+        <Separator/>
+
+        <Label fx:id="redeemDishSectionTitle" text="Danh mục món đổi điểm" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <TableView fx:id="redeemDishesTable" prefHeight="220">
+            <columns>
+                <TableColumn fx:id="dishColId" text="ID" prefWidth="56"/>
+                <TableColumn fx:id="dishColMenuId" text="Món (ID)" prefWidth="88"/>
+                <TableColumn fx:id="dishColPoints" text="Điểm" prefWidth="72"/>
+                <TableColumn fx:id="dishColActive" text="Kích hoạt" prefWidth="88"/>
+            </columns>
+        </TableView>
+        <GridPane hgap="10" vgap="8">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="140"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+            </columnConstraints>
+            <Label text="Chọn món" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="dishMenuCombo" GridPane.rowIndex="0" GridPane.columnIndex="1" maxWidth="Infinity"/>
+            <Label text="Điểm đổi" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="dishCatalogPointsField" promptText="VD: 500" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label text=" " GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <CheckBox fx:id="dishCatalogActiveCheck" text="Đang áp dụng" selected="true" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+        <HBox spacing="10">
+            <Button fx:id="dishNewButton" text="Dòng mới" onAction="#onRedeemDishNew"/>
+            <Button fx:id="dishSaveButton" text="Lưu món đổi điểm" onAction="#onRedeemDishSave"
+                    style="-fx-background-color: #1976d2; -fx-text-fill: white;"/>
+            <Button fx:id="dishDeleteButton" text="Xóa" onAction="#onRedeemDishDelete"
+                    style="-fx-background-color: #c62828; -fx-text-fill: white;"/>
+        </HBox>
+
+        <Separator/>
+
+        <Label fx:id="redeemGiftSectionTitle" text="Danh mục quà đổi điểm" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+        <TableView fx:id="redeemGiftsTable" prefHeight="220">
+            <columns>
+                <TableColumn fx:id="giftColId" text="ID" prefWidth="56"/>
+                <TableColumn fx:id="giftColName" text="Tên quà" prefWidth="200"/>
+                <TableColumn fx:id="giftColPoints" text="Điểm" prefWidth="72"/>
+                <TableColumn fx:id="giftColActive" text="Kích hoạt" prefWidth="88"/>
+            </columns>
+        </TableView>
+        <GridPane hgap="10" vgap="8">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" prefWidth="140"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+            </columnConstraints>
+            <Label text="Tên quà" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <TextField fx:id="giftNameField" promptText="VD: Ly nước" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+            <Label text="Điểm đổi" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="giftPointsField" promptText="VD: 200" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+            <Label text=" " GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <CheckBox fx:id="giftActiveCheck" text="Đang áp dụng" selected="true" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        </GridPane>
+        <HBox spacing="10">
+            <Button fx:id="giftNewButton" text="Dòng mới" onAction="#onGiftNew"/>
+            <Button fx:id="giftSaveButton" text="Lưu quà" onAction="#onGiftSave"
+                    style="-fx-background-color: #1976d2; -fx-text-fill: white;"/>
+            <Button fx:id="giftDeleteButton" text="Xóa" onAction="#onGiftDelete"
+                    style="-fx-background-color: #c62828; -fx-text-fill: white;"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

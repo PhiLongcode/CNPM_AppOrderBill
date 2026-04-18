@@ -27,6 +27,15 @@ mainLayout --> adminManagement["MH08 Quản trị phân quyền"]
 mainLayout --> printerConfig["MH09 Cấu hình máy in"]
 mainLayout --> userGuide["MH10 Hướng dẫn sử dụng"]
 mainLayout --> storageDialog["MH11 Kiểm tra dung lượng"]
+mainLayout --> dataModeDialog["MH16 Chế độ dữ liệu"]
+mainLayout --> aboutDialog["MH17 Về ứng dụng"]
+customerManagement --> customerFormDialog["MH18 Thêm/Sửa khách hàng"]
+tableManagement --> addTableDialog["MH19 Thêm bàn"]
+adminManagement --> userFormDialog["MH20 Thêm/Sửa user"]
+adminManagement --> roleFormDialog["MH21 Thêm/Sửa nhóm quyền"]
+adminManagement --> permissionFormDialog["MH22 Thêm/Sửa phân quyền"]
+menuManagement --> addStockDialog["MH23 Nhập kho nhanh"]
+orderScreen --> reprintDialog["MH24 Chọn hóa đơn in lại"]
 orderScreen --> checkoutDialog["MH12 Thanh toán đơn"]
 menuManagement --> menuItemDialog["MH13 Thêm/Sửa món"]
 dashboardScreen --> paymentDetailDialog["MH14 Chi tiết hóa đơn"]
@@ -52,6 +61,15 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | 13 | Màn hình Thêm/Sửa món | Hộp thoại nhập liệu | Cập nhật thông tin chi tiết món hàng |
 | 14 | Màn hình Chi tiết hóa đơn | Hộp thoại tra cứu | Hiển thị chi tiết các dòng món của hóa đơn |
 | 15 | Màn hình Xem trước in | Hộp thoại hiển thị | Xem trước nội dung in và chỉnh mức zoom |
+| 16 | Màn hình Chế độ dữ liệu | Hộp thoại cấu hình | Cấu hình sử dụng dữ liệu mẫu hoặc thật |
+| 17 | Màn hình Về ứng dụng | Hộp thoại thông tin | Hiển thị phiên bản và nhóm phát triển |
+| 18 | Màn hình Thêm/Sửa khách hàng | Hộp thoại nhập liệu | Nhập/chỉnh sửa tên, SĐT, điểm khởi đầu của khách hàng |
+| 19 | Màn hình Thêm bàn | Hộp thoại nhập liệu | Nhập tên bàn mới |
+| 20 | Màn hình Thêm/Sửa user | Hộp thoại nhập liệu | Quản lý thông tin tài khoản và nhóm quyền |
+| 21 | Màn hình Thêm/Sửa nhóm quyền | Hộp thoại nhập liệu | Quản lý tên và mô tả nhóm quyền |
+| 22 | Màn hình Thêm/Sửa phân quyền | Hộp thoại nhập liệu | Gán chức năng và quyền thao tác cho nhóm quyền |
+| 23 | Màn hình Nhập kho nhanh | Hộp thoại nhập liệu | Nhập số lượng nhập kho thêm cho món được chọn |
+| 24 | Màn hình Chọn hóa đơn in lại | Hộp thoại tra cứu | Chọn hóa đơn hôm nay để in lại |
 
 ## 5.3 Mô tả các màn hình
 
@@ -95,13 +113,17 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | 8 | `showPrinterConfigScreen` | MenuItem action | Theo quyền | Mở cấu hình máy in |
 | 9 | `showUserGuideScreen` | MenuItem action | Không | Mở hướng dẫn sử dụng |
 | 10 | `showStorageUsageDialog` | MenuItem action | Không | Mở kiểm tra dung lượng |
+| 11 | `showDataModeDialog` | MenuItem action | Không | Mở chế độ dữ liệu |
+| 12 | `showAboutDialog` | MenuItem action | Không | Mở xem thông tin ứng dụng |
 
 ### 5.3.3 Màn hình Đơn hàng - Thu ngân (MH03)
 
 **a. Giao diện**
 
-- Header tìm kiếm món và nhập nhanh số lượng.
+- Khung tìm kiếm món và nhập nhanh số lượng.
 - Khu danh sách món theo danh mục.
+- Khung thông tin khách hàng của order.
+- Khung thêm món phát sinh ngoài menu.
 - Khu bảng chi tiết order với cột linh hoạt.
 - Khu tổng tiền/giảm giá/thành tiền.
 - Khu tác vụ: in bếp, in lại, in phiếu tạm, thanh toán.
@@ -121,8 +143,14 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | 8 | `printKitchenTicketButton` | Button | Có order đang phục vụ | In phiếu bếp |
 | 9 | `printSelectedButton` | Button | Phải chọn món | In món đã chọn |
 | 10 | `checkoutButton` | Button | Có order + dữ liệu hợp lệ | Mở dialog thanh toán |
-| 11 | `allTablesFilterBtn` | ToggleButton | Một lựa chọn tại một thời điểm | Lọc bàn |
-| 12 | `addTableButton` | Button | Theo quyền/quy tắc | Thêm bàn nhanh |
+| 11 | `allTablesFilterBtn` | ToggleButton | Một lựa chọn | Lọc bàn |
+| 12 | `addTableButton` | Button | Theo quyền | Thêm bàn nhanh |
+| 13 | `reprintKitchenTicketButton` | Button | Có order | In lại phiếu bếp |
+| 14 | `reprintReceiptButton` | Button | Có order | In lại hóa đơn |
+| 15 | `printDraftReceiptButton` | Button | Có order | In phiếu tạm |
+| 16 | `orderCustomerPhoneField` | TextField | Số điện thoại | Nhập SĐT khách hàng |
+| 17 | `orderCustomerSuggestListView`| ListView | Dữ liệu động | Gợi ý khách hàng từ SĐT |
+| 18 | `itemNameField`, `itemPriceField`| TextField | Nhập liệu | Thêm món phát sinh |
 
 ### 5.3.4 Màn hình Thống kê doanh thu (MH04)
 
@@ -143,6 +171,8 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | 4 | `paymentsTable` | TableView | Dữ liệu đọc/chọn | Lịch sử thanh toán |
 | 5 | `onViewDetailClick` | Button action | Chọn 1 hóa đơn | Mở chi tiết hóa đơn |
 | 6 | `onDeleteSelectedClick` | Button action | Chọn bản ghi | Xóa hóa đơn chọn |
+| 7 | `onDeleteByDateRangeClick` | Button action | Hợp lệ ngày | Xóa hóa đơn theo khoảng ngày |
+| 8 | `paymentStartDatePicker/paymentEndDatePicker` | DatePicker | Có giá trị | Lọc lịch sử hóa đơn theo khoảng thời gian |
 
 ### 5.3.5 Màn hình Quản lý menu (MH05)
 
@@ -170,9 +200,10 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 
 **a. Giao diện**
 
-- Ô tìm kiếm theo tên/số điện thoại.
-- Nhóm nút thao tác: tìm, làm mới, thêm, sửa, xóa.
+- Thanh tác vụ: Tìm kiếm, Làm mới, Thêm, Sửa, Xóa.
+- Header cấu hình tích điểm: Tiền tích, điểm nhận, điểm tối thiểu để đổi, giá trị 1 điểm.
 - Bảng khách hàng: ID, tên, SĐT, điểm.
+- Bảng lịch sử giao dịch điểm của khách hàng được chọn.
 
 **b. Mô tả các đối tượng trên màn hình**
 
@@ -180,9 +211,11 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 |---|---|---|---|---|
 | 1 | `searchField` | TextField | Nhập tự do | Tìm khách hàng |
 | 2 | `customerTable` | TableView | Dữ liệu động | Danh sách khách hàng |
-| 3 | `onAdd` | Button action | Dữ liệu hợp lệ | Thêm khách hàng |
-| 4 | `onEdit` | Button action | Chọn 1 khách | Cập nhật khách hàng |
-| 5 | `onDelete` | Button action | Chọn 1 khách | Xóa khách hàng |
+| 3 | `onAdd`/`onEdit`/`onDelete`| Button action | Validate form | CRUD khách hàng |
+| 4 | `pointHistoryTable` | TableView | Chọn khách hàng | Lịch sử giao dịch điểm tích lũy |
+| 5 | `earnUnitAmountField`/`pointsPerUnitField` | TextField | Số > 0 | Cấu hình tỷ lệ cộng điểm |
+| 6 | `redeemPointsRequiredField`/`redeemValueField`| TextField | Số > 0 | Cấu hình tham số đổi điểm |
+| 7 | `onSaveLoyaltyConfig` | Button action | Hợp lệ dữ liệu | Lưu cấu hình tích điểm |
 
 ### 5.3.7 Màn hình Quản lý bàn (MH07)
 
@@ -280,6 +313,7 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 
 - Thông tin order và danh sách món.
 - Khu tổng tiền, giảm giá, tiền khách đưa, tiền thối.
+- Khu vực khách hàng (tìm/thêm khách, thông tin tích điểm, đổi điểm lấy giảm giá).
 - Chọn phương thức thanh toán.
 - Nút xác nhận/hủy.
 
@@ -288,12 +322,15 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | STT | Tên | Kiểu | Ràng buộc | Chức năng |
 |---|---|---|---|---|
 | 1 | `itemsTableView` | TableView | Dữ liệu order hiện tại | Hiển thị món thanh toán |
-| 2 | `discountField` | TextField | Số >= 0 | Nhập giảm giá |
+| 2 | `discountField` | TextField | Số >= 0 | Nhập giảm giá bằng tiền mặt |
 | 3 | `paidAmountField` | TextField | Số >= 0 | Nhập tiền khách đưa |
 | 4 | `changeAmountLabel` | Label | Chỉ hiển thị | Tiền thối tự tính |
-| 5 | `paymentMethodGroup` | ToggleGroup | Chọn 1 phương thức | Chọn tiền mặt/chuyển khoản/thẻ |
-| 6 | `confirmButton` | Button | Validate đủ dữ liệu | Xác nhận thanh toán |
-| 7 | `cancelButton` | Button | Không | Hủy dialog |
+| 5 | `customerPhoneField` | TextField | Chuỗi SĐT | Nhập tìm kiếm khách hàng |
+| 6 | `customerSuggestListView` | ListView | Dữ liệu động | Gợi ý khách hàng để tích điểm |
+| 7 | `redeemPointsField` | TextField | Số <= Max Point | Nhập số điểm muốn đổi giảm giá |
+| 8 | `paymentMethodGroup` | ToggleGroup | Chọn 1 phương thức | Chọn tiền mặt/chuyển khoản/thẻ |
+| 9 | `confirmButton` | Button | Validate đủ dữ liệu | Xác nhận thanh toán |
+| 10 | `cancelButton` | Button | Không | Hủy dialog |
 
 ### 5.3.13 Màn hình Thêm/Sửa món (MH13)
 
@@ -349,6 +386,160 @@ printerConfig --> printPreview["MH15 Xem trước in"]
 | 3 | `onZoomIn/onZoomOut` | Button action | Trong ngưỡng zoom | Phóng to/thu nhỏ |
 | 4 | `onActualSize/onResetZoom` | Button action | Không | Trả về kích thước chuẩn |
 | 5 | `onClose` | Button action | Không | Đóng dialog |
+
+### 5.3.16 Màn hình Chế độ dữ liệu (MH16)
+
+**a. Giao diện**
+
+- Tùy chọn chế độ dữ liệu (mẫu/thực tế).
+- Mô tả ngắn tác động của từng chế độ.
+- Nút xác nhận áp dụng và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `sampleDataRadio` | RadioButton | Chọn 1 trong nhóm | Chọn dùng dữ liệu mẫu |
+| 2 | `realDataRadio` | RadioButton | Chọn 1 trong nhóm | Chọn dùng dữ liệu thực tế |
+| 3 | `modeDescriptionLabel` | Label | Chỉ hiển thị | Giải thích chế độ đã chọn |
+| 4 | `applyButton` | Button action | Có chế độ được chọn | Áp dụng chế độ dữ liệu |
+| 5 | `cancelButton` | Button action | Không | Đóng dialog không thay đổi |
+
+### 5.3.17 Màn hình Về ứng dụng (MH17)
+
+**a. Giao diện**
+
+- Tên ứng dụng, phiên bản, thông tin nhóm phát triển.
+- Khu mô tả chức năng chính.
+- Nút đóng.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `appNameLabel` | Label | Chỉ hiển thị | Tên hệ thống |
+| 2 | `versionLabel` | Label | Chỉ hiển thị | Phiên bản ứng dụng |
+| 3 | `teamInfoLabel` | Label | Chỉ hiển thị | Thông tin nhóm phát triển |
+| 4 | `closeButton` | Button action | Không | Đóng cửa sổ thông tin |
+
+### 5.3.18 Màn hình Thêm/Sửa khách hàng (MH18)
+
+**a. Giao diện**
+
+- Form nhập tên khách hàng, số điện thoại, điểm ban đầu.
+- Tiêu đề thay đổi theo chế độ thêm mới/chỉnh sửa.
+- Nút lưu và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `nameField` | TextField | Không rỗng | Nhập tên khách hàng |
+| 2 | `phoneField` | TextField | Định dạng SĐT hợp lệ | Nhập số điện thoại |
+| 3 | `pointsField` | TextField | Số nguyên >= 0 | Nhập điểm ban đầu (khi thêm mới) |
+| 4 | `saveButton` | Button action | Validate dữ liệu | Lưu thông tin khách hàng |
+| 5 | `cancelButton` | Button action | Không | Đóng form không lưu |
+
+### 5.3.19 Màn hình Thêm bàn (MH19)
+
+**a. Giao diện**
+
+- Hộp thoại đơn giản gồm ô nhập tên bàn.
+- Nút xác nhận tạo bàn và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `tableNameField` | TextField | Không rỗng | Nhập tên bàn mới |
+| 2 | `confirmButton` | Button action | Tên hợp lệ, không trùng | Tạo bàn mới |
+| 3 | `cancelButton` | Button action | Không | Hủy thao tác |
+
+### 5.3.20 Màn hình Thêm/Sửa user (MH20)
+
+**a. Giao diện**
+
+- Form thông tin tài khoản: username, password, nhóm quyền.
+- Trạng thái thêm mới/chỉnh sửa hiển thị ở tiêu đề.
+- Nút lưu và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `usernameField` | TextField | Không rỗng, không trùng | Nhập tài khoản đăng nhập |
+| 2 | `passwordField` | PasswordField | Không rỗng khi thêm mới | Nhập mật khẩu |
+| 3 | `roleGroupCombo` | ComboBox | Phải chọn 1 nhóm quyền | Gán nhóm quyền cho user |
+| 4 | `saveButton` | Button action | Validate form | Lưu user |
+| 5 | `cancelButton` | Button action | Không | Hủy thao tác |
+
+### 5.3.21 Màn hình Thêm/Sửa nhóm quyền (MH21)
+
+**a. Giao diện**
+
+- Form thông tin nhóm quyền gồm tên và mô tả.
+- Nút lưu và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `roleNameField` | TextField | Không rỗng, không trùng | Nhập tên nhóm quyền |
+| 2 | `roleDescriptionField` | TextArea/TextField | Tùy chọn | Nhập mô tả nhóm quyền |
+| 3 | `saveButton` | Button action | Validate dữ liệu | Lưu nhóm quyền |
+| 4 | `cancelButton` | Button action | Không | Đóng form |
+
+### 5.3.22 Màn hình Thêm/Sửa phân quyền (MH22)
+
+**a. Giao diện**
+
+- Form chọn nhóm quyền, chức năng, hành động (xem/thêm/sửa/xóa).
+- Nút lưu và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `roleGroupCombo` | ComboBox | Bắt buộc chọn | Chọn nhóm quyền cần gán |
+| 2 | `functionCombo` | ComboBox | Bắt buộc chọn | Chọn chức năng hệ thống |
+| 3 | `canViewCheck/canCreateCheck/canUpdateCheck/canDeleteCheck` | CheckBox | Tối thiểu 1 quyền | Chọn mức quyền thao tác |
+| 4 | `saveButton` | Button action | Validate tổ hợp phân quyền | Lưu phân quyền |
+| 5 | `cancelButton` | Button action | Không | Hủy thao tác |
+
+### 5.3.23 Màn hình Nhập kho nhanh (MH23)
+
+**a. Giao diện**
+
+- Hộp thoại nhập số lượng nhập thêm cho món được chọn.
+- Hiển thị thông tin món và tồn kho hiện tại.
+- Nút xác nhận và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `itemNameLabel` | Label | Chỉ hiển thị | Tên món cần nhập kho |
+| 2 | `currentStockLabel` | Label | Chỉ hiển thị | Tồn kho hiện tại |
+| 3 | `addQuantityField` | TextField | Số nguyên > 0 | Nhập số lượng thêm |
+| 4 | `confirmButton` | Button action | Dữ liệu hợp lệ | Cập nhật tồn kho |
+| 5 | `cancelButton` | Button action | Không | Hủy nhập kho nhanh |
+
+### 5.3.24 Màn hình Chọn hóa đơn in lại (MH24)
+
+**a. Giao diện**
+
+- Danh sách hóa đơn trong ngày (mã, bàn, tiền, phương thức, thời gian).
+- Hỗ trợ chọn 1 dòng hoặc double click để in ngay.
+- Nút in lại và hủy.
+
+**b. Mô tả các đối tượng trên màn hình**
+
+| STT | Tên | Kiểu | Ràng buộc | Chức năng |
+|---|---|---|---|---|
+| 1 | `paymentsListView` | ListView | Có dữ liệu hóa đơn | Hiển thị danh sách hóa đơn có thể in lại |
+| 2 | `reprintButton` | Button action | Chọn 1 hóa đơn | Gửi lệnh in lại hóa đơn |
+| 3 | `cancelButton` | Button action | Không | Đóng dialog |
+| 4 | `onDoubleClickPayment` | Mouse event | Chọn dòng hợp lệ | In lại nhanh bằng thao tác double click |
 
 ## Phụ lục: Quy ước chuẩn hóa giao diện
 

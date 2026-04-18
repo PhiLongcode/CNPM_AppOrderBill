@@ -4,22 +4,24 @@ import java.time.LocalDateTime;
 
 /**
  * Lịch sử giao dịch điểm của một khách hàng.
- * Mỗi bản ghi thể hiện 1 lần cộng hoặc trừ điểm.
+ * M��i bản ghi thể hiện 1 lần cộng hoặc tr�� điểm.
  */
 public class PointTransaction {
 
     public enum Type {
-        EARN,   // Tích điểm sau khi thanh toán
-        REDEEM  // Đổi điểm lấy giảm giá
+        EARN,
+        REDEEM,
+        REDEEM_DISH,
+        REDEEM_GIFT
     }
 
     private Long id;
     private Long customerId;
-    private int delta;             // dương = cộng, âm = trừ
-    private int balanceAfter;      // số điểm còn lại sau giao dịch
+    private int delta;
+    private int balanceAfter;
     private Type type;
-    private String note;           // e.g. "Thanh toán đơn #ORDER123" hoặc "Đổi 100 điểm"
-    private String orderId;        // order liên quan (nullable)
+    private String note;
+    private String orderId;
     private LocalDateTime createdAt;
 
     public PointTransaction(Long id, Long customerId, int delta, int balanceAfter,

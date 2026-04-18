@@ -9,8 +9,12 @@ import com.giadinh.apporderbill.catalog.CatalogComponentImpl;
 import com.giadinh.apporderbill.catalog.repository.*;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
 import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyRedeemMenuItemRepository;
 import com.giadinh.apporderbill.customer.repository.MySqlCustomerRepository;
 import com.giadinh.apporderbill.customer.repository.MySqlLoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.MySqlLoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.MySqlLoyaltyRedeemMenuItemRepository;
 import com.giadinh.apporderbill.customer.repository.MySqlPointTransactionRepository;
 import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
@@ -111,8 +115,25 @@ public class OrderApiMySqlConfig {
     }
 
     @Bean
-    public OrdersComponent ordersComponent(OrderRepository orderRepository, MenuItemRepository menuItemRepository, PaymentRepository paymentRepository) {
-        return new OrdersComponentImpl(orderRepository, menuItemRepository, paymentRepository);
+    public LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository(MySqlConnectionProvider provider) {
+        return new MySqlLoyaltyRedeemMenuItemRepository(provider);
+    }
+
+    @Bean
+    public LoyaltyGiftRepository loyaltyGiftRepository(MySqlConnectionProvider provider) {
+        return new MySqlLoyaltyGiftRepository(provider);
+    }
+
+    @Bean
+    public OrdersComponent ordersComponent(OrderRepository orderRepository,
+            MenuItemRepository menuItemRepository,
+            PaymentRepository paymentRepository,
+            TableRepository tableRepository,
+            CustomerUseCases customerUseCases,
+            LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository,
+            LoyaltyGiftRepository loyaltyGiftRepository) {
+        return new OrdersComponentImpl(orderRepository, menuItemRepository, paymentRepository,
+                tableRepository, customerUseCases, loyaltyRedeemMenuItemRepository, loyaltyGiftRepository);
     }
 
     @Bean
@@ -168,10 +189,14 @@ public class OrderApiMySqlConfig {
     @Bean
     public CustomerUseCases customerUseCases(CustomerRepository customerRepository,
                                              PointTransactionRepository pointTransactionRepository,
-                                             LoyaltyConfigRepository loyaltyConfigRepository) {
+                                             LoyaltyConfigRepository loyaltyConfigRepository,
+                                             LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository,
+                                             LoyaltyGiftRepository loyaltyGiftRepository) {
         CustomerUseCases useCases = new CustomerUseCases(customerRepository);
         useCases.setPointTransactionRepository(pointTransactionRepository);
         useCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
+        useCases.setLoyaltyRedeemMenuItemRepository(loyaltyRedeemMenuItemRepository);
+        useCases.setLoyaltyGiftRepository(loyaltyGiftRepository);
         useCases.setLoyaltyConfig(loyaltyConfigRepository.load());
         return useCases;
     }

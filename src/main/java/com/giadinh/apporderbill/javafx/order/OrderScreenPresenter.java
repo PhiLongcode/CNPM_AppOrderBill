@@ -13,6 +13,7 @@ import com.giadinh.apporderbill.kitchen.usecase.dto.PrintKitchenTicketOutput;
 import com.giadinh.apporderbill.kitchen.usecase.dto.PrintSelectedItemsInput;
 import com.giadinh.apporderbill.orders.usecase.*;
 import com.giadinh.apporderbill.orders.usecase.dto.*;
+import com.giadinh.apporderbill.customer.model.LoyaltyRedeemMode;
 import com.giadinh.apporderbill.orders.model.Order;
 import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
@@ -415,11 +416,21 @@ public class OrderScreenPresenter {
      * Thanh toán order.
      */
     public boolean checkout(long paidAmount, String paymentMethod, long discountAmount, Double discountPercent) {
-        return checkout(paidAmount, paymentMethod, discountAmount, discountPercent, null, 0);
+        return checkout(paidAmount, paymentMethod, discountAmount, discountPercent, null, 0,
+                LoyaltyRedeemMode.NONE, null, null);
     }
 
     public boolean checkout(long paidAmount, String paymentMethod, long discountAmount,
                             Double discountPercent, Long customerId, int pointsUsed) {
+        return checkout(paidAmount, paymentMethod, discountAmount, discountPercent, customerId, pointsUsed,
+                LoyaltyRedeemMode.NONE, null, null);
+    }
+
+    public boolean checkout(long paidAmount, String paymentMethod, long discountAmount,
+                            Double discountPercent, Long customerId, int pointsUsed,
+                            LoyaltyRedeemMode loyaltyRedeemMode,
+                            Long loyaltyRedeemCatalogId,
+                            Long loyaltyGiftId) {
         if (currentOrderId == null) {
             view.showError(msg("ui.order.select_table_and_have_order"));
             return false;
@@ -433,8 +444,17 @@ public class OrderScreenPresenter {
                     discountPercent);
             CalculateOrderTotalOutput calcOutput = calculateOrderTotalUseCase.execute(calcInput);
 
-            if (paidAmount < calcOutput.getFinalAmount()) {
-                view.showError(msg("error.CHECKOUT_PAID_AMOUNT_INSUFFICIENT", calcOutput.getFinalAmount()));
+            LoyaltyRedeemMode mode = loyaltyRedeemMode != null ? loyaltyRedeemMode : LoyaltyRedeemMode.NONE;
+            long due = calcOutput.getFinalAmount();
+            if (mode == LoyaltyRedeemMode.BILL_DISCOUNT && pointsUsed > 0 && customerId != null
+                    && customerUseCases != null && customerUseCases.getLoyaltyConfig() != null) {
+                long off = customerUseCases.getLoyaltyConfig().calcRedeemDiscount(pointsUsed);
+                due = Math.max(0L, due - off);
+            }
+
+            boolean cashPayment = paymentMethod == null || "CASH".equalsIgnoreCase(paymentMethod);
+            if (cashPayment && paidAmount < due) {
+                view.showError(msg("error.CHECKOUT_PAID_AMOUNT_INSUFFICIENT", due));
                 return false;
             }
 
@@ -447,9 +467,13 @@ public class OrderScreenPresenter {
                     (Double) discountPercent,
                     (String) "THU_NGAN",
                     (Long) customerId,
-                    (int) pointsUsed);
+                    (int) pointsUsed,
+                    mode,
+                    loyaltyRedeemCatalogId,
+                    loyaltyGiftId);
 
             CheckoutOrderOutput output = checkoutOrderUseCase.execute(input);
+
 
             // IN HÓA ĐƠN SAU KHI ĐÃ LƯU - với paymentId từ output
             boolean printSuccess = false;

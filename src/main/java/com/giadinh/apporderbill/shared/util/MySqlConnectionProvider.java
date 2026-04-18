@@ -139,8 +139,53 @@ public class MySqlConnectionProvider {
                         ('loyalty.earnUnitAmount', '10000'),
                         ('loyalty.pointsPerUnit', '1'),
                         ('loyalty.redeemPointsRequired', '100'),
-                        ('loyalty.redeemValue', '5000')
+                        ('loyalty.redeemValue', '5000'),
+                        ('tax.vatPercent', '0')
                     ON DUPLICATE KEY UPDATE `value` = `value`
+                    """);
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN customer_id BIGINT");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN vat_percent DOUBLE NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN vat_amount BIGINT NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN points_discount_amount BIGINT NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN net_before_vat BIGINT NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN amount_after_vat_before_points BIGINT NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE order_items ADD COLUMN loyalty_redeem_points INT NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS loyalty_redeem_menu_items (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        menu_item_id INT NOT NULL,
+                        points_cost INT NOT NULL,
+                        active TINYINT NOT NULL DEFAULT 1
+                    )
+                    """);
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS loyalty_gifts (
+                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        points_cost INT NOT NULL,
+                        active TINYINT NOT NULL DEFAULT 1
+                    )
                     """);
         } catch (Exception ignored) {
         }

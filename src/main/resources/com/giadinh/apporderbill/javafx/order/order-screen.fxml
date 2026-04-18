@@ -63,8 +63,9 @@
             <VBox spacing="10" style="-fx-background-color: white; -fx-padding: 15;" VBox.vgrow="ALWAYS">
                 <!-- Order Header -->
                 <VBox spacing="5">
-                    <VBox spacing="4">
-                        <HBox spacing="10" alignment="CENTER_LEFT">
+                    <AnchorPane>
+                        <HBox spacing="10" alignment="CENTER_LEFT"
+                              AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                             <children>
                                 <Label text="Bàn:" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
                                 <TextField fx:id="tableNumberField" editable="false" prefWidth="100" 
@@ -77,8 +78,17 @@
                                 <Label fx:id="orderCustomerNameLabel" text="(Khách vãng lai)" textFill="GRAY"/>
                             </children>
                         </HBox>
-                        <ListView fx:id="orderCustomerSuggestListView" prefHeight="88" maxHeight="88" visible="false" managed="false"/>
-                    </VBox>
+                        <ListView fx:id="orderCustomerSuggestListView"
+                                  prefWidth="300"
+                                  prefHeight="120"
+                                  maxHeight="120"
+                                  visible="false"
+                                  managed="false"
+                                  viewOrder="9999"
+                                  AnchorPane.topAnchor="30.0"
+                                  AnchorPane.rightAnchor="0.0"
+                                  style="-fx-background-color: white; -fx-border-color: #90CAF9; -fx-border-width: 1;"/>
+                    </AnchorPane>
                     
                     <!-- Custom Item Entry -->
                     <HBox spacing="5" alignment="CENTER_LEFT">

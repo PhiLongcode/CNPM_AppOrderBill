@@ -28,7 +28,11 @@
                         <MenuItem fx:id="customerManagementMenuItem" text="Quản lý khách hàng" onAction="#showCustomerManagementScreen"/>
                         <MenuItem fx:id="tableManagementMenuItem" text="Quản lý bàn" onAction="#showTableManagementScreen"/>
                         <MenuItem fx:id="adminManagementMenuItem" text="Quản trị phân quyền" onAction="#showAdminManagementScreen"/>
-                        <MenuItem text="Cấu hình máy in" onAction="#showPrinterConfigScreen"/>
+                    </items>
+                </Menu>
+                <Menu text="Cấu hình">
+                    <items>
+                        <MenuItem fx:id="settingsMenuItem" text="Cài đặt (tích điểm, VAT, máy in)" onAction="#showAppSettingsScreen"/>
                     </items>
                 </Menu>
                 <Menu text="Trợ giúp">

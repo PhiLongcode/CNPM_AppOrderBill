@@ -30,7 +30,7 @@ public class BillingComponentImpl implements BillingComponent {
             Object menuItemRepository, PrinterService printerService) {
         this.getTodayPaymentsUseCase = new GetTodayPaymentsUseCase(paymentRepository, orderRepository);
         this.getPaymentsByDateRangeUseCase = new GetPaymentsByDateRangeUseCase(paymentRepository, orderRepository);
-        this.getPaymentDetailUseCase = new GetPaymentDetailUseCase(paymentRepository, orderRepository, menuItemRepository);
+        this.getPaymentDetailUseCase = new GetPaymentDetailUseCase(paymentRepository, orderRepository, menuItemRepository, null);
         this.deletePaymentsByDateRangeUseCase = new DeletePaymentsByDateRangeUseCase(paymentRepository);
         this.printReceiptUseCase = new PrintReceiptUseCase(paymentRepository, printerService);
         this.reprintReceiptUseCase = new ReprintReceiptUseCase(paymentRepository, printerService);

@@ -114,8 +114,8 @@ public class SqliteOrderRepository implements OrderRepository {
                     del.executeUpdate();
                 }
                 String insItem = """
-                        INSERT INTO order_items (id, order_id, menu_item_id, menu_item_name, quantity, price, note, status, is_printed, discount_percent, discount_amount)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO order_items (id, order_id, menu_item_id, menu_item_name, quantity, price, note, status, is_printed, discount_percent, discount_amount, loyalty_redeem_points)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """;
                 try (PreparedStatement ps = c.prepareStatement(insItem)) {
                     for (OrderItem it : order.getItems()) {
@@ -130,6 +130,7 @@ public class SqliteOrderRepository implements OrderRepository {
                         ps.setInt(9, it.isPrintedToKitchen() ? 1 : 0);
                         ps.setDouble(10, it.getDiscountPercent() != null ? it.getDiscountPercent() : 0.0);
                         ps.setDouble(11, it.getDiscountAmount() != null ? it.getDiscountAmount() : 0.0);
+                        ps.setInt(12, it.getLoyaltyRedeemPoints());
                         ps.addBatch();
                     }
                     ps.executeBatch();
@@ -216,7 +217,7 @@ public class SqliteOrderRepository implements OrderRepository {
 
     private static void loadItems(Connection c, Order order) throws Exception {
         String sql = """
-                SELECT id, order_id, menu_item_id, menu_item_name, quantity, price, note, discount_percent, discount_amount, is_printed
+                SELECT id, order_id, menu_item_id, menu_item_name, quantity, price, note, discount_percent, discount_amount, is_printed, loyalty_redeem_points
                 FROM order_items WHERE order_id = ?
                 ORDER BY rowid
                 """;
@@ -232,7 +233,11 @@ public class SqliteOrderRepository implements OrderRepository {
                     if (rs.wasNull()) discountPercent = 0.0;
                     Double discountAmount = rs.getDouble("discount_amount");
                     if (rs.wasNull()) discountAmount = 0.0;
-                    
+                    int loyaltyPts = 0;
+                    try {
+                        loyaltyPts = rs.getInt("loyalty_redeem_points");
+                    } catch (Exception ignored) {
+                    }
                     OrderItem it = new OrderItem(
                             rs.getString("id"),
                             rs.getString("order_id"),
@@ -243,7 +248,8 @@ public class SqliteOrderRepository implements OrderRepository {
                             note,
                             discountPercent,
                             discountAmount,
-                            rs.getInt("is_printed") == 1);
+                            rs.getInt("is_printed") == 1,
+                            loyaltyPts);
                     order.restoreOrderItem(it);
                 }
             }

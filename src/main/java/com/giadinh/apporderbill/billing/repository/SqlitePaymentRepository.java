@@ -27,9 +27,9 @@ public class SqlitePaymentRepository implements PaymentRepository {
         try (Connection c = connectionProvider.getConnection()) {
             if (isInsert) {
                 String sql = """
-                    INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at, customer_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+                    INSERT INTO payments (order_id, total_amount, final_amount, paid_amount, payment_method, discount_amount, discount_percent, cashier, paid_at, customer_id, vat_percent, vat_amount, net_before_vat, amount_after_vat_before_points, points_discount_amount)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """;
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     bindParams(ps, payment);
                     ps.executeUpdate();
@@ -43,12 +43,12 @@ public class SqlitePaymentRepository implements PaymentRepository {
                 }
             } else {
                 String sql = """
-                    UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?, customer_id = ?
+                    UPDATE payments SET order_id = ?, total_amount = ?, final_amount = ?, paid_amount = ?, payment_method = ?, discount_amount = ?, discount_percent = ?, cashier = ?, paid_at = ?, customer_id = ?, vat_percent = ?, vat_amount = ?, net_before_vat = ?, amount_after_vat_before_points = ?, points_discount_amount = ?
                     WHERE id = ?
-                """;
+                    """;
                 try (PreparedStatement ps = c.prepareStatement(sql)) {
                     bindParams(ps, payment);
-                    ps.setLong(11, payment.getPaymentId());
+                    ps.setLong(16, payment.getPaymentId());
                     ps.executeUpdate();
                 }
             }
@@ -81,6 +81,11 @@ public class SqlitePaymentRepository implements PaymentRepository {
         } else {
             ps.setNull(10, java.sql.Types.INTEGER);
         }
+        ps.setDouble(11, payment.getVatPercent());
+        ps.setLong(12, payment.getVatAmount());
+        ps.setLong(13, payment.getNetAmountBeforeVat());
+        ps.setLong(14, payment.getAmountAfterVatBeforePoints());
+        ps.setLong(15, payment.getPointsDiscountAmount());
     }
 
     @Override
@@ -166,7 +171,34 @@ public class SqlitePaymentRepository implements PaymentRepository {
             }
         } catch (Exception ignored) {}
 
-        Payment payment = new Payment(orderId, totalAmount, finalAmount, paidAmount, paymentMethod, discountAmount, discountPercent, cashier, customerId);
+        double vatPercent = 0.0;
+        long vatAmount = 0L;
+        long netBeforeVat = 0L;
+        long amountAfterVatBeforePoints = 0L;
+        long pointsDiscount = 0L;
+        try {
+            vatPercent = rs.getDouble("vat_percent");
+        } catch (Exception ignored) {
+        }
+        try {
+            vatAmount = rs.getLong("vat_amount");
+        } catch (Exception ignored) {
+        }
+        try {
+            netBeforeVat = rs.getLong("net_before_vat");
+        } catch (Exception ignored) {
+        }
+        try {
+            amountAfterVatBeforePoints = rs.getLong("amount_after_vat_before_points");
+        } catch (Exception ignored) {
+        }
+        try {
+            pointsDiscount = rs.getLong("points_discount_amount");
+        } catch (Exception ignored) {
+        }
+
+        Payment payment = new Payment(orderId, totalAmount, finalAmount, paidAmount, paymentMethod, discountAmount, discountPercent, cashier, customerId,
+                vatAmount, vatPercent, pointsDiscount, netBeforeVat, amountAfterVatBeforePoints);
         payment.setPaymentId(id);
         payment.setPaidAt(paidAt);
         return payment;

@@ -6,6 +6,8 @@ import com.giadinh.apporderbill.table.repository.TableRepository;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -81,6 +83,26 @@ public class SqliteConnectionProvider {
                 s.execute("ALTER TABLE order_items ADD COLUMN discount_amount REAL DEFAULT 0");
             } catch (Exception ignoredColumnExists) {
             }
+            try {
+                s.execute("ALTER TABLE order_items ADD COLUMN loyalty_redeem_points INTEGER NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS loyalty_redeem_menu_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        menu_item_id INTEGER NOT NULL,
+                        points_cost INTEGER NOT NULL,
+                        active INTEGER NOT NULL DEFAULT 1
+                    )
+                    """);
+            s.execute("""
+                    CREATE TABLE IF NOT EXISTS loyalty_gifts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        points_cost INTEGER NOT NULL,
+                        active INTEGER NOT NULL DEFAULT 1
+                    )
+                    """);
             s.execute("""
                     CREATE TABLE IF NOT EXISTS payments (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -97,6 +119,26 @@ public class SqliteConnectionProvider {
                     """);
             try {
                 s.execute("ALTER TABLE payments ADD COLUMN customer_id INTEGER");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN vat_percent REAL NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN vat_amount INTEGER NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN points_discount_amount INTEGER NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN net_before_vat INTEGER NOT NULL DEFAULT 0");
+            } catch (Exception ignoredColumnExists) {
+            }
+            try {
+                s.execute("ALTER TABLE payments ADD COLUMN amount_after_vat_before_points INTEGER NOT NULL DEFAULT 0");
             } catch (Exception ignoredColumnExists) {
             }
             try {
@@ -178,7 +220,8 @@ public class SqliteConnectionProvider {
                         ('loyalty.earnUnitAmount', '10000'),
                         ('loyalty.pointsPerUnit', '1'),
                         ('loyalty.redeemPointsRequired', '100'),
-                        ('loyalty.redeemValue', '5000')
+                        ('loyalty.redeemValue', '5000'),
+                        ('tax.vatPercent', '0')
                     """);
             s.execute("""
                     CREATE TABLE IF NOT EXISTS point_transactions (
@@ -195,6 +238,7 @@ public class SqliteConnectionProvider {
                     """);
         } catch (Exception ignored) {
         }
+        seedCustomersIfEmpty();
     }
 
     public Connection getConnection() throws SQLException {
@@ -219,6 +263,32 @@ public class SqliteConnectionProvider {
         }
         for (int i = 1; i <= 20; i++) {
             tableRepository.save(new Table("Bàn " + i));
+        }
+    }
+
+    private void seedCustomersIfEmpty() {
+        try (Connection c = getConnection();
+             Statement countStmt = c.createStatement();
+             ResultSet rs = countStmt.executeQuery("SELECT COUNT(*) FROM customers")) {
+            int count = rs.next() ? rs.getInt(1) : 0;
+            if (count > 0) {
+                return;
+            }
+
+            String insertSql = "INSERT INTO customers(name, phone, points) VALUES (?, ?, ?)";
+            try (PreparedStatement ps = c.prepareStatement(insertSql)) {
+                for (int i = 1; i <= 500; i++) {
+                    String name = "Khach " + i;
+                    String phone = String.format("03%08d", i);
+                    int points = (i * 7) % 200;
+                    ps.setString(1, name);
+                    ps.setString(2, phone);
+                    ps.setInt(3, points);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+        } catch (Exception ignored) {
         }
     }
 }

@@ -234,6 +234,10 @@ public class DashboardController {
         try {
             PaymentDetailOutput detail = getPaymentDetailUseCase.execute(selected.getPaymentId());
             FXMLLoader loader = new FXMLLoader(getClass().getResource("payment-detail-dialog.fxml"));
+            ClassLoader cl = getClass().getClassLoader();
+            if (cl != null) {
+                loader.setClassLoader(cl);
+            }
             Scene scene = new Scene(loader.load());
             PaymentDetailDialogController controller = loader.getController();
             controller.setPaymentDetail(detail);

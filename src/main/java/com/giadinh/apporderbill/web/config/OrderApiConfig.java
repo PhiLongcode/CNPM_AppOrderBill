@@ -27,8 +27,12 @@ import com.giadinh.apporderbill.shared.service.DefaultPrinterService;
 import com.giadinh.apporderbill.customer.repository.CustomerRepository;
 import com.giadinh.apporderbill.customer.repository.LoyaltyConfigRepository;
 import com.giadinh.apporderbill.customer.repository.PointTransactionRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyRedeemMenuItemRepository;
 import com.giadinh.apporderbill.customer.repository.SqliteCustomerRepository;
 import com.giadinh.apporderbill.customer.repository.SqliteLoyaltyConfigRepository;
+import com.giadinh.apporderbill.customer.repository.SqliteLoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.SqliteLoyaltyRedeemMenuItemRepository;
 import com.giadinh.apporderbill.customer.repository.SqlitePointTransactionRepository;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 
@@ -116,10 +120,25 @@ public class OrderApiConfig {
     // --- Component Implementations ---
 
     @Bean
+    public LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqliteLoyaltyRedeemMenuItemRepository(connectionProvider);
+    }
+
+    @Bean
+    public LoyaltyGiftRepository loyaltyGiftRepository(SqliteConnectionProvider connectionProvider) {
+        return new SqliteLoyaltyGiftRepository(connectionProvider);
+    }
+
+    @Bean
     public OrdersComponent ordersComponent(OrderRepository orderRepository,
             MenuItemRepository menuItemRepository,
-            PaymentRepository paymentRepository) {
-        return new OrdersComponentImpl(orderRepository, menuItemRepository, paymentRepository);
+            PaymentRepository paymentRepository,
+            TableRepository tableRepository,
+            CustomerUseCases customerUseCases,
+            LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository,
+            LoyaltyGiftRepository loyaltyGiftRepository) {
+        return new OrdersComponentImpl(orderRepository, menuItemRepository, paymentRepository,
+                tableRepository, customerUseCases, loyaltyRedeemMenuItemRepository, loyaltyGiftRepository);
     }
 
     @Bean
@@ -188,10 +207,14 @@ public class OrderApiConfig {
     @Bean
     public CustomerUseCases customerUseCases(CustomerRepository customerRepository,
                                              PointTransactionRepository pointTransactionRepository,
-                                             LoyaltyConfigRepository loyaltyConfigRepository) {
+                                             LoyaltyConfigRepository loyaltyConfigRepository,
+                                             LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository,
+                                             LoyaltyGiftRepository loyaltyGiftRepository) {
         CustomerUseCases useCases = new CustomerUseCases(customerRepository);
         useCases.setPointTransactionRepository(pointTransactionRepository);
         useCases.setLoyaltyConfigRepository(loyaltyConfigRepository);
+        useCases.setLoyaltyRedeemMenuItemRepository(loyaltyRedeemMenuItemRepository);
+        useCases.setLoyaltyGiftRepository(loyaltyGiftRepository);
         useCases.setLoyaltyConfig(loyaltyConfigRepository.load());
         return useCases;
     }

@@ -1,7 +1,6 @@
 package com.giadinh.apporderbill.javafx.customer;
 
 import com.giadinh.apporderbill.customer.model.Customer;
-import com.giadinh.apporderbill.customer.model.LoyaltyConfig;
 import com.giadinh.apporderbill.customer.model.PointTransaction;
 import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
@@ -36,14 +35,6 @@ public class CustomerManagementController {
     @FXML private TableColumn<PointTransaction, Integer> txBalanceColumn;
     @FXML private TableColumn<PointTransaction, String> txNoteColumn;
     @FXML private TableColumn<PointTransaction, String> txOrderColumn;
-    @FXML private TextField earnUnitAmountField;
-    @FXML private TextField pointsPerUnitField;
-    @FXML private TextField redeemPointsRequiredField;
-    @FXML private TextField redeemValueField;
-    @FXML private Label earnUnitInfoLabel;
-    @FXML private Label pointsPerUnitInfoLabel;
-    @FXML private Label redeemPointsInfoLabel;
-    @FXML private Label redeemValueInfoLabel;
 
     private static final DateTimeFormatter DT_FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -74,8 +65,10 @@ public class CustomerManagementController {
         txTypeColumn.setCellValueFactory(c -> {
             PointTransaction tx = c.getValue();
             String label = switch (tx.getType()) {
-                case EARN   -> msg("ui.customer.tx_type_earn");
+                case EARN -> msg("ui.customer.tx_type_earn");
                 case REDEEM -> msg("ui.customer.tx_type_redeem");
+                case REDEEM_DISH -> msg("ui.customer.tx_type_redeem_dish");
+                case REDEEM_GIFT -> msg("ui.customer.tx_type_redeem_gift");
             };
             return new SimpleStringProperty(label);
         });
@@ -104,7 +97,6 @@ public class CustomerManagementController {
         txBalanceColumn.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getBalanceAfter()));
         txNoteColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNote()));
         txOrderColumn.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getOrderId()));
-        initLoyaltyHints();
         if (searchField != null) {
             searchField.textProperty().addListener((obs, oldValue, newValue) -> onSearch());
         }
@@ -112,7 +104,6 @@ public class CustomerManagementController {
 
     public void setUseCases(CustomerUseCases useCases) {
         this.useCases = useCases;
-        loadLoyaltyConfig();
         onRefresh();
     }
 
@@ -135,7 +126,6 @@ public class CustomerManagementController {
 
     @FXML private void onRefresh() {
         if (useCases == null) return;
-        loadLoyaltyConfig();
         rows.setAll(useCases.getAll(""));
         historyRows.clear();
         historyCustomerLabel.setText(msg("ui.customer.history_select_hint"));
@@ -248,73 +238,4 @@ public class CustomerManagementController {
         return DomainMessages.formatKey(key, args);
     }
 
-    @FXML
-    private void onSaveLoyaltyConfig() {
-        if (useCases == null) return;
-        try {
-            LoyaltyConfig config = new LoyaltyConfig(
-                    parsePositiveLong(earnUnitAmountField, "ui.customer.loyalty_earn_unit_invalid"),
-                    parsePositiveInt(pointsPerUnitField, "ui.customer.loyalty_points_per_unit_invalid"),
-                    parsePositiveInt(redeemPointsRequiredField, "ui.customer.loyalty_redeem_points_invalid"),
-                    parsePositiveLong(redeemValueField, "ui.customer.loyalty_redeem_value_invalid")
-            );
-            useCases.updateLoyaltyConfig(config);
-            showInfo(msg("ui.customer.loyalty_save_success"));
-        } catch (Exception e) {
-            showInfo(e.getMessage());
-        }
-    }
-
-    private void loadLoyaltyConfig() {
-        if (useCases == null || earnUnitAmountField == null) return;
-        LoyaltyConfig config = useCases.reloadLoyaltyConfig();
-        earnUnitAmountField.setText(String.valueOf(config.getEarnUnitAmount()));
-        pointsPerUnitField.setText(String.valueOf(config.getPointsPerUnit()));
-        redeemPointsRequiredField.setText(String.valueOf(config.getRedeemPointsRequired()));
-        redeemValueField.setText(String.valueOf(config.getRedeemValue()));
-    }
-
-    private long parsePositiveLong(TextField field, String errorMessageKey) {
-        long value;
-        try {
-            value = Long.parseLong(field.getText().trim());
-        } catch (Exception e) {
-            throw new IllegalArgumentException(msg(errorMessageKey));
-        }
-        if (value <= 0) {
-            throw new IllegalArgumentException(msg(errorMessageKey));
-        }
-        return value;
-    }
-
-    private int parsePositiveInt(TextField field, String errorMessageKey) {
-        int value;
-        try {
-            value = Integer.parseInt(field.getText().trim());
-        } catch (Exception e) {
-            throw new IllegalArgumentException(msg(errorMessageKey));
-        }
-        if (value <= 0) {
-            throw new IllegalArgumentException(msg(errorMessageKey));
-        }
-        return value;
-    }
-
-    private void initLoyaltyHints() {
-        installHint(earnUnitInfoLabel, "ui.customer.loyalty_hint_earn_unit");
-        installHint(pointsPerUnitInfoLabel, "ui.customer.loyalty_hint_points_per_unit");
-        installHint(redeemPointsInfoLabel, "ui.customer.loyalty_hint_redeem_points");
-        installHint(redeemValueInfoLabel, "ui.customer.loyalty_hint_redeem_value");
-    }
-
-    private void installHint(Label label, String key) {
-        if (label == null) {
-            return;
-        }
-        String message = msg(key);
-        Tooltip tooltip = new Tooltip(message);
-        Tooltip.install(label, tooltip);
-        label.setStyle(label.getStyle() + "; -fx-cursor: hand;");
-        label.setOnMouseClicked(event -> showInfo(message));
-    }
 }

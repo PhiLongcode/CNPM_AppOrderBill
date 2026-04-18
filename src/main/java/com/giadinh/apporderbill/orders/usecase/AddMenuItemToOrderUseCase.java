@@ -31,12 +31,12 @@ public class AddMenuItemToOrderUseCase {
 
         String targetMenuItemId = String.valueOf(menu.getMenuItemId());
 
-        // Nếu món đã có trong order (cùng menuItemId, chưa có ghi chú riêng) thì cộng dồn
-        // thay vì tạo thêm dòng mới.
+        // Nếu món đã có trong order (cùng menuItemId, chưa có ghi chú riêng, chưa in phiếu bếp) thì cộng dồn
+        // thay vì tạo thêm dòng mới. Dòng đã in bếp không gộp — thêm món trùng sẽ là dòng mới để in add-on.
         for (OrderItem existing : order.getItems()) {
             String note = existing.getNote();
             boolean hasCustomNote = note != null && !note.isBlank();
-            if (targetMenuItemId.equals(existing.getMenuItemId()) && !hasCustomNote) {
+            if (targetMenuItemId.equals(existing.getMenuItemId()) && !hasCustomNote && !existing.isPrintedToKitchen()) {
                 existing.updateQuantity(existing.getQuantity() + input.getQuantity());
                 order.recomputeTotalFromItems();
                 orderRepository.save(order);

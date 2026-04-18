@@ -143,7 +143,6 @@ public class OrderScreenController implements OrderScreenView {
     // Data
     private OrderScreenPresenter presenter;
     private GetActiveMenuItemsUseCase getActiveMenuItemsUseCase;
-    private AddMenuItemToOrderUseCase addMenuItemToOrderUseCase;
     private com.giadinh.apporderbill.catalog.repository.MenuItemRepository menuItemRepository;
     private com.giadinh.apporderbill.customer.usecase.CustomerUseCases customerUseCases;
     private com.giadinh.apporderbill.customer.model.Customer currentCustomerOfOrder;
@@ -301,7 +300,6 @@ public class OrderScreenController implements OrderScreenView {
 
     public void init(OpenOrCreateOrderUseCase openOrCreateOrderUseCase,
             AddCustomItemToOrderUseCase addCustomItemToOrderUseCase,
-            AddMenuItemToOrderUseCase addMenuItemToOrderUseCase,
             GetOrderDetailsUseCase getOrderDetailsUseCase,
             CalculateOrderTotalUseCase calculateOrderTotalUseCase,
             CancelOrderUseCase cancelOrderUseCase,
@@ -313,7 +311,6 @@ public class OrderScreenController implements OrderScreenView {
             RemoveOrderItemUseCase removeOrderItemUseCase,
             com.giadinh.apporderbill.orders.usecase.UpdateOrderItemDiscountUseCase updateOrderItemDiscountUseCase) {
         this.getActiveMenuItemsUseCase = getActiveMenuItemsUseCase;
-        this.addMenuItemToOrderUseCase = addMenuItemToOrderUseCase;
 
         // Presenter will be set by OrderPosApplication after repository is available
         this.presenter = null;
@@ -586,27 +583,9 @@ public class OrderScreenController implements OrderScreenView {
                 quickQuantityField.setText("1");
             }
 
-            // Nếu đã có dòng cùng món và chưa in phiếu bếp thì cộng dồn số lượng vào dòng
-            // đó.
-            // Món đã in phiếu bếp sẽ tạo dòng mới để tách rõ phần add-on.
-            OrderItemViewModel unprintedSameItem = null;
-            if (orderItemHandler != null) {
-                unprintedSameItem = orderItemHandler.getItemViewModels().stream()
-                        .filter(item -> !item.isCanceled())
-                        .filter(item -> !item.isPrintedToKitchen())
-                        .filter(item -> item.getName() != null && item.getName().equals(menuItem.getName()))
-                        .filter(item -> item.getUnitPrice() == menuItem.getUnitPrice())
-                        .findFirst()
-                        .orElse(null);
-            }
-
-            if (unprintedSameItem != null) {
-                presenter.updateItemQuantity(
-                        unprintedSameItem.getOrderItemId(),
-                        unprintedSameItem.getQuantity() + quantity);
-            } else {
-                presenter.onAddMenuItem(menuItem.getMenuItemId(), quantity);
-            }
+            // Luôn qua nghiệp vụ AddMenuItemToOrderUseCase: gộp dòng khi hợp lệ,
+            // tách dòng mới khi dòng hiện có đã in phiếu bếp (và các quy tắc ghi chú).
+            presenter.onAddMenuItem(menuItem.getMenuItemId(), quantity);
             currentOrderId = presenter.getCurrentOrderId();
         } catch (NumberFormatException e) {
             showError(msg("ui.order.quantity_invalid"));
@@ -1138,6 +1117,9 @@ public class OrderScreenController implements OrderScreenView {
         boolean visible = !matches.isEmpty();
         orderCustomerSuggestListView.setVisible(visible);
         orderCustomerSuggestListView.setManaged(visible);
+        if (visible) {
+            orderCustomerSuggestListView.toFront();
+        }
     }
 
     private void hideCustomerSuggestions() {

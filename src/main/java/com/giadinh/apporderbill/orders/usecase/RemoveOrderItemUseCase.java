@@ -25,7 +25,7 @@ public class RemoveOrderItemUseCase {
         }
         var item = order.getItems().get(idx);
         rollbackStock(item.getMenuItemId(), item.getQuantity());
-        order.removeOrderItem(item.getMenuItemId());
+        order.removeOrderItemAt(idx);
         orderRepository.save(order);
         return new RemoveOrderItemOutput(OrderUseCaseSupport.toOutputs(order), OrderUseCaseSupport.total(order));
     }

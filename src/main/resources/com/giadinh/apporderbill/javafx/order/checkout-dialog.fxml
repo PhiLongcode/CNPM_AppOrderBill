@@ -73,6 +73,18 @@
                             </VBox>
                             
                             <Separator/>
+
+                            <!-- VAT -->
+                            <VBox spacing="8" styleClass="summary-item">
+                                <Label text="VAT" styleClass="summary-label-small"/>
+                                <HBox spacing="10" alignment="CENTER_LEFT">
+                                    <Label fx:id="vatRateLabel" text="0%" styleClass="summary-label-small"/>
+                                    <Region HBox.hgrow="ALWAYS"/>
+                                    <Label fx:id="vatAmountLabel" text="0" styleClass="summary-amount-big"/>
+                                </HBox>
+                            </VBox>
+
+                            <Separator/>
                             
                             <!-- Khách cần trả -->
                             <VBox spacing="8" styleClass="summary-item final-item">
@@ -132,14 +144,27 @@
                                 <!-- Đổi điểm -->
                                 <VBox fx:id="redeemPointsBox" spacing="6" managed="false" visible="false"
                                       style="-fx-background-color:#fff8e1;-fx-padding:8;-fx-background-radius:6;">
-                                    <Label text="🎁 Sử dụng điểm tích lũy" style="-fx-font-weight:bold;-fx-text-fill:#e65100;"/>
-                                    <HBox spacing="6" alignment="CENTER_LEFT">
-                                        <Label text="Số điểm muốn dùng:" style="-fx-text-fill:#555;"/>
-                                        <TextField fx:id="redeemPointsField" promptText="0" prefWidth="80"
-                                                   onKeyReleased="#onRedeemPointsChanged"/>
-                                        <Label fx:id="redeemDiscountLabel" text="→ 0 VNĐ"
-                                               style="-fx-text-fill:#e65100;-fx-font-weight:bold;"/>
-                                    </HBox>
+                                    <Label text="🎁 Đổi điểm (một chế độ / bill)" style="-fx-font-weight:bold;-fx-text-fill:#e65100;"/>
+                                    <Label fx:id="loyaltyModeLabel" text="Hình thức đổi điểm"/>
+                                    <ComboBox fx:id="loyaltyModeCombo" maxWidth="Infinity" onAction="#onLoyaltyModeChanged"/>
+                                    <VBox fx:id="loyaltyBillBox" spacing="6" managed="false" visible="false">
+                                        <HBox spacing="6" alignment="CENTER_LEFT">
+                                            <Label text="Số điểm muốn dùng:" style="-fx-text-fill:#555;"/>
+                                            <TextField fx:id="redeemPointsField" promptText="0" prefWidth="80"
+                                                       onKeyReleased="#onRedeemPointsChanged"/>
+                                            <Label fx:id="redeemDiscountLabel" text="→ 0 VNĐ"
+                                                   style="-fx-text-fill:#e65100;-fx-font-weight:bold;"/>
+                                        </HBox>
+                                    </VBox>
+                                    <VBox fx:id="loyaltyDishBox" spacing="4" managed="false" visible="false">
+                                        <Label fx:id="loyaltyDishLabel" text="Chọn món đổi điểm"/>
+                                        <ComboBox fx:id="loyaltyDishCatalogCombo" maxWidth="Infinity"
+                                                  onAction="#onLoyaltyCatalogChanged"/>
+                                    </VBox>
+                                    <VBox fx:id="loyaltyGiftBox" spacing="4" managed="false" visible="false">
+                                        <Label fx:id="loyaltyGiftLabel" text="Chọn quà đổi điểm"/>
+                                        <ComboBox fx:id="loyaltyGiftCombo" maxWidth="Infinity"/>
+                                    </VBox>
                                 </VBox>
                             </VBox>
 

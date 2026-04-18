@@ -25,6 +25,10 @@
             <Label text="Phương thức:" style="-fx-font-weight: bold;"/>
             <Label fx:id="paymentMethodLabel"/>
         </HBox>
+        <HBox spacing="10">
+            <Label text="Khách hàng:" style="-fx-font-weight: bold;"/>
+            <Label fx:id="customerLabel"/>
+        </HBox>
     </VBox>
 
     <!-- Items Table -->
@@ -53,7 +57,27 @@
             <Label fx:id="discountAmountLabel"/>
         </HBox>
         <HBox spacing="10">
-            <Label text="Thành tiền:" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <Label text="Trước VAT:" style="-fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="netBeforeVatLabel"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="VAT:" style="-fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="vatSummaryLabel"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Sau VAT (trước đổi điểm):" style="-fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="amountAfterVatLabel"/>
+        </HBox>
+        <HBox fx:id="pointsDiscountRow" spacing="10" managed="false" visible="false">
+            <Label text="Giảm đổi điểm:" style="-fx-font-weight: bold;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="pointsDiscountLabel"/>
+        </HBox>
+        <HBox spacing="10">
+            <Label text="Tổng phải trả:" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="finalAmountLabel" style="-fx-font-size: 14px; -fx-text-fill: #4CAF50;"/>
         </HBox>

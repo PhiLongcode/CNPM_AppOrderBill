@@ -6,6 +6,7 @@ import com.giadinh.apporderbill.javafx.order.OrderScreenPresenter;
 import com.giadinh.apporderbill.shared.error.DomainMessages;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class CheckoutHandler {
@@ -91,6 +93,14 @@ public class CheckoutHandler {
             return;
         }
 
+        List<com.giadinh.apporderbill.javafx.order.OrderItemViewModel> unprintedItems =
+                presenter.getCurrentOrderItemsForCheckout().stream()
+                        .filter(item -> !item.isPrintedToKitchen())
+                        .toList();
+        if (!unprintedItems.isEmpty() && !confirmCheckoutWithUnprintedItems(unprintedItems)) {
+            return;
+        }
+
         long currentDiscount = parseLong(discountField.getText(), 0L);
         presenter.calculateTotalWithDiscount(currentDiscount, null);
         showCheckoutDialog(window);
@@ -138,6 +148,10 @@ public class CheckoutHandler {
         try {
             FXMLLoader loader = new FXMLLoader(
                     CheckoutHandler.class.getResource("/com/giadinh/apporderbill/javafx/order/checkout-dialog.fxml"));
+            ClassLoader cl = CheckoutHandler.class.getClassLoader();
+            if (cl != null) {
+                loader.setClassLoader(cl);
+            }
             DialogPane dialogPane = new DialogPane();
             CheckoutDialogController controller = new CheckoutDialogController();
             loader.setRoot(dialogPane);
@@ -185,14 +199,23 @@ public class CheckoutHandler {
 
             controller.getCancelButton().setOnAction(e -> dialog.close());
             controller.getConfirmButton().setOnAction(e -> {
-                CheckoutDialogController.Result result = controller.buildResult();
+                CheckoutDialogController.Result result;
+                try {
+                    result = controller.buildResult();
+                } catch (IllegalArgumentException ex) {
+                    errorHandler.accept(ex.getMessage());
+                    return;
+                }
                 boolean success = presenter.checkout(
                         result.paidAmount(),
                         result.paymentMethod(),
                         result.discountAmount(),
                         null,
                         result.customerId(),
-                        result.pointsUsed());
+                        result.pointsUsed(),
+                        result.loyaltyRedeemMode(),
+                        result.loyaltyRedeemCatalogId(),
+                        result.loyaltyGiftId());
                 if (success) {
                     paidAmount = String.valueOf(result.paidAmount());
                     paymentMethod = result.paymentMethod();
@@ -224,6 +247,25 @@ public class CheckoutHandler {
 
     private String msg(String key, Object... args) {
         return DomainMessages.formatKey(key, args);
+    }
+
+    private boolean confirmCheckoutWithUnprintedItems(List<com.giadinh.apporderbill.javafx.order.OrderItemViewModel> unprintedItems) {
+        StringBuilder details = new StringBuilder();
+        for (var item : unprintedItems) {
+            details.append("- ")
+                    .append(item.getName() == null ? msg("ui.order.unprinted_item_fallback_name") : item.getName())
+                    .append(" x")
+                    .append(Math.max(1, item.getQuantity()))
+                    .append("\n");
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(msg("ui.order.unprinted_items_warning_title"));
+        alert.setHeaderText(msg("ui.order.unprinted_items_warning_header", unprintedItems.size()));
+        alert.setContentText(msg("ui.order.unprinted_items_warning_body", details.toString().trim()));
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.OK;
     }
 }
 

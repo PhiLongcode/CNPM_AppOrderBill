@@ -132,7 +132,8 @@ class UnitScenarioCoverageTest {
         orderRepo.save(order);
         tableRepo.save(new Table("T1", "Bàn 5", TableStatus.OCCUPIED, "4001"));
 
-        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
+        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null,
+                new CalculateOrderTotalUseCase(orderRepo), null, null, null);
         var output = useCase.execute(new CheckoutOrderInput(4001L, 100000L, "CASH", null, null, "tester", null, 0));
         assertNotNull(output.getPaymentId());
         assertEquals(OrderStatus.COMPLETED, orderRepo.findById("4001").orElseThrow().getStatus());
@@ -149,7 +150,8 @@ class UnitScenarioCoverageTest {
         Order order = new Order("5001", "Bàn 6", LocalDateTime.now(), OrderStatus.PENDING, 0);
         order.addOrderItem(new com.giadinh.apporderbill.orders.model.OrderItem(order.getOrderId(), "1", "Lẩu", 1, 120000));
         orderRepo.save(order);
-        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
+        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null,
+                new CalculateOrderTotalUseCase(orderRepo), null, null, null);
 
         DomainException ex = assertThrows(DomainException.class, () ->
                 useCase.execute(new CheckoutOrderInput(5001L, 50000L, "CASH", null, null, "tester", null, 0)));
@@ -168,13 +170,39 @@ class UnitScenarioCoverageTest {
         orderRepo.save(order);
         tableRepo.save(new Table("T11", "Bàn 11", TableStatus.OCCUPIED, "5101"));
 
-        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
+        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null,
+                new CalculateOrderTotalUseCase(orderRepo), null, null, null);
         useCase.execute(new CheckoutOrderInput(5101L, 180000L, "CASH", 10000L, 10.0, "tester", null, 0));
 
         assertEquals(1, paymentRepo.saved.size());
         Payment p = paymentRepo.saved.get(0);
         assertEquals(200000L, p.getTotalAmount());
+        assertEquals(170000L, p.getNetAmountBeforeVat());
+        assertEquals(170000L, p.getAmountAfterVatBeforePoints());
         assertEquals(170000L, p.getFinalAmount());
+    }
+
+    @Test
+    void checkout_includesVatInFinalAmount_savedOnPayment() {
+        InMemoryOrderRepository orderRepo = new InMemoryOrderRepository();
+        InMemoryPaymentRepository paymentRepo = new InMemoryPaymentRepository();
+        InMemoryTableRepository tableRepo = new InMemoryTableRepository();
+
+        Order order = new Order("6101", "Bàn 20", LocalDateTime.now(), OrderStatus.PENDING, 0);
+        order.addOrderItem(new com.giadinh.apporderbill.orders.model.OrderItem(order.getOrderId(), "1", "Cà phê", 1, 100000));
+        orderRepo.save(order);
+
+        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null,
+                new CalculateOrderTotalUseCase(orderRepo, () -> 10.0), null, null, null);
+        useCase.execute(new CheckoutOrderInput(6101L, 110000L, "CASH", null, null, "tester", null, 0));
+
+        Payment p = paymentRepo.saved.get(0);
+        assertEquals(100000L, p.getTotalAmount());
+        assertEquals(100000L, p.getNetAmountBeforeVat());
+        assertEquals(10000L, p.getVatAmount());
+        assertEquals(10.0, p.getVatPercent(), 0.001);
+        assertEquals(110000L, p.getAmountAfterVatBeforePoints());
+        assertEquals(110000L, p.getFinalAmount());
     }
 
     @Test
@@ -186,7 +214,8 @@ class UnitScenarioCoverageTest {
         Order order = new Order("5201", "Bàn 12", LocalDateTime.now(), OrderStatus.COMPLETED, 100000);
         orderRepo.save(order);
 
-        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null);
+        CheckoutOrderUseCase useCase = new CheckoutOrderUseCase(orderRepo, paymentRepo, tableRepo, null,
+                new CalculateOrderTotalUseCase(orderRepo), null, null, null);
         DomainException ex = assertThrows(DomainException.class, () ->
                 useCase.execute(new CheckoutOrderInput(5201L, 100000L, "CASH", null, null, "tester", null, 0)));
         assertEquals(ErrorCode.CHECKOUT_ORDER_NOT_PAYABLE_STATE, ex.getErrorCode());

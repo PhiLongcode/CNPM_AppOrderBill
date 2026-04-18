@@ -9,15 +9,16 @@ public class OrderItem {
     private String orderItemId;
     private String orderId;
     private String menuItemId;
-    private String menuItemName; // Tên món ăn để hiển thị
+    private String menuItemName;
     private int quantity;
-    private double price; // Giá tại thời điểm đặt hàng
-    private String note; // Ghi chú cho món ăn (ví dụ: ít đường, thêm đá)
-    private Double discountPercent; // Phần trăm giảm giá (0-100)
-    private Double discountAmount; // Số tiền giảm giá
-    private boolean printedToKitchen; // Trạng thái đã in phiếu bếp
+    private double price;
+    private String note;
+    private Double discountPercent;
+    private Double discountAmount;
+    private boolean printedToKitchen;
+    /** Points redeemed for this line (0 = normal sale line). */
+    private int loyaltyRedeemPoints;
 
-    // Constructor cho OrderItem mới
     public OrderItem(String orderId, String menuItemId, String menuItemName, int quantity, double price) {
         if (quantity <= 0) {
             throw new DomainException(ErrorCode.ORDER_ITEM_QUANTITY_INVALID);
@@ -28,14 +29,16 @@ public class OrderItem {
         this.menuItemName = menuItemName;
         this.quantity = quantity;
         this.price = price;
-        this.note = ""; // Mặc định không có ghi chú
+        this.note = "";
         this.discountPercent = 0.0;
         this.discountAmount = 0.0;
         this.printedToKitchen = false;
+        this.loyaltyRedeemPoints = 0;
     }
 
-    // Constructor cho việc tải OrderItem từ Repository
-    public OrderItem(String orderItemId, String orderId, String menuItemId, String menuItemName, int quantity, double price, String note, Double discountPercent, Double discountAmount, boolean printedToKitchen) {
+    public OrderItem(String orderItemId, String orderId, String menuItemId, String menuItemName, int quantity,
+            double price, String note, Double discountPercent, Double discountAmount, boolean printedToKitchen,
+            int loyaltyRedeemPoints) {
         this.orderItemId = orderItemId;
         this.orderId = orderId;
         this.menuItemId = menuItemId;
@@ -46,6 +49,7 @@ public class OrderItem {
         this.discountPercent = discountPercent != null ? discountPercent : 0.0;
         this.discountAmount = discountAmount != null ? discountAmount : 0.0;
         this.printedToKitchen = printedToKitchen;
+        this.loyaltyRedeemPoints = loyaltyRedeemPoints;
     }
 
     public String getOrderItemId() {
@@ -79,7 +83,7 @@ public class OrderItem {
     public void setNote(String note) {
         this.note = note;
     }
-    
+
     public Double getDiscountPercent() {
         return discountPercent;
     }
@@ -104,15 +108,21 @@ public class OrderItem {
         this.printedToKitchen = printedToKitchen;
     }
 
-    // Cập nhật số lượng
+    public int getLoyaltyRedeemPoints() {
+        return loyaltyRedeemPoints;
+    }
+
+    public void setLoyaltyRedeemPoints(int loyaltyRedeemPoints) {
+        this.loyaltyRedeemPoints = Math.max(0, loyaltyRedeemPoints);
+    }
+
     public void updateQuantity(int newQuantity) {
         if (newQuantity <= 0) {
             throw new DomainException(ErrorCode.ORDER_ITEM_QUANTITY_INVALID);
         }
         this.quantity = newQuantity;
     }
-    
-    // Tính tổng tiền sau khi giảm giá
+
     public double getLineTotal() {
         return (quantity * price - discountAmount) * (1.0 - discountPercent / 100.0);
     }

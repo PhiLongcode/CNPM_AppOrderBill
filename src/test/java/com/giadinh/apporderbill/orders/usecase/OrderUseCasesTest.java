@@ -11,6 +11,7 @@ import com.giadinh.apporderbill.orders.usecase.dto.AddMenuItemInput;
 import com.giadinh.apporderbill.orders.usecase.dto.CalculateOrderTotalInput;
 import com.giadinh.apporderbill.orders.usecase.dto.CancelOrderInput;
 import com.giadinh.apporderbill.orders.usecase.dto.DeleteOrderItemInput;
+import com.giadinh.apporderbill.orders.usecase.dto.UpdateOrderItemQuantityInput;
 import com.giadinh.apporderbill.shared.error.DomainException;
 import com.giadinh.apporderbill.shared.error.ErrorCode;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class OrderUseCasesTest {
         CalculateOrderTotalUseCase calcUseCase = new CalculateOrderTotalUseCase(repo);
         var total = calcUseCase.execute(new CalculateOrderTotalInput(1L, 10000, null));
         assertEquals(100000, total.getSubtotal());
+        assertEquals(90000, total.getNetAmountBeforeVat());
         assertEquals(90000, total.getFinalAmount());
 
         CancelOrderUseCase cancelUseCase = new CancelOrderUseCase(repo, null, null);
@@ -78,6 +80,81 @@ class OrderUseCasesTest {
         CancelOrderUseCase cancelUseCase = new CancelOrderUseCase(orderRepo, menuRepo, null);
         cancelUseCase.execute(new CancelOrderInput(1L, "test", "tester"));
         assertEquals(5, menuRepo.currentStock(11));
+    }
+
+    @Test
+    void addMenuItem_whenExistingLinePrinted_doesNotMerge_createsNewLine() {
+        InMemoryOrderRepository orderRepo = new InMemoryOrderRepository();
+        Order order = new Order("1", "B1", LocalDateTime.now(), OrderStatus.PENDING, 0);
+        orderRepo.save(order);
+        InMemoryMenuRepository menuRepo = new InMemoryMenuRepository();
+        menuRepo.putTrackedItem(20, "Com tam", 35000, 50);
+
+        AddMenuItemToOrderUseCase useCase = new AddMenuItemToOrderUseCase(orderRepo, menuRepo);
+        useCase.execute(new AddMenuItemInput(1L, 20L, 2, null));
+
+        Order loaded = orderRepo.findById("1").orElseThrow();
+        assertEquals(1, loaded.getItems().size());
+        loaded.getItems().get(0).setPrintedToKitchen(true);
+        orderRepo.save(loaded);
+
+        useCase.execute(new AddMenuItemInput(1L, 20L, 3, null));
+
+        loaded = orderRepo.findById("1").orElseThrow();
+        assertEquals(2, loaded.getItems().size());
+        assertEquals(2, loaded.getItems().get(0).getQuantity());
+        assertTrue(loaded.getItems().get(0).isPrintedToKitchen());
+        assertEquals(3, loaded.getItems().get(1).getQuantity());
+        assertFalse(loaded.getItems().get(1).isPrintedToKitchen());
+        assertEquals(45, menuRepo.currentStock(20));
+    }
+
+    @Test
+    void updateQuantity_secondLineOfSameMenu_onlyUpdatesThatLine() {
+        InMemoryOrderRepository orderRepo = new InMemoryOrderRepository();
+        Order order = new Order("1", "B1", LocalDateTime.now(), OrderStatus.PENDING, 0);
+        orderRepo.save(order);
+        InMemoryMenuRepository menuRepo = new InMemoryMenuRepository();
+        menuRepo.putTrackedItem(21, "Bun bo", 40000, 20);
+
+        AddMenuItemToOrderUseCase addUseCase = new AddMenuItemToOrderUseCase(orderRepo, menuRepo);
+        addUseCase.execute(new AddMenuItemInput(1L, 21L, 1, null));
+        Order o = orderRepo.findById("1").orElseThrow();
+        o.getItems().get(0).setPrintedToKitchen(true);
+        orderRepo.save(o);
+        addUseCase.execute(new AddMenuItemInput(1L, 21L, 2, null));
+
+        UpdateOrderItemQuantityUseCase updateUseCase = new UpdateOrderItemQuantityUseCase(orderRepo, menuRepo);
+        updateUseCase.execute(new UpdateOrderItemQuantityInput(1L, 2L, 5));
+
+        o = orderRepo.findById("1").orElseThrow();
+        assertEquals(2, o.getItems().size());
+        assertEquals(1, o.getItems().get(0).getQuantity());
+        assertEquals(5, o.getItems().get(1).getQuantity());
+    }
+
+    @Test
+    void deleteItem_secondLineOfSameMenu_onlyRemovesThatLine() {
+        InMemoryOrderRepository orderRepo = new InMemoryOrderRepository();
+        Order order = new Order("1", "B1", LocalDateTime.now(), OrderStatus.PENDING, 0);
+        orderRepo.save(order);
+        InMemoryMenuRepository menuRepo = new InMemoryMenuRepository();
+        menuRepo.putTrackedItem(22, "Hu tieu", 38000, 20);
+
+        AddMenuItemToOrderUseCase addUseCase = new AddMenuItemToOrderUseCase(orderRepo, menuRepo);
+        addUseCase.execute(new AddMenuItemInput(1L, 22L, 1, null));
+        Order o = orderRepo.findById("1").orElseThrow();
+        o.getItems().get(0).setPrintedToKitchen(true);
+        orderRepo.save(o);
+        addUseCase.execute(new AddMenuItemInput(1L, 22L, 3, null));
+
+        DeleteOrderItemUseCase deleteUseCase = new DeleteOrderItemUseCase(orderRepo, menuRepo);
+        deleteUseCase.execute(new DeleteOrderItemInput(1L, 2L));
+
+        o = orderRepo.findById("1").orElseThrow();
+        assertEquals(1, o.getItems().size());
+        assertEquals(1, o.getItems().get(0).getQuantity());
+        assertEquals(19, menuRepo.currentStock(22));
     }
 
     private static class InMemoryOrderRepository implements OrderRepository {

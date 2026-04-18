@@ -51,6 +51,33 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
         }
     }
 
+    @Override
+    public double loadVatPercent() {
+        String sql = "SELECT value FROM settings WHERE key = 'tax.vatPercent' LIMIT 1";
+        try (Connection c = connectionProvider.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return parseDouble(rs.getString("value"), 0.0);
+            }
+        } catch (Exception e) {
+            System.err.println("SqliteLoyaltyConfigRepository.loadVatPercent: " + e.getMessage());
+        }
+        return 0.0;
+    }
+
+    @Override
+    public void saveVatPercent(double vatPercent) {
+        String sql = "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)";
+        double normalized = Math.max(0.0, vatPercent);
+        try (Connection c = connectionProvider.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            upsert(ps, "tax.vatPercent", String.valueOf(normalized));
+        } catch (Exception e) {
+            System.err.println("SqliteLoyaltyConfigRepository.saveVatPercent: " + e.getMessage());
+        }
+    }
+
     private void upsert(PreparedStatement ps, String key, String value) throws Exception {
         ps.setString(1, key);
         ps.setString(2, value);
@@ -63,5 +90,9 @@ public class SqliteLoyaltyConfigRepository implements LoyaltyConfigRepository {
 
     private int parseInt(String s, int fallback) {
         try { return Integer.parseInt(s); } catch (Exception e) { return fallback; }
+    }
+
+    private double parseDouble(String s, double fallback) {
+        try { return Double.parseDouble(s); } catch (Exception e) { return fallback; }
     }
 }

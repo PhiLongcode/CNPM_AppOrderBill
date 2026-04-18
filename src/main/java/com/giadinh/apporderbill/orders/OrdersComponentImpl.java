@@ -2,6 +2,9 @@ package com.giadinh.apporderbill.orders;
 
 import com.giadinh.apporderbill.billing.repository.PaymentRepository;
 import com.giadinh.apporderbill.catalog.repository.MenuItemRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyGiftRepository;
+import com.giadinh.apporderbill.customer.repository.LoyaltyRedeemMenuItemRepository;
+import com.giadinh.apporderbill.customer.usecase.CustomerUseCases;
 import com.giadinh.apporderbill.orders.repository.OrderRepository;
 import com.giadinh.apporderbill.orders.service.ConfigurableOrderCodeService;
 import com.giadinh.apporderbill.orders.usecase.*;
@@ -24,6 +27,16 @@ public class OrdersComponentImpl implements OrdersComponent {
 
     public OrdersComponentImpl(OrderRepository orderRepository, MenuItemRepository menuItemRepository,
             PaymentRepository paymentRepository) {
+        this(orderRepository, menuItemRepository, paymentRepository, null, null, null, null);
+    }
+
+    public OrdersComponentImpl(OrderRepository orderRepository,
+            MenuItemRepository menuItemRepository,
+            PaymentRepository paymentRepository,
+            TableRepository tableRepository,
+            CustomerUseCases customerUseCases,
+            LoyaltyRedeemMenuItemRepository loyaltyRedeemMenuItemRepository,
+            LoyaltyGiftRepository loyaltyGiftRepository) {
         this.openOrCreateOrderUseCase = new OpenOrCreateOrderUseCase(
                 orderRepository,
                 menuItemRepository,
@@ -36,27 +49,84 @@ public class OrdersComponentImpl implements OrdersComponent {
         this.updateOrderItemDiscountUseCase = new UpdateOrderItemDiscountUseCase(orderRepository, menuItemRepository);
         this.deleteOrderItemUseCase = new DeleteOrderItemUseCase(orderRepository, menuItemRepository);
         this.removeOrderItemUseCase = new RemoveOrderItemUseCase(orderRepository, menuItemRepository);
-        this.calculateOrderTotalUseCase = new CalculateOrderTotalUseCase(orderRepository);
-        this.checkoutOrderUseCase = new CheckoutOrderUseCase(orderRepository, paymentRepository, new TableRepository() {
-            public java.util.Optional<com.giadinh.apporderbill.table.model.Table> findById(String id){return java.util.Optional.empty();}
-            public java.util.Optional<com.giadinh.apporderbill.table.model.Table> findByTableName(String n){return java.util.Optional.empty();}
-            public java.util.List<com.giadinh.apporderbill.table.model.Table> findAll(){return java.util.List.of();}
-            public void save(com.giadinh.apporderbill.table.model.Table t){}
-            public void delete(String id){}
-        }, null);
-        this.cancelOrderUseCase = new CancelOrderUseCase(orderRepository, menuItemRepository, null);
-    }
-    public OpenOrCreateOrderOutput openOrCreateOrder(OpenOrCreateOrderInput input){ return openOrCreateOrderUseCase.execute(input); }
-    public GetOrderDetailsOutput getOrderDetails(GetOrderDetailsInput input){ return getOrderDetailsUseCase.execute(input); }
-    public AddCustomItemOutput addMenuItemToOrder(AddMenuItemInput input){ return addMenuItemToOrderUseCase.execute(input); }
-    public AddCustomItemOutput addCustomItemToOrder(AddCustomItemInput input){ return addCustomItemToOrderUseCase.execute(input); }
-    public UpdateOrderItemQuantityOutput updateOrderItemQuantity(UpdateOrderItemQuantityInput input){ return updateOrderItemQuantityUseCase.execute(input); }
-    public UpdateOrderItemNoteOutput updateOrderItemNote(UpdateOrderItemNoteInput input){ return updateOrderItemNoteUseCase.execute(input); }
-    public UpdateOrderItemDiscountOutput updateOrderItemDiscount(UpdateOrderItemDiscountInput input){ return updateOrderItemDiscountUseCase.execute(input); }
-    public DeleteOrderItemOutput deleteOrderItem(DeleteOrderItemInput input){ return deleteOrderItemUseCase.execute(input); }
-    public RemoveOrderItemOutput removeOrderItem(RemoveOrderItemInput input){ return removeOrderItemUseCase.execute(input); }
-    public CalculateOrderTotalOutput calculateOrderTotal(CalculateOrderTotalInput input){ return calculateOrderTotalUseCase.execute(input); }
-    public CheckoutOrderOutput checkoutOrder(CheckoutOrderInput input){ return checkoutOrderUseCase.execute(input); }
-    public CancelOrderOutput cancelOrder(CancelOrderInput input){ return cancelOrderUseCase.execute(input); }
-}
+        TableRepository effectiveTable = tableRepository != null ? tableRepository : new TableRepository() {
+            public java.util.Optional<com.giadinh.apporderbill.table.model.Table> findById(String id) {
+                return java.util.Optional.empty();
+            }
 
+            public java.util.Optional<com.giadinh.apporderbill.table.model.Table> findByTableName(String n) {
+                return java.util.Optional.empty();
+            }
+
+            public java.util.List<com.giadinh.apporderbill.table.model.Table> findAll() {
+                return java.util.List.of();
+            }
+
+            public void save(com.giadinh.apporderbill.table.model.Table t) {
+            }
+
+            public void delete(String id) {
+            }
+        };
+        this.calculateOrderTotalUseCase = new CalculateOrderTotalUseCase(orderRepository,
+                customerUseCases != null ? customerUseCases::getVatPercent : () -> 0.0);
+        this.checkoutOrderUseCase = new CheckoutOrderUseCase(
+                orderRepository,
+                paymentRepository,
+                effectiveTable,
+                customerUseCases,
+                this.calculateOrderTotalUseCase,
+                menuItemRepository,
+                loyaltyRedeemMenuItemRepository,
+                loyaltyGiftRepository);
+        this.cancelOrderUseCase = new CancelOrderUseCase(orderRepository, menuItemRepository, effectiveTable);
+    }
+
+    public OpenOrCreateOrderOutput openOrCreateOrder(OpenOrCreateOrderInput input) {
+        return openOrCreateOrderUseCase.execute(input);
+    }
+
+    public GetOrderDetailsOutput getOrderDetails(GetOrderDetailsInput input) {
+        return getOrderDetailsUseCase.execute(input);
+    }
+
+    public AddCustomItemOutput addMenuItemToOrder(AddMenuItemInput input) {
+        return addMenuItemToOrderUseCase.execute(input);
+    }
+
+    public AddCustomItemOutput addCustomItemToOrder(AddCustomItemInput input) {
+        return addCustomItemToOrderUseCase.execute(input);
+    }
+
+    public UpdateOrderItemQuantityOutput updateOrderItemQuantity(UpdateOrderItemQuantityInput input) {
+        return updateOrderItemQuantityUseCase.execute(input);
+    }
+
+    public UpdateOrderItemNoteOutput updateOrderItemNote(UpdateOrderItemNoteInput input) {
+        return updateOrderItemNoteUseCase.execute(input);
+    }
+
+    public UpdateOrderItemDiscountOutput updateOrderItemDiscount(UpdateOrderItemDiscountInput input) {
+        return updateOrderItemDiscountUseCase.execute(input);
+    }
+
+    public DeleteOrderItemOutput deleteOrderItem(DeleteOrderItemInput input) {
+        return deleteOrderItemUseCase.execute(input);
+    }
+
+    public RemoveOrderItemOutput removeOrderItem(RemoveOrderItemInput input) {
+        return removeOrderItemUseCase.execute(input);
+    }
+
+    public CalculateOrderTotalOutput calculateOrderTotal(CalculateOrderTotalInput input) {
+        return calculateOrderTotalUseCase.execute(input);
+    }
+
+    public CheckoutOrderOutput checkoutOrder(CheckoutOrderInput input) {
+        return checkoutOrderUseCase.execute(input);
+    }
+
+    public CancelOrderOutput cancelOrder(CancelOrderInput input) {
+        return cancelOrderUseCase.execute(input);
+    }
+}

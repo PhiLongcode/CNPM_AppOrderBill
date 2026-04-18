@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.giadinh.apporderbill.javafx.settings.AppSettingsController"
+            style="-fx-background-color: #f5f5f5;">
+    <top>
+        <VBox spacing="6" style="-fx-background-color: #1e3a5f; -fx-padding: 14 18;">
+            <Label text="Cấu hình hệ thống"
+                   style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+            <Label text="Điểm tích lũy, VAT và máy in"
+                   style="-fx-text-fill: #BBDEFB;"/>
+        </VBox>
+    </top>
+    <center>
+        <TabPane fx:id="settingsTabPane" tabClosingPolicy="UNAVAILABLE"
+                 style="-fx-background-color: white;" BorderPane.alignment="CENTER">
+            <Tab text="Điểm tích lũy">
+                <fx:include fx:id="loyaltyTab" source="loyalty-config-tab.fxml"/>
+            </Tab>
+            <Tab text="VAT">
+                <fx:include fx:id="vatTab" source="vat-config-tab.fxml"/>
+            </Tab>
+            <Tab text="Máy in">
+                <fx:include fx:id="printerTab" source="../printer/printer-config.fxml"/>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>
